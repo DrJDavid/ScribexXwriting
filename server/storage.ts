@@ -40,6 +40,7 @@ export interface IStorage {
   
   // Writing submission methods
   getWritingSubmissionsByUserId(userId: number): Promise<WritingSubmission[]>;
+  getWritingSubmissionById(id: number): Promise<WritingSubmission | undefined>;
   createWritingSubmission(submission: InsertWritingSubmission): Promise<WritingSubmission>;
   updateWritingSubmission(id: number, submission: Partial<WritingSubmission>): Promise<WritingSubmission | undefined>;
   
@@ -232,6 +233,15 @@ Westlake Middle School, 7th Grade`
       .set(updates)
       .where(eq(writingSubmissions.id, id))
       .returning();
+      
+    return result[0];
+  }
+  
+  async getWritingSubmissionById(id: number): Promise<WritingSubmission | undefined> {
+    const result = await db
+      .select()
+      .from(writingSubmissions)
+      .where(eq(writingSubmissions.id, id));
       
     return result[0];
   }

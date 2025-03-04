@@ -96,3 +96,19 @@ export type SkillMastery = {
   sequencing: number;
   voice: number;
 };
+
+// AI Feedback type for TypeScript usage
+export type AIFeedback = {
+  overallFeedback: string;
+  strengthsAnalysis: string;
+  areasToImprove: string;
+  mechanicsScore: number;
+  sequencingScore: number;
+  voiceScore: number;
+  suggestions: {
+    mechanics?: string[];
+    sequencing?: string[];
+    voice?: string[];
+  };
+  nextSteps: string;
+};
