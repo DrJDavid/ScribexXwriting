@@ -1,79 +1,215 @@
 import { useState } from "react";
+import { useLocation, Redirect } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PenLineIcon, SparklesIcon } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
-// Simplified AuthPage that doesn't use any auth hooks
+// Login Schema
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+// Register Schema
+const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  displayName: z.string().min(1, "Display name is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  age: z.coerce.number().int().min(8, "Age must be at least 8").max(18, "Age must be at most 18"),
+  grade: z.coerce.number().int().min(3, "Grade must be at least 3").max(12, "Grade must be at most 12"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
+  const { user, loginMutation, registerMutation } = useAuth();
+  const [location] = useLocation();
 
-  // Simplified versions of the forms that don't use auth hooks
-  const SimpleLoginForm = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="username">Username</label>
-        <input 
-          className="w-full p-2 border rounded-md"
-          type="text" 
-          id="username" 
-          placeholder="Enter your username" 
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="password">Password</label>
-        <input 
-          className="w-full p-2 border rounded-md"
-          type="password" 
-          id="password" 
-          placeholder="Enter your password" 
-        />
-      </div>
-      <button 
-        className="w-full bg-primary text-white p-2 rounded-md hover:bg-primary/90 transition"
-        onClick={() => alert("Login functionality will be implemented soon!")}
-      >
-        Login
-      </button>
-    </div>
-  );
+  // If user is already logged in, redirect to home
+  if (user) {
+    return <Redirect to="/" />;
+  }
 
-  const SimpleRegisterForm = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="username">Username</label>
-        <input 
-          className="w-full p-2 border rounded-md"
-          type="text" 
-          id="username" 
-          placeholder="Choose a username" 
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="display-name">Display Name</label>
-        <input 
-          className="w-full p-2 border rounded-md"
-          type="text" 
-          id="display-name" 
-          placeholder="Enter your display name" 
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="password">Password</label>
-        <input 
-          className="w-full p-2 border rounded-md"
-          type="password" 
-          id="password" 
-          placeholder="Choose a password" 
-        />
-      </div>
-      <button 
-        className="w-full bg-primary text-white p-2 rounded-md hover:bg-primary/90 transition"
-        onClick={() => alert("Registration functionality will be implemented soon!")}
-      >
-        Register
-      </button>
-    </div>
-  );
+  // Login Form Component
+  const LoginForm = () => {
+    const form = useForm<LoginFormValues>({
+      resolver: zodResolver(loginSchema),
+      defaultValues: {
+        username: "",
+        password: "",
+      },
+    });
+
+    const onSubmit = async (values: LoginFormValues) => {
+      loginMutation.mutate(values);
+    };
+
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your username" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Enter your password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={loginMutation.isPending}
+          >
+            {loginMutation.isPending ? "Logging in..." : "Login"}
+          </Button>
+          
+          <div className="text-sm text-center text-muted-foreground">
+            <p>Demo account: username: "demo", password: "password"</p>
+          </div>
+        </form>
+      </Form>
+    );
+  };
+
+  // Register Form Component
+  const RegisterForm = () => {
+    const form = useForm<RegisterFormValues>({
+      resolver: zodResolver(registerSchema),
+      defaultValues: {
+        username: "",
+        displayName: "",
+        password: "",
+        age: 13,
+        grade: 7,
+      },
+    });
+
+    const onSubmit = async (values: RegisterFormValues) => {
+      registerMutation.mutate(values);
+    };
+
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="Choose a username" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="displayName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Display Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your display name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Choose a password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="age"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={8} max={18} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="grade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Grade</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={3} max={12} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={registerMutation.isPending}
+          >
+            {registerMutation.isPending ? "Creating Account..." : "Register"}
+          </Button>
+        </form>
+      </Form>
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -93,10 +229,10 @@ export default function AuthPage() {
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
-                <SimpleLoginForm />
+                <LoginForm />
               </TabsContent>
               <TabsContent value="register">
-                <SimpleRegisterForm />
+                <RegisterForm />
               </TabsContent>
             </Tabs>
           </CardContent>
