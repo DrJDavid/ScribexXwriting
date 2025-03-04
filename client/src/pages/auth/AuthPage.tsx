@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useLocation, Redirect } from "wouter";
+import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PenLineIcon, SparklesIcon } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -38,13 +38,9 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
-  const { user, loginMutation, registerMutation } = useAuth();
-  const [location] = useLocation();
-
-  // If user is already logged in, redirect to home
-  if (user) {
-    return <Redirect to="/" />;
-  }
+  const [isLoading, setIsLoading] = useState(false);
+  const [location, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // Login Form Component
   const LoginForm = () => {
@@ -57,7 +53,35 @@ export default function AuthPage() {
     });
 
     const onSubmit = async (values: LoginFormValues) => {
-      loginMutation.mutate(values);
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(values),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Login failed');
+        }
+        
+        const data = await response.json();
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+        setLocation('/');
+      } catch (error) {
+        toast({
+          title: "Login failed",
+          description: error instanceof Error ? error.message : "An unknown error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     return (
@@ -94,9 +118,9 @@ export default function AuthPage() {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={loginMutation.isPending}
+            disabled={isLoading}
           >
-            {loginMutation.isPending ? "Logging in..." : "Login"}
+            {isLoading ? "Logging in..." : "Login"}
           </Button>
           
           <div className="text-sm text-center text-muted-foreground">
@@ -121,7 +145,35 @@ export default function AuthPage() {
     });
 
     const onSubmit = async (values: RegisterFormValues) => {
-      registerMutation.mutate(values);
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(values),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Registration failed');
+        }
+        
+        const data = await response.json();
+        toast({
+          title: "Registration successful",
+          description: "Your account has been created!",
+        });
+        setLocation('/');
+      } catch (error) {
+        toast({
+          title: "Registration failed",
+          description: error instanceof Error ? error.message : "An unknown error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     return (
@@ -202,9 +254,9 @@ export default function AuthPage() {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={registerMutation.isPending}
+            disabled={isLoading}
           >
-            {registerMutation.isPending ? "Creating Account..." : "Register"}
+            {isLoading ? "Creating Account..." : "Register"}
           </Button>
         </form>
       </Form>
