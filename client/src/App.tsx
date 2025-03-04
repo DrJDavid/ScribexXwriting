@@ -1,116 +1,424 @@
-import { Route, Switch, Link } from "wouter";
-import NotFound from "@/pages/not-found";
+import { Route, Switch, Link, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
-import AuthPage from "@/pages/auth/AuthPage";
+import { useAuth } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
+import NotFound from "@/pages/not-found";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { CheckCircle } from "lucide-react";
 
-// Basic placeholder components
-const PlaceholderComponent = ({ name }: { name: string }) => (
-  <div className="flex flex-col items-center justify-center min-h-screen p-8">
-    <h1 className="text-2xl font-bold mb-2">{name} Component</h1>
-    <p className="text-gray-600">This is a placeholder for the {name} component</p>
-  </div>
-);
+// Login schema
+const loginSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
-const REDIMap = () => <PlaceholderComponent name="REDI Map" />;
-const REDIExercise = () => <PlaceholderComponent name="REDI Exercise" />;
-const OWLTown = () => <PlaceholderComponent name="OWL Town" />;
-const OWLWritingQuest = () => <PlaceholderComponent name="OWL Writing Quest" />;
-const Profile = () => <PlaceholderComponent name="Profile" />;
-const Achievements = () => <PlaceholderComponent name="Achievements" />;
-const Tools = () => <PlaceholderComponent name="Tools" />;
-// Dashboard Component displaying main app features
-const Dashboard = () => {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Welcome to ScribexX Writing App</h1>
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+// Simplified Login Form that doesn't use Auth context directly
+const LoginFormSimple = () => {
+  const [, navigate] = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (values: LoginFormValues) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Link href="/redi" className="block p-6 bg-primary/10 rounded-lg shadow hover:bg-primary/20 transition-colors">
-          <h2 className="text-xl font-semibold mb-2">REDI System</h2>
-          <p>Structured exercises to build writing skills</p>
-        </Link>
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      
+      // Successfully logged in, redirect to home
+      navigate("/");
+    } catch (error) {
+      console.error("Login error:", error);
+      // Show error message
+      form.setError("root", {
+        message: "Invalid username or password",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="johndoe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
-        <Link href="/owl" className="block p-6 bg-primary/10 rounded-lg shadow hover:bg-primary/20 transition-colors">
-          <h2 className="text-xl font-semibold mb-2">OWL Town</h2>
-          <p>Creative writing quests in an open world</p>
-        </Link>
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
-        <Link href="/profile" className="block p-6 bg-primary/10 rounded-lg shadow hover:bg-primary/20 transition-colors">
-          <h2 className="text-xl font-semibold mb-2">Profile</h2>
-          <p>View and update your user profile</p>
-        </Link>
+        {form.formState.errors.root && (
+          <div className="text-red-500 text-sm">{form.formState.errors.root.message}</div>
+        )}
         
-        <Link href="/achievements" className="block p-6 bg-primary/10 rounded-lg shadow hover:bg-primary/20 transition-colors">
-          <h2 className="text-xl font-semibold mb-2">Achievements</h2>
-          <p>Track your writing milestones</p>
-        </Link>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Logging in..." : "Login"}
+        </Button>
+      </form>
+    </Form>
+  );
+};
+
+// Register component
+const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  displayName: z.string().min(2, "Display name must be at least 2 characters"),
+  age: z.number().int().min(5).max(18).optional(),
+  grade: z.number().int().min(0).max(12).optional(),
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+// Simplified Register Form that doesn't use Auth context directly
+const RegisterFormSimple = () => {
+  const [, navigate] = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      displayName: "",
+      age: 10,
+      grade: 5,
+    },
+  });
+
+  const onSubmit = async (values: RegisterFormValues) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+      
+      // Successfully registered, redirect to home
+      navigate("/");
+    } catch (error) {
+      console.error("Registration error:", error);
+      // Show error message
+      form.setError("root", {
+        message: "Registration failed. Username may already be taken.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="johndoe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
-        <Link href="/tools" className="block p-6 bg-primary/10 rounded-lg shadow hover:bg-primary/20 transition-colors">
-          <h2 className="text-xl font-semibold mb-2">Writing Tools</h2>
-          <p>Helpful utilities for writers</p>
-        </Link>
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="displayName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Display Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="age"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Age</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="10" 
+                  {...field} 
+                  onChange={(e) => field.onChange(parseInt(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="grade"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Grade</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="5" 
+                  {...field} 
+                  onChange={(e) => field.onChange(parseInt(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {form.formState.errors.root && (
+          <div className="text-red-500 text-sm">{form.formState.errors.root.message}</div>
+        )}
+        
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Creating account..." : "Register"}
+        </Button>
+      </form>
+    </Form>
+  );
+};
+
+// Auth page component - simplified version that doesn't depend on useAuth
+const AuthPage = () => {
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [, navigate] = useLocation();
+  
+  // We'll check for authentication status using fetch instead of useAuth
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          // User is logged in, redirect to home
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    
+    checkAuthStatus();
+  }, [navigate]);
+  
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen flex">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          <h1 className="text-2xl font-bold mb-6">ScribexX Writing Platform</h1>
+          
+          <div className="flex border-b mb-6">
+            <button
+              className={`px-4 py-2 ${activeTab === 'login' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500'}`}
+              onClick={() => setActiveTab('login')}
+            >
+              Login
+            </button>
+            <button
+              className={`px-4 py-2 ${activeTab === 'register' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500'}`}
+              onClick={() => setActiveTab('register')}
+            >
+              Register
+            </button>
+          </div>
+          
+          {activeTab === 'login' ? <LoginFormSimple /> : <RegisterFormSimple />}
+        </div>
+      </div>
+      <div className="hidden md:block md:w-1/2 bg-primary/10">
+        <div className="flex flex-col justify-center h-full p-8">
+          <h2 className="text-3xl font-bold mb-4">Improve Your Writing Skills</h2>
+          <p className="text-lg mb-6">
+            ScribexX is an educational platform designed to enhance student writing through
+            structured exercises and creative writing quests.
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
-// Super simple navigation that doesn't rely on auth
-const SimpleNavBar = () => (
+// Home component - simplified version that doesn't depend on useAuth
+const Home = () => {
+  const [, navigate] = useLocation();
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          // Not authenticated, redirect to login
+          navigate("/auth");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        navigate("/auth");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [navigate]);
+  
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        navigate("/auth");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Welcome, {user?.displayName || 'User'}</h1>
+        <Button variant="outline" onClick={handleLogout}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </Button>
+      </div>
+      
+      <div className="bg-primary/10 p-6 rounded-lg mb-6">
+        <h2 className="text-xl font-semibold mb-2">Your Writing Journey</h2>
+        <p>This is a protected area that only logged-in users can see.</p>
+      </div>
+    </div>
+  );
+};
+
+// Simple header component that doesn't use auth hooks
+const Header = () => (
   <header className="bg-primary text-white py-4 px-6">
     <div className="flex justify-between items-center">
       <Link href="/" className="text-xl font-bold">
         ScribexX
       </Link>
-      <Link href="/auth" className="px-3 py-2 rounded bg-white text-primary hover:bg-gray-100">
-        Login / Register
-      </Link>
     </div>
   </header>
 );
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/auth">
-        <AuthPage />
-      </Route>
-      <Route path="/">
-        <Dashboard />
-      </Route>
-      <Route path="/redi">
-        <REDIMap />
-      </Route>
-      <Route path="/redi/exercise/:exerciseId">
-        <REDIExercise />
-      </Route>
-      <Route path="/owl">
-        <OWLTown />
-      </Route>
-      <Route path="/owl/quest/:questId">
-        <OWLWritingQuest />
-      </Route>
-      <Route path="/profile">
-        <Profile />
-      </Route>
-      <Route path="/achievements">
-        <Achievements />
-      </Route>
-      <Route path="/tools">
-        <Tools />
-      </Route>
-      <Route>
-        <NotFound />
-      </Route>
-    </Switch>
-  );
-}
-
+// App component with routes
 function App() {
   return (
     <div className="min-h-screen flex flex-col">
-      <SimpleNavBar />
+      <Header />
       <main className="flex-1">
-        <Router />
+        <Switch>
+          <Route path="/auth" component={AuthPage} />
+          <ProtectedRoute path="/" component={Home} />
+          <Route component={NotFound} />
+        </Switch>
       </main>
       <Toaster />
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Form,
   FormControl,
@@ -38,10 +39,16 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [isLoading, setIsLoading] = useState(false);
-  const [location, setLocation] = useLocation();
-  const { toast } = useToast();
-
+  const [, navigate] = useLocation();
+  const { user, loginMutation, registerMutation } = useAuth();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+  
   // Login Form Component
   const LoginForm = () => {
     const form = useForm<LoginFormValues>({
@@ -53,35 +60,11 @@ export default function AuthPage() {
     });
 
     const onSubmit = async (values: LoginFormValues) => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Login failed');
+      loginMutation.mutate(values, {
+        onSuccess: () => {
+          navigate('/');
         }
-        
-        const data = await response.json();
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
-        setLocation('/');
-      } catch (error) {
-        toast({
-          title: "Login failed",
-          description: error instanceof Error ? error.message : "An unknown error occurred",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      });
     };
 
     return (
@@ -118,9 +101,9 @@ export default function AuthPage() {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isLoading}
+            disabled={loginMutation.isPending}
           >
-            {isLoading ? "Logging in..." : "Login"}
+            {loginMutation.isPending ? "Logging in..." : "Login"}
           </Button>
           
           <div className="text-sm text-center text-muted-foreground">
@@ -145,35 +128,11 @@ export default function AuthPage() {
     });
 
     const onSubmit = async (values: RegisterFormValues) => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Registration failed');
+      registerMutation.mutate(values, {
+        onSuccess: () => {
+          navigate('/');
         }
-        
-        const data = await response.json();
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created!",
-        });
-        setLocation('/');
-      } catch (error) {
-        toast({
-          title: "Registration failed",
-          description: error instanceof Error ? error.message : "An unknown error occurred",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      });
     };
 
     return (
@@ -254,9 +213,9 @@ export default function AuthPage() {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isLoading}
+            disabled={registerMutation.isPending}
           >
-            {isLoading ? "Creating Account..." : "Register"}
+            {registerMutation.isPending ? "Creating Account..." : "Register"}
           </Button>
         </form>
       </Form>

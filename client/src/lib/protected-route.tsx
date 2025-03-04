@@ -1,7 +1,8 @@
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { useState, useEffect } from "react";
 
-// Simple version that doesn't use the auth hook
+// Simplified ProtectedRoute that doesn't depend on AuthProvider
 export function ProtectedRoute({
   path,
   component: Component,
@@ -9,10 +10,51 @@ export function ProtectedRoute({
   path: string;
   component: React.ComponentType<any>;
 }) {
-  // For now, let's keep all routes unprotected to resolve the error
   return (
     <Route path={path}>
-      <Component />
+      {(params) => <ProtectedRouteContent component={Component} params={params} />}
     </Route>
   );
+}
+
+// Internal component that handles authentication checking
+function ProtectedRouteContent({
+  component: Component,
+  params,
+}: {
+  component: React.ComponentType<any>;
+  params: Record<string, string>;
+}) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/user');
+        setIsAuthenticated(response.ok);
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Still checking authentication
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Redirect to="/auth" />;
+  }
+
+  // Authenticated, render protected component
+  return <Component {...params} />;
 }
