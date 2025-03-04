@@ -13,9 +13,15 @@ import {
   type InsertWritingSubmission
 } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+import { Pool } from '@neondatabase/serverless';
+import { hashPassword } from "./auth";
 
-const MemoryStore = createMemoryStore(session);
+// Database session store setup
+const PostgresSessionStore = connectPg(session);
+const sessionPool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export interface IStorage {
   // User methods
@@ -41,40 +47,22 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private progresses: Map<number, Progress>; // userId -> Progress
-  private exerciseAttempts: Map<number, ExerciseAttempt>;
-  private writingSubmissions: Map<number, WritingSubmission>;
-  
+export class DatabaseStorage implements IStorage {
   public sessionStore: session.Store;
   
-  private userIdCounter: number;
-  private progressIdCounter: number;
-  private exerciseAttemptIdCounter: number;
-  private writingSubmissionIdCounter: number;
-
   constructor() {
-    this.users = new Map();
-    this.progresses = new Map();
-    this.exerciseAttempts = new Map();
-    this.writingSubmissions = new Map();
-    
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
+    this.sessionStore = new PostgresSessionStore({ 
+      pool: sessionPool, 
+      createTableIfMissing: true,
+      tableName: 'session'
     });
     
-    this.userIdCounter = 1;
-    this.progressIdCounter = 1;
-    this.exerciseAttemptIdCounter = 1;
-    this.writingSubmissionIdCounter = 1;
-    
-    // Create demo user
-    this.createDemoUser();
+    // Create a demo user if not exists
+    this.ensureDemoUserExists();
   }
   
   // Create a demo user and initial progress
-  private async createDemoUser() {
+  private async ensureDemoUserExists() {
     try {
       // Check if demo user already exists
       const existingUser = await this.getUserByUsername('demo');
@@ -83,7 +71,7 @@ export class MemStorage implements IStorage {
       // Create demo user
       const demoUser = await this.createUser({
         username: 'demo',
-        password: 'password',
+        password: 'password', // Will be hashed in createUser
         displayName: 'Demo User',
         age: 13,
         grade: 7,
@@ -133,48 +121,47 @@ Westlake Middle School, 7th Grade`
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const now = new Date();
-    const user: User = { 
-      ...insertUser, 
-      id,
+    // Ensure required fields have defaults
+    const userToInsert = {
+      ...insertUser,
       age: insertUser.age || 0,
       grade: insertUser.grade || 0,
       avatarUrl: insertUser.avatarUrl || "",
-      createdAt: now
     };
-    this.users.set(id, user);
-    return user;
+    
+    // Hash password if it's provided in plain text (not already hashed)
+    if (userToInsert.password && !userToInsert.password.includes('.')) {
+      userToInsert.password = await hashPassword(userToInsert.password);
+    }
+    
+    const result = await db.insert(users).values(userToInsert).returning();
+    return result[0];
   }
   
   // Progress methods
   async getProgressByUserId(userId: number): Promise<Progress | undefined> {
-    return Array.from(this.progresses.values()).find(
-      (progress) => progress.userId === userId,
-    );
+    const result = await db.select().from(progress).where(eq(progress.userId, userId));
+    return result[0];
   }
   
   async createProgress(insertProgress: InsertProgress): Promise<Progress> {
-    const id = this.progressIdCounter++;
-    const now = new Date();
-    const progressEntry: Progress = {
+    const progressToInsert = {
       ...insertProgress,
-      id,
       currency: insertProgress.currency || 0,
-      updatedAt: now
     };
-    this.progresses.set(id, progressEntry);
-    return progressEntry;
+    
+    const result = await db.insert(progress).values(progressToInsert).returning();
+    return result[0];
   }
   
   async updateProgress(userId: number, updatedProgress: Progress): Promise<Progress> {
@@ -184,71 +171,70 @@ Westlake Middle School, 7th Grade`
       throw new Error('Progress not found');
     }
     
-    // Update with new values and timestamp
-    const now = new Date();
-    const progress: Progress = {
-      ...updatedProgress,
-      updatedAt: now
-    };
+    // Remove id to avoid updating it
+    const { id, ...updateValues } = updatedProgress;
     
-    // Update in map
-    this.progresses.set(existingProgress.id, progress);
+    const result = await db
+      .update(progress)
+      .set({ 
+        ...updateValues,
+        updatedAt: new Date() 
+      })
+      .where(eq(progress.id, existingProgress.id))
+      .returning();
     
-    return progress;
+    return result[0];
   }
   
   // Exercise attempt methods
   async getExerciseAttemptsByUserId(userId: number): Promise<ExerciseAttempt[]> {
-    return Array.from(this.exerciseAttempts.values())
-      .filter((attempt) => attempt.userId === userId);
+    return await db
+      .select()
+      .from(exerciseAttempts)
+      .where(eq(exerciseAttempts.userId, userId));
   }
   
   async createExerciseAttempt(insertAttempt: InsertExerciseAttempt): Promise<ExerciseAttempt> {
-    const id = this.exerciseAttemptIdCounter++;
-    const now = new Date();
-    const attempt: ExerciseAttempt = {
-      ...insertAttempt,
-      id,
-      attemptedAt: now
-    };
-    this.exerciseAttempts.set(id, attempt);
-    return attempt;
+    const result = await db
+      .insert(exerciseAttempts)
+      .values(insertAttempt)
+      .returning();
+      
+    return result[0];
   }
   
   // Writing submission methods
   async getWritingSubmissionsByUserId(userId: number): Promise<WritingSubmission[]> {
-    return Array.from(this.writingSubmissions.values())
-      .filter((submission) => submission.userId === userId);
+    return await db
+      .select()
+      .from(writingSubmissions)
+      .where(eq(writingSubmissions.userId, userId));
   }
   
   async createWritingSubmission(insertSubmission: InsertWritingSubmission): Promise<WritingSubmission> {
-    const id = this.writingSubmissionIdCounter++;
-    const now = new Date();
-    const submission: WritingSubmission = {
+    const submissionToInsert = {
       ...insertSubmission,
-      id,
       feedback: '',
       status: 'submitted',
-      submittedAt: now
     };
-    this.writingSubmissions.set(id, submission);
-    return submission;
+    
+    const result = await db
+      .insert(writingSubmissions)
+      .values(submissionToInsert)
+      .returning();
+      
+    return result[0];
   }
   
   async updateWritingSubmission(id: number, updates: Partial<WritingSubmission>): Promise<WritingSubmission | undefined> {
-    const submission = this.writingSubmissions.get(id);
-    if (!submission) {
-      return undefined;
-    }
-    
-    const updatedSubmission: WritingSubmission = {
-      ...submission,
-      ...updates
-    };
-    
-    this.writingSubmissions.set(id, updatedSubmission);
-    return updatedSubmission;
+    const result = await db
+      .update(writingSubmissions)
+      .set(updates)
+      .where(eq(writingSubmissions.id, id))
+      .returning();
+      
+    return result[0];
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
