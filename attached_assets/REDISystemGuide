@@ -1,0 +1,276 @@
+# REDI System Design Guide
+
+## Overview
+
+The REDI (Reflective Exercise on Direct Instruction) system is the structured learning component of ScribexX. It presents writing instruction through an engaging, gamified level map with a Synthwave/Cyberpunk aesthetic. This guide outlines the educational framework, progression system, and implementation details for the REDI component.
+
+## 1. Educational Framework
+
+### Three-Layer Learning Model
+
+REDI organizes writing instruction into three progressive layers:
+
+1. **Mechanics & Grammar (Foundation)**
+   - Focus: Technical correctness, rules, conventions
+   - Skills: Spelling, punctuation, grammar, sentence structure
+   - Purpose: Build automaticity with the "code" of writing
+   - Example topics: Subject-verb agreement, comma usage, homophones
+
+2. **Sequencing & Logic (Structure)**
+   - Focus: Organization, flow, coherence
+   - Skills: Paragraph structure, transitions, argumentation, outlining
+   - Purpose: Create logical frameworks for ideas
+   - Example topics: Topic sentences, supporting evidence, transitions
+
+3. **Voice & Rhetoric (Style)**
+   - Focus: Expression, persuasion, audience awareness
+   - Skills: Word choice, tone, figurative language, rhetorical devices
+   - Purpose: Develop personal writing style and effectiveness
+   - Example topics: Active vs. passive voice, descriptive language, metaphors
+
+### Mastery Approach
+
+- Each level requires 90% mastery to unlock subsequent levels
+- Automatic retry on failure with different examples
+- Adaptive difficulty based on performance
+- Scaffolded learning with increasing complexity
+
+## 2. Level Map Structure
+
+### Visual Map Design
+
+The level map resembles a circuit board or digital network with the following elements:
+
+- **Nodes**: Individual exercises/lessons
+- **Pathways**: Connections between related concepts
+- **Districts**: Groupings by layer (Mechanics, Sequencing, Voice)
+- **Checkpoints**: Summary exercises that test multiple concepts
+- **Boss Levels**: Comprehensive challenges that unlock OWL features
+
+### Progression System
+
+#### Mechanics Path (Initial Focus)
+1. Letter & Word Level -> 2. Sentence Level -> 3. Paragraph Level
+
+#### Sequencing Path (Unlocked after basic Mechanics)
+1. Idea Organization -> 2. Paragraph Flow -> 3. Full Text Structure
+
+#### Voice Path (Unlocked after basic Sequencing)
+1. Word Choice -> 2. Style Elements -> 3. Audience Adaptation
+
+### Unlocking System
+
+- Linear progression within each layer
+- Cross-layer dependencies (e.g., basic Mechanics unlocks basic Sequencing)
+- Special "boss" levels that unlock OWL town features
+- Mechanics levels become less frequent as proficiency improves
+
+## 3. Exercise Types
+
+### Multiple Choice
+- Grammar rule identification
+- Error spotting
+- Best/worst example selection
+- Context-appropriate word selection
+
+### Sorting/Ordering
+- Arrange sentences into logical paragraph
+- Order steps in a process
+- Prioritize supporting details
+
+### Text Editing
+- Correct errors in provided text
+- Improve weak sentences
+- Replace vague words with specific ones
+
+### Fill-in-the-Blank
+- Complete sentences with appropriate words
+- Add punctuation to passages
+- Insert transition words between paragraphs
+
+### Mini-Writing Prompts
+- Write a specific type of sentence
+- Craft a topic sentence for provided details
+- Rewrite sentences to change voice or tone
+
+## 4. Feedback Mechanisms
+
+### Immediate Response
+- Visual indication of correct/incorrect answers
+- Explanation of why an answer is correct/incorrect
+- Reference to relevant rules or principles
+
+### Performance Metrics
+- Accuracy percentage for each exercise
+- Completion time (where relevant)
+- Streak counter for consecutive correct answers
+
+### Progress Visualization
+- Node coloring based on performance
+- Path illumination as skills are mastered
+- District completion indicators
+
+## 5. Gamification Elements
+
+### Achievement System
+- Skill badges for mastering concept areas
+- Combo badges for streaks of correct answers
+- Speed badges for quick completion
+- Persistence badges for overcoming challenges
+
+### Reward Mechanics
+- XP points for completing exercises
+- Bonus points for errorless completion
+- Streak multipliers for consecutive correct answers
+- Unlocking of OWL town features
+
+### Visual Reinforcement
+- Animation celebrations for level completion
+- Circuit "powering up" as skills are mastered
+- Digital "skill tree" visualization
+
+## 6. Connection to OWL System
+
+### Unlock Mechanics
+- Completing Mechanics Level 3 unlocks the Library in OWL town
+- Completing Sequencing Level 2 unlocks the Gazette in OWL town
+- Completing Voice Level 1 unlocks the Amphitheater in OWL town
+
+### Skill Application
+- REDI skills directly correlate to quest requirements in OWL
+- Mastery in REDI areas provides bonuses in related OWL activities
+- REDI achievements are displayed in the OWL environment
+
+## 7. Technical Implementation
+
+### Exercise Data Structure
+```typescript
+interface Exercise {
+  id: string;
+  type: 'multipleChoice' | 'sorting' | 'textEditing' | 'fillInBlank' | 'miniWriting';
+  skillLayer: 'mechanics' | 'sequencing' | 'voice';
+  difficulty: 1 | 2 | 3;
+  title: string;
+  instructions: string;
+  content: ExerciseContent; // Varies based on type
+  answers: ExerciseAnswers; // Varies based on type
+  explanation: string;
+  points: number;
+  timeLimit?: number; // Optional time limit in seconds
+}
+```
+
+### Level Map Data Structure
+```typescript
+interface LevelNode {
+  id: string;
+  title: string;
+  position: {x: number, y: number}; // For UI placement
+  exerciseId: string;
+  dependencies: string[]; // IDs of nodes that must be completed first
+  status: 'locked' | 'available' | 'completed';
+  mastery?: number; // Percentage score if completed
+  unlocksOWL?: string; // OWL feature ID if applicable
+}
+
+interface LevelMap {
+  nodes: LevelNode[];
+  connections: {from: string, to: string}[]; // Defines visual paths
+  districts: {
+    id: string;
+    name: string;
+    skillLayer: 'mechanics' | 'sequencing' | 'voice';
+    nodeIds: string[];
+  }[];
+}
+```
+
+### User Progress Tracking
+```typescript
+interface UserProgress {
+  completedExercises: {
+    exerciseId: string;
+    attempts: number;
+    bestScore: number;
+    lastCompletedAt: Date;
+  }[];
+  unlockedNodes: string[];
+  skillMastery: {
+    mechanics: number; // 0-100 percentage
+    sequencing: number;
+    voice: number;
+  };
+  achievements: string[]; // IDs of earned achievements
+  totalPoints: number;
+}
+```
+
+## 8. Sample Exercise Implementation
+
+### Multiple Choice Example: Subject-Verb Agreement
+
+```typescript
+const exercise: Exercise = {
+  id: 'mech-sv-agreement-01',
+  type: 'multipleChoice',
+  skillLayer: 'mechanics',
+  difficulty: 1,
+  title: 'Subject-Verb Agreement',
+  instructions: 'Select the sentence with correct subject-verb agreement.',
+  content: {
+    options: [
+      'The group of students are working on their projects.',
+      'The group of students is working on their projects.',
+      'The group of students was working on its projects.',
+      'The group of students were working on its projects.'
+    ]
+  },
+  answers: {
+    correctOption: 1, // Zero-indexed, so this is the second option
+  },
+  explanation: 'The subject is "group" (singular), so it requires a singular verb "is". The pronoun "their" refers to "students", which is plural.',
+  points: 10
+};
+```
+
+## 9. MVP Implementation Guide (2-Week Timeline)
+
+### Week 1 Focus: Core Map and Basic Exercises
+
+1. **Day 1-2: Map Interface**
+   - Implement the visual node-based map
+   - Create placeholder nodes with dummy data
+   - Implement basic node status displays (locked/available/completed)
+
+2. **Day 3-4: Exercise Framework**
+   - Build multiple-choice exercise component
+   - Implement scoring mechanism
+   - Create feedback display
+
+3. **Day 5-6: Content Creation**
+   - Create 5-10 Mechanics exercises
+   - Implement progression between exercises
+   - Add basic explanations for each exercise
+
+4. **Day 7: Progress Tracking**
+   - Implement persistence of user progress
+   - Add visual indicators of completion on map
+   - Connect exercise completion to node status
+
+### Week 2 Refinements (as time permits)
+
+- Add animations for map interactions
+- Implement additional exercise types
+- Create more content across different skill layers
+- Add achievement system
+- Connect REDI completion to OWL unlocks
+
+## 10. Future Enhancements
+
+- **Adaptive Exercise Generation**: Use AI to create variations of exercises based on student performance
+- **Comprehensive Analytics**: Track common errors and time spent per concept
+- **Detailed Feedback System**: Provide more granular feedback on specific aspects of answers
+- **Custom Exercise Paths**: Allow teachers to create custom progression paths for students
+- **Social Elements**: Add comparative progress visualization with classmates
+
+This guide provides the foundation for implementing the REDI system in ScribexX, with a focus on educational value while maintaining the engaging Synthwave/Cyberpunk aesthetic.

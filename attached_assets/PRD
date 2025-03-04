@@ -1,0 +1,174 @@
+# ScribexX Product Requirements Document
+
+## 1. Overview
+
+ScribexX is an educational writing app for junior high students that balances structured learning with creative exploration through a gamified interface. The app features two distinct learning environments, each with its own visual aesthetic and interaction model:
+
+- **REDI (Reflective Exercise on Direct Instruction)** - A structured learning path with a Synthwave/Cyberpunk aesthetic
+- **OWL (Open World Learning)** - A creative sandbox environment with Botanical Futurism aesthetic featuring a town with NPCs and writing quests
+
+## 2. Target Users
+
+- **Primary Users:** Junior high students (grades 6-9)
+- **Secondary Users:** Teachers who will monitor student progress
+- **Tertiary Users:** Parents who may review student work
+
+## 3. User Journeys
+
+### Student Journey
+1. Student logs in and sees the home screen featuring the REDI level map
+2. Completes REDI exercises to master writing fundamentals at their level
+3. Unlocks access to the OWL town environment by achieving specific REDI milestones
+4. Explores the OWL town, interacts with NPCs, and completes writing quests
+5. Earns in-game currency to customize their experience
+6. Returns to REDI to unlock more advanced OWL content
+
+### Teacher Journey
+1. Teacher logs in to a dashboard view of class progress
+2. Reviews individual student performance in REDI exercises
+3. Reads and provides feedback on OWL writing submissions
+4. Assigns specific REDI exercises or OWL quests to individuals or the class
+
+## 4. Feature Requirements
+
+### REDI (Synthwave/Cyberpunk Aesthetic)
+- **Level Map Interface**
+  - Visual progression path showing completed, current, and locked levels
+  - Three skill categories: Mechanics, Sequencing, and Voice
+  - Visual indication of mastery level and progress
+
+- **Exercise Framework**
+  - Multiple-choice questions
+  - Fill-in-the-blank exercises
+  - Drag-and-drop sentence/paragraph construction
+  - Progress tracking with 90% mastery requirement
+  - Immediate feedback on submissions
+
+- **Progression System**
+  - Unlocks new exercises based on performance
+  - Adaptive difficulty based on student performance
+  - Milestones that unlock OWL town features
+
+### OWL (Botanical Futurism Aesthetic)
+- **Town Environment**
+  - Interactive map with various locations (library, school, newspaper, etc.)
+  - NPCs who offer writing quests and feedback
+  - Visual progression of town elements as student completes quests
+
+- **Quest System**
+  - Writing assignments tied to different genres and skills
+  - Tiered difficulty levels based on REDI progress
+  - In-game currency rewards for completed quests
+
+- **Writing Interface**
+  - Clean, distraction-free writing space
+  - Basic formatting tools
+  - Word count and goal tracking
+  - Autosave functionality
+
+- **NPC Interaction**
+  - Character dialogues that introduce writing concepts
+  - Feedback on submitted writing
+  - Story elements that evolve based on student progress
+
+### Shared Features
+- **Profile and Progress Tracking**
+  - Student profile with achievements and statistics
+  - Skill mastery visualization
+  - Writing portfolio of completed works
+
+- **Gamification Elements**
+  - In-game currency system
+  - Achievements and badges
+  - Collection mechanics (books, writing tools, etc.)
+
+- **Teacher Tools**
+  - Student progress monitoring
+  - Assignment creation and distribution
+  - Feedback mechanism for student writing
+
+## 5. Technical Requirements
+
+### Platform
+- Mobile-first design with React Native and Expo
+- Compatible with iOS and Android devices
+- Offline functionality with cloud synchronization
+
+### Performance
+- Initial app size < 50MB
+- Quick loading time for exercises and writing interface
+- Smooth transitions between screens and interactions
+
+### Security
+- Secure student data handling compliant with educational privacy standards
+- Teacher/parent access controls
+- Appropriate content filters for generated prompts
+
+### Scalability
+- Framework for adding new exercises and quests
+- System for seasonal content updates
+- Analytics to inform future content development
+
+## 6. Design Guidelines
+
+### REDI Area
+- **Color Palette:** Neon blues, purples, and pinks on dark backgrounds
+- **Typography:** Crisp, technical fonts with good readability
+- **Visual Elements:** Digital grids, glowing edges, retro-futuristic interfaces
+- **Transitions:** Quick, electronic transitions between elements
+
+### OWL Area
+- **Color Palette:** Rich greens, earthy tones with bright accent colors
+- **Typography:** Organic, slightly playful fonts with excellent readability
+- **Visual Elements:** Plant motifs, natural patterns, digital/natural hybrids
+- **Transitions:** Flowing, growing transitions between elements
+
+### Shared Design Elements
+- Clear visual hierarchy for information
+- Consistent button and interaction patterns
+- Accessible color contrasts and text sizes
+- Distraction-free writing spaces
+
+## 7. MVP Scope (2-Week Development)
+
+### Must-Have Features
+- REDI level map with sample exercises (5-10 exercises)
+- Basic OWL town map with 2-3 NPCs offering quests
+- Simple writing interface with basic formatting
+- User profile with progress tracking
+- Simple achievement system
+- Teacher view of student progress
+
+### Nice-to-Have Features (if time permits)
+- In-game currency system
+- Additional NPCs and quests
+- More complex feedback on writing
+- Expanded achievement system
+- Customization options
+
+### Deferred to Future Versions
+- Advanced AI writing analysis
+- Peer review functionality
+- Complex town evolution
+- Multiplayer/social features
+- Custom content creation tools for teachers
+
+## 8. Success Metrics
+
+### Engagement Metrics
+- Time spent in app per session
+- Frequency of app usage
+- Completion rate of exercises and quests
+- Progression through REDI levels
+
+### Learning Metrics
+- Improvement in mechanics scores over time
+- Length and complexity of submitted writing
+- Variety of writing styles attempted
+- Mastery rate of concepts introduced
+
+### Satisfaction Metrics
+- Student feedback on enjoyment and usefulness
+- Teacher assessment of educational value
+- Retention rate over time
+- NPS scores from students and teachers
