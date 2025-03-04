@@ -414,6 +414,9 @@ const Header = () => (
   </header>
 );
 
+// Import the WritingSubmissionDetails page
+import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
+
 // App component with routes
 function App() {
   return (
@@ -423,6 +426,7 @@ function App() {
         <Switch>
           <Route path="/auth" component={AuthPage} />
           <ProtectedRoute path="/" component={Home} />
+          <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
           <Route component={NotFound} />
         </Switch>
       </main>
