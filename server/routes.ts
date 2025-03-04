@@ -199,48 +199,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { submissionId, questId, content, title, grade, focusSkill } = schema.parse(req.body);
       
-      // Get quest details for more context in the analysis
-      const questDetails = req.body.questDetails || {};
-            
-      // Mock AI response for now - this would be replaced with actual AI API call
-      const aiAnalysis = {
-        feedback: {
-          overallAssessment: "Your writing demonstrates good creativity and effort. Here are some areas to focus on improving.",
-          strengths: [
-            "Creative ideas and original thinking",
-            "Good attempt at organizing your thoughts"
-          ],
-          areasForImprovement: [
-            "Work on paragraph structure - try to keep related ideas together",
-            "Pay attention to sentence variety - mix short and long sentences"
-          ],
-          specificSuggestions: "Try reading your work aloud to catch awkward phrasing. Focus on creating clear transitions between paragraphs."
-        },
-        skillsAssessed: {
-          mechanics: 65,
-          sequencing: 58,
-          voice: 72
-        },
-        suggestedExercises: [
-          "sequencing-2",
-          "mechanics-3" 
-        ]
-      };
+      // Import required OpenAI service
+      const { analyzeWriting, generateSuggestedExercises } = await import('./services/openai');
       
-      // In a real implementation, we would call the AI API here
-      // const aiAnalysis = await callAIAnalysisAPI(content, title, questDetails, grade, focusSkill);
+      // Get current user progress to determine skill levels
+      const userProgress = await storage.getProgressByUserId(user.id);
+      if (!userProgress) {
+        return res.status(404).json({ message: 'User progress not found' });
+      }
+      
+      // Analyze the writing using OpenAI
+      const { feedback, skillsAssessed } = await analyzeWriting(
+        title, 
+        content, 
+        questId, 
+        grade || user.grade || 7 // Default to 7th grade if not specified
+      );
+      
+      // Generate suggested exercises based on the feedback and current skill levels
+      const suggestedExercises = await generateSuggestedExercises(
+        feedback,
+        userProgress.skillMastery as any
+      );
       
       // Update the submission with AI feedback
       const updatedSubmission = await storage.updateWritingSubmission(submissionId, {
         status: "reviewed",
-        aiFeedback: aiAnalysis.feedback,
-        skillsAssessed: aiAnalysis.skillsAssessed,
-        suggestedExercises: aiAnalysis.suggestedExercises
+        aiFeedback: feedback,
+        skillsAssessed,
+        suggestedExercises
       });
       
       res.json({
         submission: updatedSubmission,
-        analysis: aiAnalysis
+        analysis: {
+          feedback,
+          skillsAssessed,
+          suggestedExercises
+        }
       });
     } catch (error) {
       console.error("AI analysis error:", error);
@@ -279,6 +275,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(submissions);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching submissions' });
+    }
+  });
+  
+  app.get('/api/writing/submissions/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as any;
+      const submissionId = parseInt(req.params.id);
+      
+      if (isNaN(submissionId)) {
+        return res.status(400).json({ message: 'Invalid submission ID' });
+      }
+      
+      // Get the submission
+      const submission = await storage.getWritingSubmissionById(submissionId);
+      
+      if (!submission) {
+        return res.status(404).json({ message: 'Submission not found' });
+      }
+      
+      // Ensure user owns this submission
+      if (submission.userId !== user.id) {
+        return res.status(403).json({ message: 'Not authorized to access this submission' });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      console.error('Error fetching submission:', error);
+      res.status(500).json({ message: 'Error fetching submission' });
     }
   });
 

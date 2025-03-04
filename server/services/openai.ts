@@ -54,7 +54,8 @@ The response should be formatted as a JSON object with these fields:
     });
 
     // Parse the response
-    const result = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content || '{}';
+    const result = JSON.parse(content);
     
     // Ensure the response has all the required fields
     const feedback: AIFeedback = {
@@ -141,7 +142,8 @@ Available exercise types:
     });
 
     // Parse the response
-    const result = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content || '{}';
+    const result = JSON.parse(content);
     
     // Extract suggested exercises
     const suggestedExercises = Array.isArray(result.exercises) 
