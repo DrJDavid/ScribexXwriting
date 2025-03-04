@@ -12,6 +12,10 @@ import {
   type WritingSubmission,
   type InsertWritingSubmission
 } from "@shared/schema";
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
   // User methods
@@ -32,6 +36,9 @@ export interface IStorage {
   getWritingSubmissionsByUserId(userId: number): Promise<WritingSubmission[]>;
   createWritingSubmission(submission: InsertWritingSubmission): Promise<WritingSubmission>;
   updateWritingSubmission(id: number, submission: Partial<WritingSubmission>): Promise<WritingSubmission | undefined>;
+  
+  // Session store
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -39,6 +46,8 @@ export class MemStorage implements IStorage {
   private progresses: Map<number, Progress>; // userId -> Progress
   private exerciseAttempts: Map<number, ExerciseAttempt>;
   private writingSubmissions: Map<number, WritingSubmission>;
+  
+  public sessionStore: session.Store;
   
   private userIdCounter: number;
   private progressIdCounter: number;
@@ -50,6 +59,10 @@ export class MemStorage implements IStorage {
     this.progresses = new Map();
     this.exerciseAttempts = new Map();
     this.writingSubmissions = new Map();
+    
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
     
     this.userIdCounter = 1;
     this.progressIdCounter = 1;

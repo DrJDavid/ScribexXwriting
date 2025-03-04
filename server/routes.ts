@@ -11,104 +11,32 @@ import {
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication Routes
-  app.post('/api/auth/register', async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      
-      // Check if username exists
-      const existingUser = await storage.getUserByUsername(userData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: 'Username already exists' });
-      }
-      
-      // Create user
-      const user = await storage.createUser(userData);
-      
-      // Create initial progress for the user
-      await storage.createProgress({
-        userId: user.id,
-        skillMastery: { mechanics: 0, sequencing: 0, voice: 0 },
-        completedExercises: [],
-        completedQuests: [],
-        unlockedLocations: ['townHall', 'library', 'musicHall'],
-        currency: 0,
-        achievements: []
-      });
-      
-      // Return user without password
-      const { password, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const validationError = fromZodError(error);
-        return res.status(400).json({ message: validationError.message });
-      }
-      res.status(500).json({ message: 'Error creating user' });
-    }
-  });
+  // Setup authentication
+  setupAuth(app);
 
-  app.post('/api/auth/login', async (req, res) => {
-    try {
-      const schema = z.object({
-        username: z.string(),
-        password: z.string()
-      });
-      
-      const { username, password } = schema.parse(req.body);
-      
-      // Find user
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Check password (in a real app, would use bcrypt or similar)
-      if (user.password !== password) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const validationError = fromZodError(error);
-        return res.status(400).json({ message: validationError.message });
-      }
-      res.status(500).json({ message: 'Error during login' });
-    }
-  });
-
-  app.post('/api/auth/logout', async (req, res) => {
-    res.json({ message: 'Logged out successfully' });
-  });
-
-  app.get('/api/auth/me', async (req, res) => {
-    // Mock authenticated user - in a real app, would get from session
-    // For demo, just return a hardcoded user
-    const user = await storage.getUserByUsername('demo');
-    if (user) {
-      const { password, ...userWithoutPassword } = user;
-      return res.json(userWithoutPassword);
-    }
+  // Additional routes
+  app.get('/api/auth/me', (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: 'Not authenticated' });
     
-    res.status(401).json({ message: 'Not authenticated' });
+    // Strip password from user data before sending
+    const user = req.user as any;
+    const { password, ...userWithoutPassword } = user;
+    return res.json(userWithoutPassword);
   });
 
   // Progress Routes
   app.get('/api/progress', async (req, res) => {
     try {
-      // In a real app, would get userId from session
-      // For demo, get progress for the demo user
-      const user = await storage.getUserByUsername('demo');
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
       }
       
+      const user = req.user as any;
       const progress = await storage.getProgressByUserId(user.id);
+      
       if (!progress) {
         return res.status(404).json({ message: 'Progress not found' });
       }
@@ -121,11 +49,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/progress', async (req, res) => {
     try {
-      // In a real app, would get userId from session
-      const user = await storage.getUserByUsername('demo');
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
       }
+      
+      const user = req.user as any;
       
       // Validate update data
       const schema = z.object({
@@ -189,11 +117,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Exercise Attempt Routes
   app.post('/api/exercises/attempt', async (req, res) => {
     try {
-      // In a real app, would get userId from session
-      const user = await storage.getUserByUsername('demo');
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
       }
+      
+      const user = req.user as any;
       
       // Validate attempt data
       const attemptData = insertExerciseAttemptSchema.parse({
@@ -217,11 +145,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Writing Submission Routes
   app.post('/api/writing/submit', async (req, res) => {
     try {
-      // In a real app, would get userId from session
-      const user = await storage.getUserByUsername('demo');
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
       }
+      
+      const user = req.user as any;
       
       // Validate submission data
       const schema = z.object({
@@ -252,7 +180,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/writing/draft', async (req, res) => {
     try {
-      // In a real app, would get userId from session and actually save draft
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
       // For demo, just return success
       res.json({ message: 'Draft saved successfully' });
     } catch (error) {
@@ -262,11 +193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/writing/submissions', async (req, res) => {
     try {
-      // In a real app, would get userId from session
-      const user = await storage.getUserByUsername('demo');
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
       }
+      
+      const user = req.user as any;
       
       // Get submissions for user
       const submissions = await storage.getWritingSubmissionsByUserId(user.id);
