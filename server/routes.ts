@@ -177,6 +177,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Error submitting writing' });
     }
   });
+  
+  // AI Analysis endpoint for writing submissions
+  app.post('/api/writing/analyze', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as any;
+      
+      // Validate request data
+      const schema = z.object({
+        submissionId: z.number(),
+        questId: z.string(),
+        content: z.string().min(1),
+        title: z.string().min(1),
+        grade: z.number().optional(),
+        focusSkill: z.enum(['mechanics', 'sequencing', 'voice']).optional()
+      });
+      
+      const { submissionId, questId, content, title, grade, focusSkill } = schema.parse(req.body);
+      
+      // Get quest details for more context in the analysis
+      const questDetails = req.body.questDetails || {};
+            
+      // Mock AI response for now - this would be replaced with actual AI API call
+      const aiAnalysis = {
+        feedback: {
+          overallAssessment: "Your writing demonstrates good creativity and effort. Here are some areas to focus on improving.",
+          strengths: [
+            "Creative ideas and original thinking",
+            "Good attempt at organizing your thoughts"
+          ],
+          areasForImprovement: [
+            "Work on paragraph structure - try to keep related ideas together",
+            "Pay attention to sentence variety - mix short and long sentences"
+          ],
+          specificSuggestions: "Try reading your work aloud to catch awkward phrasing. Focus on creating clear transitions between paragraphs."
+        },
+        skillsAssessed: {
+          mechanics: 65,
+          sequencing: 58,
+          voice: 72
+        },
+        suggestedExercises: [
+          "sequencing-2",
+          "mechanics-3" 
+        ]
+      };
+      
+      // In a real implementation, we would call the AI API here
+      // const aiAnalysis = await callAIAnalysisAPI(content, title, questDetails, grade, focusSkill);
+      
+      // Update the submission with AI feedback
+      const updatedSubmission = await storage.updateWritingSubmission(submissionId, {
+        status: "reviewed",
+        aiFeedback: aiAnalysis.feedback,
+        skillsAssessed: aiAnalysis.skillsAssessed,
+        suggestedExercises: aiAnalysis.suggestedExercises
+      });
+      
+      res.json({
+        submission: updatedSubmission,
+        analysis: aiAnalysis
+      });
+    } catch (error) {
+      console.error("AI analysis error:", error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error analyzing submission' });
+    }
+  });
 
   app.post('/api/writing/draft', async (req, res) => {
     try {

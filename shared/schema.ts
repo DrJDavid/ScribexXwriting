@@ -60,15 +60,21 @@ export const writingSubmissions = pgTable("writing_submissions", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   feedback: text("feedback"),
+  aiFeedback: jsonb("ai_feedback"), // Detailed structured AI feedback
   status: text("status").notNull().default("submitted"), // submitted, reviewed, approved
   submittedAt: timestamp("submitted_at").defaultNow(),
+  skillsAssessed: jsonb("skills_assessed"), // { mechanics: number, sequencing: number, voice: number }
+  suggestedExercises: jsonb("suggested_exercises"), // Array of exercise IDs
 });
 
 export const insertWritingSubmissionSchema = createInsertSchema(writingSubmissions).omit({
   id: true,
   feedback: true,
+  aiFeedback: true,
   status: true,
   submittedAt: true,
+  skillsAssessed: true,
+  suggestedExercises: true,
 });
 
 // Type exports
