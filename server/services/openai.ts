@@ -11,16 +11,16 @@ const MODEL = "gpt-4o";
 
 export async function analyzeWriting(
   title: string,
-  content: string,
+  writingContent: string,
   questId: string,
   grade: number
 ): Promise<{ feedback: AIFeedback; skillsAssessed: SkillMastery }> {
   try {
     // Format content for the prompt
-    const formattedContent = `Title: ${title}\n\n${content}`;
+    const formattedContent: string = `Title: ${title}\n\n${writingContent}`;
     
     // Create a system prompt tailored to educational writing assessment based on Common Core standards
-    const systemPrompt = `You are an expert middle school writing teacher evaluating student work according to Common Core standards for grade ${grade}. 
+    const systemPrompt: string = `You are an expert middle school writing teacher evaluating student work according to Common Core standards for grade ${grade}. 
     
 Analyze the following student writing sample focusing on three key areas:
 1. Mechanics: grammar, punctuation, spelling, and sentence structure
@@ -29,7 +29,7 @@ Analyze the following student writing sample focusing on three key areas:
 
 Provide thoughtful, encouraging feedback that highlights strengths while offering specific improvement suggestions.`;
 
-    const userPrompt = `Please analyze this writing sample and provide detailed feedback in JSON format:
+    const userPrompt: string = `Please analyze this writing sample and provide detailed feedback in JSON format:
 ${formattedContent}
 
 The response should be formatted as a JSON object with these fields:
@@ -54,8 +54,8 @@ The response should be formatted as a JSON object with these fields:
     });
 
     // Parse the response
-    const content = response.choices[0].message.content || '{}';
-    const result = JSON.parse(content);
+    const responseContent: string = response.choices[0].message.content || '{}';
+    const result = JSON.parse(responseContent);
     
     // Ensure the response has all the required fields
     const feedback: AIFeedback = {
@@ -107,10 +107,10 @@ export async function generateSuggestedExercises(
     skillAreas.sort((a, b) => a.score - b.score);
     
     // Create a prompt that focuses on the weakest areas
-    const systemPrompt = `You are an expert curriculum designer for middle school writing education.
+    const systemPrompt: string = `You are an expert curriculum designer for middle school writing education.
 Based on a student's recent writing assessment, recommend specific exercise IDs from our database that would help them improve their weakest areas.`;
 
-    const userPrompt = `A student has received the following feedback on their writing:
+    const userPrompt: string = `A student has received the following feedback on their writing:
 - Mechanics score: ${feedback.mechanicsScore}/100
 - Sequencing score: ${feedback.sequencingScore}/100
 - Voice score: ${feedback.voiceScore}/100
@@ -142,11 +142,11 @@ Available exercise types:
     });
 
     // Parse the response
-    const content = response.choices[0].message.content || '{}';
-    const result = JSON.parse(content);
+    const responseContent: string = response.choices[0].message.content || '{}';
+    const result = JSON.parse(responseContent);
     
     // Extract suggested exercises
-    const suggestedExercises = Array.isArray(result.exercises) 
+    const suggestedExercises: string[] = Array.isArray(result.exercises) 
       ? result.exercises 
       : Array.isArray(result) 
         ? result 
