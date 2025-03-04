@@ -361,10 +361,16 @@ const Home = () => {
     try {
       const response = await fetch('/api/logout', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {
+        setUser(null); // Clear user data first
         navigate("/auth");
+      } else {
+        console.error("Logout failed:", await response.text());
       }
     } catch (error) {
       console.error("Logout error:", error);

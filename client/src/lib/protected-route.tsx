@@ -12,7 +12,7 @@ export function ProtectedRoute({
 }) {
   return (
     <Route path={path}>
-      {(params) => <ProtectedRouteContent component={Component} params={params} />}
+      {(params: any) => <ProtectedRouteContent component={Component} params={params} />}
     </Route>
   );
 }
@@ -23,7 +23,7 @@ function ProtectedRouteContent({
   params,
 }: {
   component: React.ComponentType<any>;
-  params: Record<string, string>;
+  params: Record<string, string | undefined>;
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
