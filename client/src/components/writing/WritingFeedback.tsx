@@ -51,9 +51,9 @@ const WritingFeedback: React.FC<WritingFeedbackProps> = ({
               <span className="text-white">Mechanics</span>
               <span className={primaryColor}>{skillsAssessed.mechanics}%</span>
             </div>
-            <Progress value={skillsAssessed.mechanics} className="h-2">
+            <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
               <div className={`h-full ${getProgressColor(skillsAssessed.mechanics)}`} style={{ width: `${skillsAssessed.mechanics}%` }} />
-            </Progress>
+            </div>
           </div>
           
           <div>
@@ -61,9 +61,9 @@ const WritingFeedback: React.FC<WritingFeedbackProps> = ({
               <span className="text-white">Sequencing</span>
               <span className={primaryColor}>{skillsAssessed.sequencing}%</span>
             </div>
-            <Progress value={skillsAssessed.sequencing} className="h-2">
+            <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
               <div className={`h-full ${getProgressColor(skillsAssessed.sequencing)}`} style={{ width: `${skillsAssessed.sequencing}%` }} />
-            </Progress>
+            </div>
           </div>
           
           <div>
@@ -71,9 +71,9 @@ const WritingFeedback: React.FC<WritingFeedbackProps> = ({
               <span className="text-white">Voice</span>
               <span className={primaryColor}>{skillsAssessed.voice}%</span>
             </div>
-            <Progress value={skillsAssessed.voice} className="h-2">
+            <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
               <div className={`h-full ${getProgressColor(skillsAssessed.voice)}`} style={{ width: `${skillsAssessed.voice}%` }} />
-            </Progress>
+            </div>
           </div>
         </div>
       </Card>

@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -395,9 +395,40 @@ const Home = () => {
         </Button>
       </div>
       
-      <div className="bg-primary/10 p-6 rounded-lg mb-6">
+      <div className="bg-primary/10 p-6 rounded-lg mb-8">
         <h2 className="text-xl font-semibold mb-2">Your Writing Journey</h2>
-        <p>This is a protected area that only logged-in users can see.</p>
+        <p className="mb-4">Explore the ScribexX platform to improve your writing skills through interactive exercises and creative writing quests.</p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 mt-6">
+          <Button 
+            className="bg-[#6320ee] hover:bg-[#6320ee]/80 text-white flex-1 h-16 flex flex-col items-center justify-center"
+            onClick={() => navigate('/redi')}
+          >
+            <span className="text-lg font-bold">REDI System</span>
+            <span className="text-xs">Structured Writing Exercises</span>
+          </Button>
+          
+          <Button 
+            className="bg-[#3cb371] hover:bg-[#3cb371]/80 text-white flex-1 h-16 flex flex-col items-center justify-center"
+            onClick={() => navigate('/owl')}
+          >
+            <span className="text-lg font-bold">OWL Town</span>
+            <span className="text-xs">Creative Writing Quests</span>
+          </Button>
+        </div>
+      </div>
+      
+      <div className="bg-primary/10 p-6 rounded-lg mb-6">
+        <h2 className="text-xl font-semibold mb-2">Your Portfolio</h2>
+        <p className="mb-4">View your writing submissions and AI feedback.</p>
+        
+        <Button 
+          className="bg-primary hover:bg-primary/80 w-full sm:w-auto"
+          onClick={() => navigate('/writing/submissions')}
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          View Writing Portfolio
+        </Button>
       </div>
     </div>
   );
@@ -414,8 +445,9 @@ const Header = () => (
   </header>
 );
 
-// Import the WritingSubmissionDetails page
+// Import the components
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
+import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
 
 // App component with routes
 function App() {
@@ -426,6 +458,7 @@ function App() {
         <Switch>
           <Route path="/auth" component={AuthPage} />
           <ProtectedRoute path="/" component={Home} />
+          <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
           <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
           <Route component={NotFound} />
         </Switch>

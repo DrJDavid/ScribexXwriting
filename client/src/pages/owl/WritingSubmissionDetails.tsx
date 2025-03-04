@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import WritingFeedback from '@/components/writing/WritingFeedback';
-import type { WritingSubmission } from '@shared/schema';
+import type { WritingSubmission, AIFeedback, SkillMastery } from '@shared/schema';
 
 const WritingSubmissionDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,21 +29,21 @@ const WritingSubmissionDetails: React.FC = () => {
     queryKey: ['/api/writing/submissions', numId],
     queryFn: async () => {
       const res = await apiRequest('GET', `/api/writing/submissions/${numId}`);
-      return res.json();
+      return await res.json() as WritingSubmission;
     },
     enabled: !isNaN(numId),
   });
   
   // Request AI analysis mutation
-  const analysisMutation = useMutation({
-    mutationFn: async (data: {
-      submissionId: number;
-      questId: string;
-      title: string;
-      content: string;
-    }) => {
+  const analysisMutation = useMutation<any, Error, {
+    submissionId: number;
+    questId: string;
+    title: string;
+    content: string;
+  }>({
+    mutationFn: async (data) => {
       const res = await apiRequest('POST', '/api/writing/analyze', data);
-      return res.json();
+      return await res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/writing/submissions', numId] });
@@ -124,7 +124,7 @@ const WritingSubmissionDetails: React.FC = () => {
       title={submission.title} 
       showBackButton={true} 
       onBackClick={handleBack}
-      subtitle={`Submitted on ${new Date(submission.submittedAt).toLocaleDateString()}`}
+      subtitle={`Submitted on ${new Date(submission.submittedAt || Date.now()).toLocaleDateString()}`}
     >
       <div className="p-4 space-y-6">
         {/* Writing Content */}
@@ -163,9 +163,9 @@ const WritingSubmissionDetails: React.FC = () => {
         {/* AI Feedback Display */}
         {hasAIFeedback && (
           <WritingFeedback 
-            feedback={submission.aiFeedback}
-            skillsAssessed={submission.skillsAssessed}
-            suggestedExercises={submission.suggestedExercises || []}
+            feedback={submission.aiFeedback as AIFeedback}
+            skillsAssessed={submission.skillsAssessed as SkillMastery}
+            suggestedExercises={(submission.suggestedExercises as string[]) || []}
           />
         )}
       </div>
