@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Loader2, MessageSquare } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import WritingFeedback from '@/components/writing/WritingFeedback';
+import { WritersBlockModal } from '@/components/writing/WritersBlockModal';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -43,9 +44,6 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [writersBlockDialogOpen, setWritersBlockDialogOpen] = useState(false);
-  const [writersBlockPrompt, setWritersBlockPrompt] = useState('');
-  const [writersBlockResponse, setWritersBlockResponse] = useState('');
-  const [isLoadingWritersBlockResponse, setIsLoadingWritersBlockResponse] = useState(false);
   const [submissionData, setSubmissionData] = useState<any>(null);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
   
@@ -109,31 +107,7 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
     },
   });
 
-  // Writer's block help mutation
-  const writersBlockMutation = useMutation<any, Error, {
-    questId: string;
-    title: string;
-    prompt: string;
-    currentContent: string;
-  }>({
-    mutationFn: async (data) => {
-      const res = await apiRequest('POST', '/api/writing/writers-block-help', data);
-      return await res.json();
-    },
-    onSuccess: (data) => {
-      setWritersBlockResponse(data.response);
-      setIsLoadingWritersBlockResponse(false);
-    },
-    onError: (error) => {
-      setIsLoadingWritersBlockResponse(false);
-      setWritersBlockResponse("I'm sorry, I couldn't generate a response. Please try asking a different question.");
-      toast({
-        title: 'Writer\'s Block Helper Error',
-        description: 'There was an error getting help. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
+  // Analysis mutation only
 
   const handleSubmit = async () => {
     try {
@@ -388,75 +362,14 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Writer's Block Help Dialog */}
-      <Dialog open={writersBlockDialogOpen} onOpenChange={setWritersBlockDialogOpen}>
-        <DialogContent className={`${fontClass} p-6 max-w-2xl`}>
-          <DialogHeader>
-            <DialogTitle className="text-xl mb-2 flex items-center">
-              <MessageSquare className="w-5 h-5 mr-2" />
-              Writer's Block Helper
-            </DialogTitle>
-            <DialogDescription>
-              Stuck on your writing? Ask for help, ideas, or feedback on your current work.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="my-4">
-            <div className="mb-4">
-              <h4 className="text-sm font-medium mb-2">Your Assignment</h4>
-              <div className="p-3 bg-gray-100 rounded-md text-sm">
-                <p className="font-medium">{questTitle}</p>
-                <p className="text-gray-600 mt-1">{description}</p>
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="prompt" className="block text-sm font-medium mb-2">
-                What are you struggling with?
-              </label>
-              <Textarea
-                id="prompt"
-                placeholder="e.g., I'm having trouble starting my essay... or I need help developing my argument..."
-                value={writersBlockPrompt}
-                onChange={(e) => setWritersBlockPrompt(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              />
-            </div>
-            
-            <Button 
-              onClick={handleWritersBlockSubmit}
-              disabled={!writersBlockPrompt.trim() || isLoadingWritersBlockResponse}
-              className={`w-full ${primaryBgClass}`}
-            >
-              {isLoadingWritersBlockResponse ? 'Getting help...' : 'Get Help'}
-            </Button>
-            
-            {isLoadingWritersBlockResponse && (
-              <div className="flex justify-center mt-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            )}
-            
-            {writersBlockResponse && !isLoadingWritersBlockResponse && (
-              <div className="mt-6">
-                <h4 className="text-sm font-medium mb-2">Response</h4>
-                <div className="p-4 bg-gray-100 rounded-md">
-                  <p className="whitespace-pre-wrap">{writersBlockResponse}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setWritersBlockDialogOpen(false)}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Writer's Block Help Modal */}
+      <WritersBlockModal
+        open={writersBlockDialogOpen}
+        onOpenChange={setWritersBlockDialogOpen}
+        questId={questId}
+        title={title || questTitle}
+        currentContent={content}
+      />
     </div>
   );
 };
