@@ -7,6 +7,7 @@ export interface TownLocation {
   position: { x: number; y: number };
   status?: 'locked' | 'unlocked';
   quests: string[]; // Quest IDs available at this location
+  type: 'argumentative' | 'informative' | 'narrative' | 'reflective' | 'descriptive';
 }
 
 export interface WritingQuest {
@@ -29,42 +30,47 @@ export const TOWN_LOCATIONS: TownLocation[] = [
   {
     id: 'townHall',
     name: 'Town Hall',
-    description: 'The center of civic activity',
+    description: 'Perfect for persuasive and argumentative writing',
     icon: 'building',
     position: { x: 50, y: 100 },
-    quests: ['town-hall-1', 'town-hall-2', 'town-hall-3']
+    quests: ['town-hall-1', 'town-hall-2', 'town-hall-3'],
+    type: 'argumentative'
   },
   {
     id: 'library',
     name: 'Library',
-    description: 'A repository of knowledge',
+    description: 'Ideal for research-based and informative writing',
     icon: 'book',
     position: { x: 150, y: 60 },
-    quests: ['library-1', 'library-2', 'library-3']
+    quests: ['library-1', 'library-2', 'library-3'],
+    type: 'informative'
   },
   {
-    id: 'musicHall',
-    name: 'Music Hall',
-    description: 'Where creativity flows',
-    icon: 'music',
+    id: 'amphitheater',
+    name: 'Amphitheater',
+    description: 'The place for narrative and creative storytelling',
+    icon: 'theater',
     position: { x: 100, y: 180 },
-    quests: ['music-hall-1', 'music-hall-2']
+    quests: ['music-hall-1', 'music-hall-2'],
+    type: 'narrative'
   },
   {
     id: 'cafe',
     name: 'Café',
-    description: 'A cozy spot for conversation',
+    description: 'A cozy spot for reflective and journal writing',
     icon: 'coffee',
     position: { x: 200, y: 150 },
-    quests: ['cafe-1', 'cafe-2']
+    quests: ['cafe-1', 'cafe-2'],
+    type: 'reflective'
   },
   {
     id: 'park',
-    name: 'Central Park',
-    description: 'A peaceful natural space',
+    name: 'Nature Park',
+    description: 'Inspiration for descriptive and nature writing',
     icon: 'tree',
     position: { x: 280, y: 110 },
-    quests: ['park-1', 'park-2']
+    quests: ['park-1', 'park-2'],
+    type: 'descriptive'
   }
 ];
 
@@ -156,14 +162,14 @@ export const WRITING_QUESTS: WritingQuest[] = [
     }
   },
 
-  // Music Hall Quests
+  // Amphitheater Quests
   {
     id: 'music-hall-1',
-    locationId: 'musicHall',
-    title: 'Song Lyrics',
-    description: 'Write lyrics for a song about a topic that matters to you. Focus on rhythm, imagery, and emotional impact.',
-    tags: ['Creative', 'Poetry', 'Expression'],
-    minWordCount: 100,
+    locationId: 'amphitheater',
+    title: 'Short Story Beginning',
+    description: 'Write the opening paragraph of a creative story. Focus on establishing character, setting, and an engaging hook.',
+    tags: ['Creative', 'Narrative', 'Storytelling'],
+    minWordCount: 150,
     skillFocus: 'voice',
     level: 1,
     unlockRequirements: {
@@ -172,10 +178,10 @@ export const WRITING_QUESTS: WritingQuest[] = [
   },
   {
     id: 'music-hall-2',
-    locationId: 'musicHall',
-    title: 'Concert Review',
-    description: 'Write a review of an imaginary concert. Describe the atmosphere, performances, and your overall impression.',
-    tags: ['Review', 'Descriptive', 'Opinion'],
+    locationId: 'amphitheater',
+    title: 'Character Monologue',
+    description: 'Create a monologue for a character facing a difficult decision. Show their internal thoughts and emotional state.',
+    tags: ['Narrative', 'Character', 'Drama'],
     minWordCount: 200,
     skillFocus: 'voice',
     level: 2,

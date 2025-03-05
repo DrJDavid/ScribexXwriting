@@ -5,6 +5,10 @@ import OWLMapLocation from '@/components/owl/OWLMapLocation';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
 import { getTownLocations } from '@/data/quests';
+import { 
+  Building, Book, Theater, Coffee, Tree,
+  FileText, Pencil, BookOpen, Feather, PenTool
+} from 'lucide-react';
 
 const OWLTown: React.FC = () => {
   const { setTheme } = useTheme();
