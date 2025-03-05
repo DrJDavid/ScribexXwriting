@@ -39,10 +39,18 @@ export function WritersBlockModal({
     setMessages
   } = useChat({
     api: "/api/writing/writers-block-help",
+    id: nanoid(),
+    initialMessages: [], // Start with empty messages array
     body: {
       questId,
       title,
       currentContent
+    },
+    onResponse: (response) => {
+      // Check for successful response
+      if (response.status !== 200) {
+        console.error("Chat response error:", response.statusText);
+      }
     },
     onError: (err) => {
       console.error("Chat error:", err);

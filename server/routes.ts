@@ -472,18 +472,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const user = req.user as any;
       
-      // Validate required fields
+      // Validate required fields with more flexible schema
       const schema = z.object({
         questId: z.string(),
         title: z.string().optional(),
         messages: z.array(
           z.object({
-            id: z.string(),
-            role: z.enum(["user", "assistant"]),
+            id: z.string().optional(), // Make id optional to handle various message formats
+            role: z.enum(["user", "assistant", "system"]),
             content: z.string(),
           })
-        ),
-        currentContent: z.string().optional(),
+        ).optional().default([]), // Make messages optional with default empty array
+        currentContent: z.string().optional().default(""),
       });
       
       const { questId, title, messages, currentContent } = schema.parse(req.body);
@@ -576,6 +576,89 @@ Important: Never simply write the content for them. Instead, guide them to devel
         return res.status(400).json({ message: validationError.message });
       }
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Add an endpoint for generating writing prompts based on OWL location
+  app.post('/api/writing/generate-prompt', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as any;
+      
+      // Validate request body
+      const schema = z.object({
+        locationId: z.string(),
+        locationType: z.enum([
+          'argumentative', 
+          'informative', 
+          'narrative', 
+          'reflective', 
+          'descriptive'
+        ]),
+      });
+      
+      const { locationId, locationType } = schema.parse(req.body);
+      
+      // Fetch the location to get more context
+      const location = getLocationById(locationId);
+      if (!location) {
+        return res.status(404).json({ message: 'Location not found' });
+      }
+      
+      // Import OpenAI
+      const { OpenAI } = await import('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      // Create a prompt for the AI
+      const promptContent = `Generate a creative writing prompt for a student to write a ${locationType} piece related to the location "${location.name}" in OWL Town.
+
+Location description: ${location.description}
+
+The prompt should:
+- Be engaging and specific to this location's themes and atmosphere
+- Include a clear writing goal that fits with ${locationType} writing
+- Suggest a target word count between 250-500 words
+- Include 2-3 guiding questions to help the student brainstorm
+- Incorporate elements from the location's environment and purpose
+
+Format the response as JSON with these fields:
+- prompt: The main writing prompt (1-2 sentences)
+- scenario: Background context for the writing (2-3 sentences)
+- guidingQuestions: Array of 2-3 specific questions to help with brainstorming
+- suggestedElements: Array of 3-4 elements to consider including
+- challengeElement: One optional challenging element to incorporate
+
+Keep the entire response concise and focused on inspiring creativity.`;
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        temperature: 0.8,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: "You are a creative writing instructor who specializes in generating engaging prompts tailored to specific settings and writing types."
+          },
+          {
+            role: "user",
+            content: promptContent
+          }
+        ],
+      });
+      
+      // Parse and return the generated prompt
+      const promptData = JSON.parse(response.choices[0].message.content);
+      res.json(promptData);
+    } catch (error) {
+      console.error("Error generating writing prompt:", error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error generating writing prompt' });
     }
   });
 
