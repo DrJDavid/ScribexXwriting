@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import ExerciseMultipleChoice from '@/components/exercises/ExerciseMultipleChoice';
+import ExerciseWriting from '@/components/exercises/ExerciseWriting';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
 import { getExerciseById } from '@/data/exercises';
@@ -33,16 +34,25 @@ const REDIExercise: React.FC = () => {
     return null;
   }
   
-  // Handle answer submission
-  const handleSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
+  // Handle multiple choice submission
+  const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
     // Record the exercise completion in the progress context
     completeExercise(exerciseId, isCorrect);
+  };
+  
+  // Handle writing submission
+  const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
+    // For writing exercises, we consider them correct if they meet the minimum requirements
+    completeExercise(exerciseId, isComplete);
   };
   
   // Handle back button
   const handleBack = () => {
     navigate('/redi');
   };
+
+  // Determine if this is a writing exercise
+  const isWritingExercise = exercise.type === 'writing';
 
   return (
     <MainLayout 
@@ -54,15 +64,30 @@ const REDIExercise: React.FC = () => {
         Exercise {exerciseIndex} of {totalExercises}
       </div>
       
-      <ExerciseMultipleChoice
-        exerciseId={exercise.id}
-        title={exercise.title}
-        instructions={exercise.instructions}
-        content={exercise.content}
-        options={exercise.options}
-        correctOptionIndex={exercise.correctOptionIndex}
-        onSubmit={handleSubmit}
-      />
+      {isWritingExercise ? (
+        // Render writing exercise component
+        <ExerciseWriting
+          exerciseId={exercise.id}
+          title={exercise.title}
+          instructions={exercise.instructions}
+          content={exercise.content}
+          prompt={exercise.prompt || ''}
+          minWordCount={exercise.minWordCount || 50}
+          exampleResponse={exercise.exampleResponse}
+          onSubmit={handleWritingSubmit}
+        />
+      ) : (
+        // Render multiple choice component
+        <ExerciseMultipleChoice
+          exerciseId={exercise.id}
+          title={exercise.title}
+          instructions={exercise.instructions}
+          content={exercise.content}
+          options={exercise.options || []}
+          correctOptionIndex={exercise.correctOptionIndex || 0}
+          onSubmit={handleMultipleChoiceSubmit}
+        />
+      )}
     </MainLayout>
   );
 };

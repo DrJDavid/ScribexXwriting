@@ -105,6 +105,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Subject-Verb Agreement',
     level: 3,
     skillType: 'mechanics',
+    type: 'multiple-choice',
     instructions: 'Select the sentence with correct subject-verb agreement',
     content: 'Read each option and choose the sentence where the subject and verb properly agree.',
     options: [
@@ -120,6 +121,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Tense Consistency',
     level: 4,
     skillType: 'mechanics',
+    type: 'multiple-choice',
     instructions: 'Choose the sentence with consistent verb tense',
     content: 'Identify the sentence that maintains a consistent verb tense throughout.',
     options: [
@@ -135,6 +137,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Apostrophe Usage',
     level: 5,
     skillType: 'mechanics',
+    type: 'multiple-choice',
     instructions: 'Select the sentence with correct apostrophe usage',
     content: 'Identify proper use of apostrophes in possessives and contractions.',
     options: [
@@ -152,6 +155,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Paragraph Order',
     level: 1,
     skillType: 'sequencing',
+    type: 'multiple-choice',
     instructions: 'Choose the correct sequence for these sentences',
     content: 'Which order would make these sentences a logical paragraph?\n1. Then, add the eggs and mix well.\n2. First, combine the flour and sugar.\n3. Finally, bake for 30 minutes.\n4. Next, pour the batter into a pan.',
     options: [
@@ -167,6 +171,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Topic Sentences',
     level: 2,
     skillType: 'sequencing',
+    type: 'multiple-choice',
     instructions: 'Identify the topic sentence',
     content: 'Although many people think of spiders as insects, they are actually arachnids. Spiders have eight legs, while insects have only six. Unlike insects, spiders don\'t have antennae or wings. Another difference is that spiders have two body segments, while insects have three. These differences are important to scientists who study arthropods.',
     options: [
@@ -333,6 +338,7 @@ const POSITIONS = {
   'mechanics-3': { x: 210, y: 50 },
   'mechanics-4': { x: 300, y: 50 },
   'mechanics-5': { x: 390, y: 50 },
+  'mechanics-writing-1': { x: 210, y: 100 }, // Writing exercise for mechanics
   
   'sequencing-1': { x: 60, y: 150 },
   'sequencing-2': { x: 150, y: 150 },
@@ -345,6 +351,7 @@ const POSITIONS = {
   'voice-3': { x: 270, y: 250 },
   'voice-4': { x: 360, y: 250 },
   'voice-5': { x: 450, y: 250 },
+  'voice-writing-1': { x: 270, y: 300 }, // Writing exercise for voice
 };
 
 // Create map nodes with positions and default status
