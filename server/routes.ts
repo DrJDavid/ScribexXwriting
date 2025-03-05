@@ -8,11 +8,83 @@ import {
   insertWritingSubmissionSchema, 
   Progress 
 } from "@shared/schema";
-// import { TOWN_LOCATIONS, getTownLocations, WRITING_QUESTS, getQuestById } from "../shared/quests";
+// Import location and quest types from client-side
+import { type TownLocation, type WritingQuest } from "../client/src/data/quests";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
+
+// Load all quests and locations from client (types only were imported earlier)
+import { TOWN_LOCATIONS, WRITING_QUESTS, getQuestById } from "../client/src/data/quests";
+
+// Functions to handle location unlocking
+async function determineLocationsToUnlock(progress: Progress): Promise<string[]> {
+  // Ensure skill mastery is properly typed
+  const currentSkillMastery = progress.skillMastery as SkillMastery;
+  
+  // Ensure unlockedLocations is an array (use empty array as fallback)
+  const currentlyUnlocked: string[] = Array.isArray(progress.unlockedLocations) 
+    ? (progress.unlockedLocations as string[]) 
+    : [];
+  
+  // Find locations that are not yet unlocked
+  const locationsToCheck = TOWN_LOCATIONS.filter(
+    location => !currentlyUnlocked.includes(location.id)
+  );
+  
+  const locationsToUnlock: string[] = [];
+  
+  // Check each location to see if it should be unlocked based on 
+  // the user's current skill mastery
+  for (const location of locationsToCheck) {
+    // Get the quests for this location
+    const locationQuests = WRITING_QUESTS.filter(quest => 
+      quest.locationId === location.id
+    );
+    
+    // If there are no quests, skip this location
+    if (locationQuests.length === 0) continue;
+    
+    // Get the first quest (usually has the lowest requirements)
+    const firstQuest = locationQuests.sort((a, b) => a.level - b.level)[0];
+    
+    // Check if the player meets the skill requirements for the first quest
+    const requirements = firstQuest.unlockRequirements.skillMastery;
+    
+    if (
+      currentSkillMastery.mechanics >= requirements.mechanics &&
+      currentSkillMastery.sequencing >= requirements.sequencing &&
+      currentSkillMastery.voice >= requirements.voice
+    ) {
+      locationsToUnlock.push(location.id);
+    }
+  }
+  
+  return locationsToUnlock;
+}
+
+async function unlockLocations(progress: Progress, locationIds: string[]): Promise<Progress> {
+  // Ensure unlockedLocations is an array (use empty array as fallback)
+  const currentlyUnlocked: string[] = Array.isArray(progress.unlockedLocations) 
+    ? progress.unlockedLocations 
+    : [];
+  
+  // Combine current locations with new ones, ensuring no duplicates
+  // Use array spread and filter instead of Set to avoid TypeScript issues
+  const updatedUnlockedLocations = [
+    ...currentlyUnlocked,
+    ...locationIds.filter(id => !currentlyUnlocked.includes(id))
+  ];
+  
+  // Update progress with the new locations
+  const updatedProgress = await storage.updateProgress(progress.userId, {
+    ...progress,
+    unlockedLocations: updatedUnlockedLocations
+  });
+  
+  return updatedProgress;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -224,12 +296,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`AI analysis completed for submission ${submission.id}`);
           
           // Unlock additional town locations based on progress
-          const quest = await storage.getQuestById(questId);
+          const quest = getQuestById(questId);
           if (quest && quest.locationId) {
             const nextLocations = await determineLocationsToUnlock(userProgress);
             if (nextLocations.length > 0) {
               console.log(`Unlocking locations: ${nextLocations.join(', ')}`);
-              // We'll implement this function soon
               await unlockLocations(userProgress, nextLocations);
             }
           }
