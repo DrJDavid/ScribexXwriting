@@ -65,7 +65,7 @@ const OWLWritingQuest: React.FC = () => {
         description: 'Your writing has been submitted successfully!',
       });
       
-      // Return success - WritingInterface will show success dialog
+      // Return result - WritingInterface will display it and start analysis
       return result;
     } catch (error) {
       toast({

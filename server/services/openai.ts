@@ -59,10 +59,11 @@ function generateFallbackAnalysis(): { feedback: AIFeedback; skillsAssessed: Ski
 }
 
 export async function analyzeWriting(
-  title: string,
   writingContent: string,
-  questId: string,
-  grade: number
+  title: string,
+  context: string,
+  submissionId: string = '',
+  grade: number = 7
 ): Promise<{ feedback: AIFeedback; skillsAssessed: SkillMastery }> {
   try {
     // Check if OpenAI is properly configured
@@ -71,12 +72,49 @@ export async function analyzeWriting(
       return generateFallbackAnalysis();
     }
     
+    // Determine the type of analysis based on title and submissionId
+    const isWritersBlockHelp = title === "Writer's Block Help";
+    
     // Format content for the prompt
-    const formattedContent: string = `Title: ${title}\n\n${writingContent}`;
+    const formattedContent: string = `Title: ${title}\n\nAssignment Context: ${context}\n\n${writingContent}`;
     
-    // Create a system prompt tailored to educational writing assessment based on Common Core standards
-    const systemPrompt: string = `You are an expert middle school writing teacher evaluating student work according to Common Core standards for grade ${grade}. 
+    // Create a system prompt tailored to the type of analysis
+    let systemPrompt: string;
+    let userPrompt: string;
     
+    if (isWritersBlockHelp) {
+      // Writer's block help prompt
+      systemPrompt = `You are a supportive middle school writing coach helping a student who is experiencing writer's block. 
+      
+Your goal is to provide encouraging, constructive guidance to help them overcome their creative block and continue writing.
+Focus on providing specific, actionable suggestions rather than general advice.
+Understand that the student may be feeling frustrated, stuck, or uncertain about their writing.
+
+Respond in a friendly, encouraging tone that empowers the student to continue writing.`;
+
+      userPrompt = `A student is experiencing writer's block on their writing assignment and has asked for help:
+
+${formattedContent}
+
+Please provide thoughtful, specific guidance to help them continue writing. Your response should include:
+- A brief analysis of what might be causing their writer's block
+- 2-3 specific suggestions for how to overcome this block
+- 1-2 concrete starting points or ideas they could use to continue their writing
+- Encouraging language that builds confidence
+
+The response should be formatted as a JSON object with these fields:
+- overallFeedback: Encouraging guidance and specific advice (3-4 sentences)
+- strengthsAnalysis: Positive reinforcement based on what they've shared (1-2 points)
+- areasToImprove: Gentle suggestions for areas to focus on (1-2 points)
+- mechanicsScore: A placeholder score (use 70)
+- sequencingScore: A placeholder score (use 70)
+- voiceScore: A placeholder score (use 70)
+- suggestions: An object with arrays containing specific writing prompts, sentence starters, or ideas for each area
+- nextSteps: Specific next action the student should take to continue writing (1-2 sentences)`;
+    } else {
+      // Regular writing assessment prompt
+      systemPrompt = `You are an expert middle school writing teacher evaluating student work according to Common Core standards for grade ${grade}. 
+      
 Analyze the following student writing sample focusing on three key areas:
 1. Mechanics: grammar, punctuation, spelling, and sentence structure
 2. Sequencing: organization, logical flow, transitions, and paragraph structure
@@ -84,7 +122,7 @@ Analyze the following student writing sample focusing on three key areas:
 
 Provide thoughtful, encouraging feedback that highlights strengths while offering specific improvement suggestions.`;
 
-    const userPrompt: string = `Please analyze this writing sample and provide detailed feedback in JSON format:
+      userPrompt = `Please analyze this writing sample and provide detailed feedback in JSON format:
 ${formattedContent}
 
 The response should be formatted as a JSON object with these fields:
@@ -96,6 +134,7 @@ The response should be formatted as a JSON object with these fields:
 - voiceScore: A score from 0-100 for voice
 - suggestions: An object with arrays of specific suggestions for each area (mechanics, sequencing, voice)
 - nextSteps: Recommended follow-up learning activities (1-2 sentences)`;
+    }
 
     // Call OpenAI API
     const response = await openai.chat.completions.create({

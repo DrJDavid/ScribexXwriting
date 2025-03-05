@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocation } from 'wouter';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, MessageSquare } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import WritingFeedback from '@/components/writing/WritingFeedback';
+import { Card } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { useMutation } from '@tanstack/react-query';
+import type { AIFeedback, SkillMastery } from '@shared/schema';
 
 export interface WritingQuestProps {
   questId: string;
@@ -27,12 +35,19 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
   onSaveDraft,
 }) => {
   const { theme } = useTheme();
+  const { toast } = useToast();
   const [, navigate] = useLocation();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [writersBlockDialogOpen, setWritersBlockDialogOpen] = useState(false);
+  const [writersBlockPrompt, setWritersBlockPrompt] = useState('');
+  const [writersBlockResponse, setWritersBlockResponse] = useState('');
+  const [isLoadingWritersBlockResponse, setIsLoadingWritersBlockResponse] = useState(false);
+  const [submissionData, setSubmissionData] = useState<any>(null);
+  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
   
   const isREDI = theme === 'redi';
   
@@ -60,17 +75,106 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
     }
   };
   
+  // Analysis mutation
+  const analysisMutation = useMutation<any, Error, {
+    submissionId: number;
+    questId: string;
+    title: string;
+    content: string;
+  }>({
+    mutationFn: async (data) => {
+      const res = await apiRequest('POST', '/api/writing/analyze', data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setSubmissionData({
+        ...submissionData,
+        aiFeedback: data.feedback,
+        skillsAssessed: data.skillsAssessed,
+        suggestedExercises: data.suggestedExercises || []
+      });
+      setIsLoadingAnalysis(false);
+      toast({
+        title: 'Analysis Complete',
+        description: 'Your writing has been analyzed successfully.',
+      });
+    },
+    onError: (error) => {
+      setIsLoadingAnalysis(false);
+      toast({
+        title: 'Analysis Failed',
+        description: 'There was an error analyzing your writing. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Writer's block help mutation
+  const writersBlockMutation = useMutation<any, Error, {
+    questId: string;
+    title: string;
+    prompt: string;
+    currentContent: string;
+  }>({
+    mutationFn: async (data) => {
+      const res = await apiRequest('POST', '/api/writing/writers-block-help', data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setWritersBlockResponse(data.response);
+      setIsLoadingWritersBlockResponse(false);
+    },
+    onError: (error) => {
+      setIsLoadingWritersBlockResponse(false);
+      setWritersBlockResponse("I'm sorry, I couldn't generate a response. Please try asking a different question.");
+      toast({
+        title: 'Writer\'s Block Helper Error',
+        description: 'There was an error getting help. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-      onSubmit(questId, title, content);
+      const result = await onSubmit(questId, title, content);
+      
+      // Store the submission data for later analysis display
+      setSubmissionData(result);
       setSubmissionSuccess(true);
+      
+      // Request analysis right away
+      setIsLoadingAnalysis(true);
+      analysisMutation.mutate({
+        submissionId: result.id,
+        questId: result.questId,
+        title: result.title,
+        content: result.content
+      });
+      
       // Keep dialog open to show success message
     } catch (error) {
       console.error("Error submitting quest:", error);
       setSubmissionSuccess(false);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  
+  const handleWritersBlockHelp = () => {
+    setWritersBlockDialogOpen(true);
+  };
+  
+  const handleWritersBlockSubmit = () => {
+    if (writersBlockPrompt.trim()) {
+      setIsLoadingWritersBlockResponse(true);
+      writersBlockMutation.mutate({
+        questId,
+        title: title || questTitle,
+        prompt: writersBlockPrompt,
+        currentContent: content
+      });
     }
   };
   
@@ -107,48 +211,115 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
         </div>
       </div>
       
-      {/* Writing area */}
-      <div className="bg-white rounded-xl p-5 shadow-lg flex flex-col flex-grow mb-4">
-        <div className="mb-2">
-          <Input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border-b border-gray-300 font-medium text-lg focus:outline-none focus:border-[#3cb371]"
-          />
-        </div>
-        <Textarea
-          placeholder="Start writing here..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="w-full flex-grow p-3 text-gray-800 resize-none border-0 focus:outline-none font-inter"
-        />
-        <div className="flex justify-between text-xs text-gray-500 mt-2">
-          <span>Word count: {wordCount}</span>
-          {minWordCount > 0 && (
-            <span className={meetsWordCount ? 'text-green-500' : 'text-red-500'}>
-              {minWordCount} minimum
-            </span>
-          )}
-        </div>
-      </div>
+      {!submissionData && (
+        <>
+          {/* Writing area */}
+          <div className="bg-white rounded-xl p-5 shadow-lg flex flex-col flex-grow mb-4">
+            <div className="mb-2">
+              <Input
+                type="text"
+                placeholder="Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 border-b border-gray-300 font-medium text-lg focus:outline-none focus:border-[#3cb371]"
+              />
+            </div>
+            <Textarea
+              placeholder="Start writing here..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full flex-grow p-3 text-gray-800 resize-none border-0 focus:outline-none font-inter"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-2">
+              <span>Word count: {wordCount}</span>
+              {minWordCount > 0 && (
+                <span className={meetsWordCount ? 'text-green-500' : 'text-red-500'}>
+                  {minWordCount} minimum
+                </span>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={handleWritersBlockHelp}
+              className={`w-full py-2 font-medium text-white ${secondaryBgClass} rounded-md hover:bg-opacity-90 transition text-sm ${fontClass}`}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Writer's Block Help
+            </Button>
+            <Button
+              onClick={handleOpenSubmitDialog}
+              disabled={!title.trim() || !content.trim() || !meetsWordCount}
+              className={`w-full py-2 font-medium text-white ${primaryBgClass} rounded-md shadow hover:opacity-90 transition text-sm ${fontClass}`}
+            >
+              Submit Quest
+            </Button>
+          </div>
+        </>
+      )}
       
-      <div className="grid grid-cols-2 gap-3">
-        <Button
-          onClick={handleSaveDraft}
-          className={`w-full py-2 font-medium text-white ${secondaryBgClass} rounded-md hover:bg-opacity-90 transition text-sm ${fontClass}`}
-        >
-          Writer's Block Help
-        </Button>
-        <Button
-          onClick={handleOpenSubmitDialog}
-          disabled={!title.trim() || !content.trim() || !meetsWordCount}
-          className={`w-full py-2 font-medium text-white ${primaryBgClass} rounded-md shadow hover:opacity-90 transition text-sm ${fontClass}`}
-        >
-          Submit Quest
-        </Button>
-      </div>
+      {/* Analysis and Submission Results */}
+      {submissionData && (
+        <div className="mt-2 space-y-6">
+          {/* Submitted Content */}
+          <Card className={`${questBgClass} border-t-4 border-t-[#ffd700] p-4 shadow-md`}>
+            <h3 className={`text-lg font-bold text-white mb-2`}>Your Submission</h3>
+            <h4 className={`text-md font-semibold ${accentColor} mb-1`}>{submissionData.title}</h4>
+            <div className="max-h-60 overflow-y-auto pr-2 text-white">
+              <p className="whitespace-pre-wrap">{submissionData.content}</p>
+            </div>
+          </Card>
+          
+          {/* Analysis Loading or Display */}
+          {isLoadingAnalysis ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <p className="text-gray-600 text-center">
+                Analyzing your writing...<br />
+                This may take a moment
+              </p>
+            </div>
+          ) : submissionData.aiFeedback ? (
+            <WritingFeedback 
+              feedback={submissionData.aiFeedback as AIFeedback}
+              skillsAssessed={submissionData.skillsAssessed as SkillMastery}
+              suggestedExercises={submissionData.suggestedExercises || []}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-600 text-center mb-4">
+                Waiting for analysis to complete...
+              </p>
+              <Button 
+                onClick={() => {
+                  setIsLoadingAnalysis(true);
+                  analysisMutation.mutate({
+                    submissionId: submissionData.id,
+                    questId: submissionData.questId,
+                    title: submissionData.title,
+                    content: submissionData.content
+                  });
+                }}
+                className={primaryBgClass}
+              >
+                Request Analysis
+              </Button>
+            </div>
+          )}
+          
+          {/* Return to OWL Town button */}
+          <div className="flex justify-center mt-6">
+            <Button 
+              onClick={() => navigate('/owl')}
+              variant="outline"
+              className="px-6"
+            >
+              Return to Town
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Submission Confirmation Dialog */}
       <Dialog open={submissionDialogOpen} onOpenChange={closeSubmitDialog}>
@@ -201,22 +372,89 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
                   </svg>
                 </div>
                 <p className="text-lg font-medium mt-2">Your writing is being analyzed</p>
-                <p className="text-sm text-gray-600 mt-1">Visit the portfolio page to check for feedback!</p>
+                <p className="text-sm text-gray-600 mt-1">Your feedback will appear on this page when ready!</p>
               </div>
 
               <DialogFooter>
                 <Button 
-                  onClick={() => {
-                    closeSubmitDialog();
-                    navigate('/owl/submissions');
-                  }}
+                  onClick={closeSubmitDialog}
                   className={primaryBgClass}
                 >
-                  View Portfolio
+                  View Analysis
                 </Button>
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Writer's Block Help Dialog */}
+      <Dialog open={writersBlockDialogOpen} onOpenChange={setWritersBlockDialogOpen}>
+        <DialogContent className={`${fontClass} p-6 max-w-2xl`}>
+          <DialogHeader>
+            <DialogTitle className="text-xl mb-2 flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Writer's Block Helper
+            </DialogTitle>
+            <DialogDescription>
+              Stuck on your writing? Ask for help, ideas, or feedback on your current work.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="my-4">
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Your Assignment</h4>
+              <div className="p-3 bg-gray-100 rounded-md text-sm">
+                <p className="font-medium">{questTitle}</p>
+                <p className="text-gray-600 mt-1">{description}</p>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label htmlFor="prompt" className="block text-sm font-medium mb-2">
+                What are you struggling with?
+              </label>
+              <Textarea
+                id="prompt"
+                placeholder="e.g., I'm having trouble starting my essay... or I need help developing my argument..."
+                value={writersBlockPrompt}
+                onChange={(e) => setWritersBlockPrompt(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+              />
+            </div>
+            
+            <Button 
+              onClick={handleWritersBlockSubmit}
+              disabled={!writersBlockPrompt.trim() || isLoadingWritersBlockResponse}
+              className={`w-full ${primaryBgClass}`}
+            >
+              {isLoadingWritersBlockResponse ? 'Getting help...' : 'Get Help'}
+            </Button>
+            
+            {isLoadingWritersBlockResponse && (
+              <div className="flex justify-center mt-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
+            
+            {writersBlockResponse && !isLoadingWritersBlockResponse && (
+              <div className="mt-6">
+                <h4 className="text-sm font-medium mb-2">Response</h4>
+                <div className="p-4 bg-gray-100 rounded-md">
+                  <p className="whitespace-pre-wrap">{writersBlockResponse}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setWritersBlockDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
