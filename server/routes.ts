@@ -598,27 +598,59 @@ Important: Never simply write the content for them. Instead, guide them to devel
       });
       
       try {
-        // Format for the Vercel AI SDK
-        // Initial message with an ID
-        const messageId = Date.now().toString();
-        res.write(`data: ${JSON.stringify({ id: messageId, role: "assistant", content: "" })}\n\n`);
+        // Prepare for non-streaming fallback in case streaming fails
+        let fullResponseText = "";
         
-        // Call OpenAI API with streaming
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-          messages: openaiMessages,
-          stream: true,
-        });
-        
-        // Stream the chunks as they come
-        for await (const chunk of response) {
-          const content = chunk.choices[0]?.delta?.content || '';
-          if (content) {
-            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        try {
+          // Generate a unique ID for this message
+          const messageId = Date.now().toString();
+          
+          // Format for the Vercel AI SDK - this is very specific
+          // First, send the initial message with empty content
+          res.write(`data: ${JSON.stringify({ id: messageId, role: "assistant", content: "" })}\n\n`);
+          
+          // Call OpenAI API with streaming
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+            messages: openaiMessages,
+            stream: true,
+          });
+          
+          // Stream the chunks as they come
+          for await (const chunk of response) {
+            const content = chunk.choices[0]?.delta?.content || '';
+            if (content) {
+              fullResponseText += content;
+              // Send the delta in the correct format for Vercel AI SDK
+              res.write(`data: ${JSON.stringify({ delta: content })}\n\n`);
+            }
+          }
+          
+          console.log("AI response completed successfully");
+        } catch (streamError) {
+          console.error("Streaming error:", streamError);
+          
+          // Try non-streaming fallback if streaming fails
+          try {
+            console.log("Trying non-streaming fallback");
+            const nonStreamResponse = await openai.chat.completions.create({
+              model: "gpt-4o", 
+              messages: openaiMessages,
+              stream: false,
+            });
+            
+            fullResponseText = nonStreamResponse.choices[0].message.content || "";
+            console.log("Got non-streaming response");
+            
+            // Send the full content at once
+            res.write(`data: ${JSON.stringify({ delta: fullResponseText })}\n\n`);
+          } catch (nonStreamError) {
+            console.error("Non-streaming fallback also failed:", nonStreamError);
+            res.write(`data: ${JSON.stringify({ error: "Failed to generate response" })}\n\n`);
           }
         }
         
-        console.log("AI response completed successfully");
+        // Always terminate the stream with DONE
         res.write('data: [DONE]\n\n');
       } catch (error) {
         console.error("Error with OpenAI API:", error);

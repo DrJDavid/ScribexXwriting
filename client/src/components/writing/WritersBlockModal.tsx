@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Loader2, SendIcon, XCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, SendIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useChat } from 'ai/react';
 import { nanoid } from 'nanoid';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -15,6 +13,12 @@ interface WritersBlockModalProps {
   questId: string;
   title: string;
   currentContent: string;
+}
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 export function WritersBlockModal({
@@ -27,59 +31,143 @@ export function WritersBlockModal({
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Use the AI SDK's chat hook with debugging and better error handling
-  const {
-    messages,
-    input,
-    setInput,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error,
-    setMessages
-  } = useChat({
-    api: "/api/writing/writers-block-help",
-    id: nanoid(),
-    initialMessages: [], // Start with empty messages array
-    body: {
-      questId,
-      title,
-      currentContent
-    },
-    onResponse: (response) => {
-      // Log response details for debugging
-      console.log("Chat response status:", response.status);
+  // Custom chat state
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Function to send messages to the API
+  const sendMessage = async (content: string) => {
+    if (!content.trim()) return;
+    
+    try {
+      // Create a new user message
+      const userMessageId = nanoid();
+      const userMessage: ChatMessage = {
+        id: userMessageId,
+        role: 'user',
+        content: content
+      };
       
-      // Check for successful response
-      if (response.status !== 200) {
-        console.error("Chat response error:", response.statusText);
-        toast({
-          title: "Chat Error",
-          description: `Error ${response.status}: ${response.statusText}`,
-          variant: "destructive",
-        });
+      // Add user message to the messages
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+      
+      // Start loading
+      setIsLoading(true);
+      setError(null);
+      
+      // Clear input
+      setInput('');
+      
+      // Call API
+      const response = await fetch('/api/writing/writers-block-help', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          questId,
+          title,
+          currentContent,
+          messages: updatedMessages
+        }),
+      });
+      
+      // Check response
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    },
-    onFinish: (message) => {
-      console.log("Chat finished with message:", message);
-    },
-    onError: (err) => {
-      console.error("Chat error:", err);
-      // Show error to user
+      
+      // Create placeholder for assistant response
+      const assistantMessageId = nanoid();
+      const assistantMessage: ChatMessage = {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: ''
+      };
+      
+      // Add assistant message placeholder
+      setMessages([...updatedMessages, assistantMessage]);
+      
+      // Read the stream
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Response body cannot be read');
+      
+      let assistantContent = '';
+      
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          // Convert bytes to text
+          const text = new TextDecoder().decode(value);
+          
+          // Split by lines
+          const lines = text.split('\n');
+          
+          // Process each line
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.substring(6);
+              
+              if (data === '[DONE]') {
+                console.log("Stream complete");
+                break;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                
+                if (parsed.delta || parsed.content) {
+                  assistantContent += parsed.delta || parsed.content || '';
+                  
+                  // Update assistant message with accumulated content
+                  setMessages(current => 
+                    current.map(msg => 
+                      msg.id === assistantMessageId 
+                        ? { ...msg, content: assistantContent } 
+                        : msg
+                    )
+                  );
+                }
+              } catch (e) {
+                console.error("Error parsing JSON from stream:", e);
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error in sendMessage:", error);
+      setError(error instanceof Error ? error : new Error('Unknown error'));
+      setIsLoading(false);
       toast({
         title: "Chat Error",
-        description: "Failed to get a response. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get a response",
         variant: "destructive",
       });
     }
-  });
+  };
+  
+  // Form handler
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    sendMessage(input);
+  };
 
   // Clear messages when dialog is opened
   useEffect(() => {
     if (open) {
       setMessages([]);
     }
-  }, [open, setMessages]);
+  }, [open]);
 
   // Auto-scroll to the bottom when new messages arrive
   useEffect(() => {
@@ -87,19 +175,6 @@ export function WritersBlockModal({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, open]);
-
-  const onFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) {
-      toast({
-        title: "No message",
-        description: "Please enter a message to send",
-        variant: "destructive",
-      });
-      return;
-    }
-    handleSubmit(e);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,11 +213,18 @@ export function WritersBlockModal({
                       }`}
                     >
                       <div className="whitespace-pre-wrap text-sm">
-                        {message.content}
+                        {message.content || (message.role === 'assistant' && isLoading ? 'Thinking...' : '')}
                       </div>
                     </div>
                   </div>
                 ))
+              )}
+              {error && (
+                <div className="flex justify-center">
+                  <div className="bg-destructive/10 text-destructive px-4 py-2 rounded-md text-sm">
+                    Error: {error.message}
+                  </div>
+                </div>
               )}
               <div ref={messagesEndRef} />
             </div>
@@ -150,15 +232,15 @@ export function WritersBlockModal({
           
           {/* Input Area */}
           <div className="border-t p-4">
-            <form onSubmit={onFormSubmit} className="flex gap-2">
+            <form onSubmit={handleSubmit} className="flex gap-2">
               <Textarea
                 autoFocus
                 value={input}
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    onFormSubmit(e);
+                    handleSubmit(e);
                   }
                 }}
                 placeholder="Ask for writing help..."
