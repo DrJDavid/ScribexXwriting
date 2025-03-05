@@ -1,13 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import WritingInterface from '@/components/writing/WritingInterface';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
-import { getQuestById } from '@/data/quests';
+import { getQuestById, WritingQuest } from '@/data/quests';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
+
+interface GeneratedPrompt {
+  prompt: string;
+  scenario: string;
+  guidingQuestions: string[];
+  suggestedElements: string[];
+  challengeElement: string;
+}
 
 const OWLWritingQuest: React.FC = () => {
   const { setTheme } = useTheme();
@@ -21,45 +29,61 @@ const OWLWritingQuest: React.FC = () => {
     setTheme('owl');
   }, [setTheme]);
   
+  // Get URL parameters
+  const searchParams = useMemo(() => new URLSearchParams(window.location.search), []);
+  
   // Check if this is a free-write or a regular quest
   const isFreeWrite = params.questId === 'free-write';
   
   // For free-write, get location and prompt type from query parameters
-  const searchParams = new URLSearchParams(window.location.search);
   const locationId = searchParams.get('locationId');
   const promptType = searchParams.get('promptType');
   
   // Get the quest data for regular quests
-  const quest = isFreeWrite ? null : getQuestById(params.questId);
+  const quest = useMemo(() => {
+    return isFreeWrite ? null : getQuestById(params.questId);
+  }, [isFreeWrite, params.questId]);
   
-  // If regular quest not found, go back to town
+  // Check for invalid state and redirect if needed
   useEffect(() => {
+    // Regular quest not found
     if (!isFreeWrite && !quest && params.questId) {
+      console.log("Quest not found, redirecting to OWL Town");
       navigate('/owl');
+      return;
     }
-  }, [isFreeWrite, quest, params.questId, navigate]);
-  
-  // If free-write but missing parameters, go back to town
-  useEffect(() => {
+    
+    // Free-write missing parameters
     if (isFreeWrite && (!locationId || !promptType)) {
+      console.log("Missing free-write parameters, redirecting to OWL Town");
       navigate('/owl');
+      return;
     }
-  }, [isFreeWrite, locationId, promptType, navigate]);
+  }, [isFreeWrite, quest, params.questId, locationId, promptType, navigate]);
   
   // Create a virtual quest for free-write mode
-  const freeWriteQuest = isFreeWrite ? {
-    id: 'free-write',
-    locationId: locationId || '',
-    title: `Free ${promptType ? promptType.charAt(0).toUpperCase() + promptType.slice(1) : 'Creative'} Writing`,
-    description: `Express yourself freely in ${promptType || 'creative'} writing format.`,
-    tags: ['free-writing', promptType || 'creative'],
-    minWordCount: 100,
-    skillFocus: 'voice' as const,
-    level: 1,
-    unlockRequirements: {
-      skillMastery: { mechanics: 0, sequencing: 0, voice: 0 },
-    }
-  } : null;
+  const freeWriteQuest: WritingQuest | null = useMemo(() => {
+    if (!isFreeWrite) return null;
+    
+    // Create a safe version of the quest
+    const capitalizedType = promptType 
+      ? `${promptType.charAt(0).toUpperCase()}${promptType.slice(1)}`
+      : 'Creative';
+      
+    return {
+      id: 'free-write',
+      locationId: locationId || '',
+      title: `Free ${capitalizedType} Writing`,
+      description: `Express yourself freely in ${promptType || 'creative'} writing format.`,
+      tags: ['free-writing', promptType || 'creative'],
+      minWordCount: 100,
+      skillFocus: 'voice' as const,
+      level: 1,
+      unlockRequirements: {
+        skillMastery: { mechanics: 0, sequencing: 0, voice: 0 },
+      }
+    };
+  }, [isFreeWrite, locationId, promptType]);
   
   // Use either the real quest or the free-write quest
   const currentQuest = quest || freeWriteQuest;

@@ -44,43 +44,80 @@ export function WritePromptGenerator({
     setIsLoading(true);
     
     try {
+      // Logging the request parameters
+      const requestBody = {
+        locationType: location.type,
+        locationName: location.name,
+        customFocus: customFocus.trim() || null,
+      };
+      console.log("Sending prompt generation request:", requestBody);
+      
       const response = await fetch('/api/writing/generate-prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          locationType: location.type,
-          locationName: location.name,
-          customFocus: customFocus.trim() || null,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      // Log the response status
+      console.log(`Prompt generation response status: ${response.status}`);
+      
       if (!response.ok) {
-        throw new Error('Failed to generate prompt');
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to generate prompt: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
-      console.log("Received prompt data:", data);
+      // Get the response data
+      const text = await response.text();
+      console.log("Raw response:", text);
       
-      // Make sure the data is in the expected format
-      if (data && typeof data === 'object' && data.prompt) {
-        setGeneratedPrompts([data, ...generatedPrompts].slice(0, 3));
-      } else {
-        console.error("Invalid prompt data format:", data);
-        throw new Error("Invalid prompt data format");
+      // Try to parse the JSON
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        throw new Error("Unable to parse server response");
       }
+      
+      console.log("Parsed prompt data:", data);
+      
+      // Validate the response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error("Invalid response format");
+      }
+      
+      // Check for required fields and fix any missing ones
+      const validatedPrompt: GeneratedPrompt = {
+        prompt: data.prompt || `Write about ${location.name}`,
+        scenario: data.scenario || `Imagine yourself in ${location.name}...`,
+        guidingQuestions: Array.isArray(data.guidingQuestions) ? data.guidingQuestions : ["What happened?", "Who was involved?", "How did it end?"],
+        suggestedElements: Array.isArray(data.suggestedElements) ? data.suggestedElements : ["Character", "Setting", "Plot"],
+        challengeElement: data.challengeElement || "Try incorporating a surprising twist"
+      };
+      
+      // Add to the list of prompts (newest first)
+      setGeneratedPrompts(prevPrompts => [validatedPrompt, ...prevPrompts].slice(0, 3));
+      
+      // Show success toast
+      toast({
+        title: "Prompt Generated",
+        description: "Click on a prompt to use it for your writing.",
+      });
+      
     } catch (error) {
       console.error('Error generating prompt:', error);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate a writing prompt. Please try again.",
+        description: "Failed to generate a writing prompt. Using a fallback prompt instead.",
         variant: "destructive"
       });
       
       // Add fallback prompt if API fails
       const fallbackPrompt = generateFallbackPrompt(location);
-      setGeneratedPrompts([fallbackPrompt, ...generatedPrompts].slice(0, 3));
+      setGeneratedPrompts(prevPrompts => [fallbackPrompt, ...prevPrompts].slice(0, 3));
     } finally {
       setIsLoading(false);
     }

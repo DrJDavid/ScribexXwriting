@@ -559,10 +559,14 @@ Important: Never simply write the content for them. Instead, guide them to devel
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
       
-      // Stream the response
+      // Stream the response properly formatted for the AI SDK
+      res.write(`data: ${JSON.stringify({ role: "assistant", content: "" })}\n\n`);
+      
+      let fullContent = "";
       for await (const chunk of response) {
         const content = chunk.choices[0]?.delta?.content || '';
         if (content) {
+          fullContent += content;
           res.write(`data: ${JSON.stringify({ content })}\n\n`);
         }
       }
