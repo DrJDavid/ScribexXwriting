@@ -519,6 +519,7 @@ function App() {
                   <Route path="/auth" component={AuthPage} />
                   <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
                   <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
+                  <ProtectedRoute path="/owl/quest/free-write" component={OWLWritingQuest} />
                   <ProtectedRoute path="/owl/quest/:questId" component={OWLWritingQuest} />
                   <ProtectedRoute path="/owl/location/:locationId" component={OWLLocationDetail} />
                   <ProtectedRoute path="/owl" component={OWLTown} />

@@ -582,11 +582,14 @@ Important: Never simply write the content for them. Instead, guide them to devel
   // Add an endpoint for generating writing prompts based on OWL location
   app.post('/api/writing/generate-prompt', async (req, res) => {
     try {
+      // Check if OpenAI is configured
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(503).json({ message: 'OpenAI service not configured' });
+      }
+      
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: 'Not authenticated' });
       }
-      
-      const user = req.user as any;
       
       // Validate request body
       const schema = z.object({
@@ -603,20 +606,16 @@ Important: Never simply write the content for them. Instead, guide them to devel
       
       const { locationName, locationType, customFocus } = schema.parse(req.body);
       
-      // Fetch the location to get more context
-      const location = getLocationById(locationId);
-      if (!location) {
-        return res.status(404).json({ message: 'Location not found' });
-      }
+      // We're using locationName directly now, no need to fetch additional location data
       
       // Import OpenAI
       const { OpenAI } = await import('openai');
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
       // Create a prompt for the AI
-      const promptContent = `Generate a creative writing prompt for a student to write a ${locationType} piece related to the location "${location.name}" in OWL Town.
+      const promptContent = `Generate a creative writing prompt for a student to write a ${locationType} piece related to the location "${locationName}" in OWL Town.
 
-Location description: ${location.description}
+${customFocus ? `Additional focus: ${customFocus}` : ''}
 
 The prompt should:
 - Be engaging and specific to this location's themes and atmosphere
@@ -651,8 +650,16 @@ Keep the entire response concise and focused on inspiring creativity.`;
       });
       
       // Parse and return the generated prompt
-      const promptData = JSON.parse(response.choices[0].message.content);
-      res.json(promptData);
+      try {
+        const content = response.choices[0].message.content || "{}";
+        const promptData = JSON.parse(content);
+        res.json(promptData);
+      } catch (parseError) {
+        console.error("Error parsing OpenAI response:", parseError);
+        // Return error but also log the actual content for debugging
+        console.log("Raw response content:", response.choices[0].message.content);
+        res.status(500).json({ message: 'Error parsing prompt data' });
+      }
     } catch (error) {
       console.error("Error generating writing prompt:", error);
       if (error instanceof ZodError) {

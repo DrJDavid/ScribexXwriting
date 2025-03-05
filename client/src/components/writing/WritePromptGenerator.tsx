@@ -61,7 +61,15 @@ export function WritePromptGenerator({
       }
 
       const data = await response.json();
-      setGeneratedPrompts([data.prompt, ...generatedPrompts].slice(0, 3));
+      console.log("Received prompt data:", data);
+      
+      // Make sure the data is in the expected format
+      if (data && typeof data === 'object' && data.prompt) {
+        setGeneratedPrompts([data, ...generatedPrompts].slice(0, 3));
+      } else {
+        console.error("Invalid prompt data format:", data);
+        throw new Error("Invalid prompt data format");
+      }
     } catch (error) {
       console.error('Error generating prompt:', error);
       toast({

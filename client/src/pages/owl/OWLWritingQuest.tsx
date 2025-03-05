@@ -21,17 +21,50 @@ const OWLWritingQuest: React.FC = () => {
     setTheme('owl');
   }, [setTheme]);
   
-  // Get the quest data
-  const quest = getQuestById(params.questId);
+  // Check if this is a free-write or a regular quest
+  const isFreeWrite = params.questId === 'free-write';
   
-  // If quest not found, go back to town
+  // For free-write, get location and prompt type from query parameters
+  const searchParams = new URLSearchParams(window.location.search);
+  const locationId = searchParams.get('locationId');
+  const promptType = searchParams.get('promptType');
+  
+  // Get the quest data for regular quests
+  const quest = isFreeWrite ? null : getQuestById(params.questId);
+  
+  // If regular quest not found, go back to town
   useEffect(() => {
-    if (!quest && params.questId) {
+    if (!isFreeWrite && !quest && params.questId) {
       navigate('/owl');
     }
-  }, [quest, params.questId, navigate]);
+  }, [isFreeWrite, quest, params.questId, navigate]);
   
-  if (!quest) {
+  // If free-write but missing parameters, go back to town
+  useEffect(() => {
+    if (isFreeWrite && (!locationId || !promptType)) {
+      navigate('/owl');
+    }
+  }, [isFreeWrite, locationId, promptType, navigate]);
+  
+  // Create a virtual quest for free-write mode
+  const freeWriteQuest = isFreeWrite ? {
+    id: 'free-write',
+    locationId: locationId || '',
+    title: `Free ${promptType?.charAt(0).toUpperCase() + promptType?.slice(1) || 'Creative'} Writing`,
+    description: `Express yourself freely in ${promptType || 'creative'} writing format.`,
+    tags: ['free-writing', promptType || 'creative'],
+    minWordCount: 100,
+    skillFocus: 'voice' as const,
+    level: 1,
+    unlockRequirements: {
+      skillMastery: { mechanics: 0, sequencing: 0, voice: 0 },
+    }
+  } : null;
+  
+  // Use either the real quest or the free-write quest
+  const currentQuest = quest || freeWriteQuest;
+  
+  if (!currentQuest) {
     return null;
   }
   
