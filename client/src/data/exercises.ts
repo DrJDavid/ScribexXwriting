@@ -1,19 +1,26 @@
 import { SkillMastery } from '@shared/schema';
 import { NodeStatus } from '@/components/redi/REDIMapNode';
 
-// Define exercise types
+// Define exercise type
+export type ExerciseType = 'multiple-choice' | 'writing';
+
+// Define exercise interface with optional fields to accommodate both types
 export interface Exercise {
   id: string;
   title: string;
   level: number;
   skillType: 'mechanics' | 'sequencing' | 'voice';
+  type?: ExerciseType; // Made optional for backward compatibility
   instructions: string;
   content: string;
-  options: string[];
-  correctOptionIndex: number;
+  options?: string[];
+  correctOptionIndex?: number;
+  prompt?: string;
+  minWordCount?: number;
+  exampleResponse?: string;
 }
 
-// Define map node type that extends exercise with display information
+// Define map node type that adds display information to exercise
 export interface ExerciseMapNode extends Exercise {
   status: NodeStatus;
   position: { x: number; y: number };
@@ -66,6 +73,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Grammar Basics',
     level: 1,
     skillType: 'mechanics',
+    type: 'multiple-choice',
     instructions: 'Choose the sentence with correct grammar',
     content: 'Read each option and select the sentence with proper grammar.',
     options: [
@@ -81,6 +89,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Punctuation',
     level: 2,
     skillType: 'mechanics',
+    type: 'multiple-choice',
     instructions: 'Select the correctly punctuated sentence',
     content: 'Choose the option with proper punctuation.',
     options: [
@@ -212,6 +221,31 @@ export const EXERCISES: Exercise[] = [
       'Spatial organization (by location)'
     ],
     correctOptionIndex: 1
+  },
+  
+  // Writing Exercises
+  {
+    id: 'mechanics-writing-1',
+    title: 'Fix Grammar Errors',
+    level: 3,
+    skillType: 'mechanics',
+    type: 'writing',
+    instructions: 'Rewrite the paragraph, correcting all grammar errors',
+    content: 'In this exercise, you will practice identifying and fixing grammar errors in a short paragraph.',
+    prompt: 'The following paragraph contains several grammar errors. Rewrite it with correct grammar:\n\nLast week, me and my friend goes to the store. We buyed some snacks and drinks for the party. When we gets home, my sister help us to set up. There was many people at the party. Everyone have a good time.',
+    minWordCount: 50,
+    exampleResponse: 'Last week, my friend and I went to the store. We bought some snacks and drinks for the party. When we got home, my sister helped us to set up. There were many people at the party. Everyone had a good time.'
+  },
+  {
+    id: 'voice-writing-1',
+    title: 'Write a Personal Narrative',
+    level: 3,
+    skillType: 'voice',
+    type: 'writing',
+    instructions: 'Write a short personal narrative about a memorable experience',
+    content: 'Practice using descriptive language and appropriate tone to convey your personal experience.',
+    prompt: 'Write a short personal narrative about a time when you tried something new. How did you feel before, during, and after the experience? Use descriptive language that engages the readers senses.',
+    minWordCount: 100
   },
   
   // Voice Exercises
