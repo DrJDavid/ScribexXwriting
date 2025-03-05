@@ -434,20 +434,66 @@ const Home = () => {
   );
 };
 
-// Simple header component that doesn't use auth hooks
-const Header = () => (
-  <header className="bg-primary text-white py-4 px-6">
-    <div className="flex justify-between items-center">
-      <Link href="/" className="text-xl font-bold">
-        ScribexX
-      </Link>
-    </div>
-  </header>
-);
+// Header component with navigation
+const Header = () => {
+  const { user, logoutMutation } = useAuth();
+  const [location, navigate] = useLocation();
+
+  return (
+    <header className="bg-primary text-white py-4 px-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="text-xl font-bold">
+            ScribexX
+          </Link>
+          
+          {user && (
+            <nav className="hidden md:flex items-center space-x-4">
+              <Link href="/" className={`hover:text-white/80 transition-colors ${location === '/' ? 'underline' : ''}`}>
+                Home
+              </Link>
+              <Link href="/redi" className={`hover:text-white/80 transition-colors ${location === '/redi' ? 'underline' : ''}`}>
+                REDI
+              </Link>
+              <Link href="/owl" className={`hover:text-white/80 transition-colors ${location === '/owl' ? 'underline' : ''}`}>
+                OWL
+              </Link>
+              <Link href="/writing/submissions" className={`hover:text-white/80 transition-colors ${location.startsWith('/writing') ? 'underline' : ''}`}>
+                Submissions
+              </Link>
+            </nav>
+          )}
+        </div>
+        
+        {user && (
+          <div className="flex items-center gap-4">
+            <span className="hidden md:inline">Welcome, {user.displayName || user.username}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                logoutMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    navigate("/auth");
+                  },
+                });
+              }}
+            >
+              <LogOut className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Logout</span>
+            </Button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
 
 // Import the components
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
+import OWLTown from "@/pages/owl/OWLTown";
+import REDIMap from "@/pages/redi/REDIMap";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/hooks/use-auth";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -466,6 +512,8 @@ function App() {
                 <Route path="/auth" component={AuthPage} />
                 <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
                 <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
+                <ProtectedRoute path="/owl" component={OWLTown} />
+                <ProtectedRoute path="/redi" component={REDIMap} />
                 <ProtectedRoute path="/" component={Home} />
                 <Route component={NotFound} />
               </Switch>
