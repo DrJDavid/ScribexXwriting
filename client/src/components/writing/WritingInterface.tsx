@@ -140,18 +140,6 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
     setWritersBlockDialogOpen(true);
   };
   
-  const handleWritersBlockSubmit = () => {
-    if (writersBlockPrompt.trim()) {
-      setIsLoadingWritersBlockResponse(true);
-      writersBlockMutation.mutate({
-        questId,
-        title: title || questTitle,
-        prompt: writersBlockPrompt,
-        currentContent: content
-      });
-    }
-  };
-  
   const handleSaveDraft = () => {
     if (title.trim() || content.trim()) {
       onSaveDraft(questId, title, content);
