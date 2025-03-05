@@ -117,7 +117,7 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
           
           <Button
             className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-            onClick={() => window.history.back()}
+            onClick={() => window.location.href = '/redi'}
           >
             Continue
           </Button>
