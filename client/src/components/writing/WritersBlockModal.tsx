@@ -27,7 +27,7 @@ export function WritersBlockModal({
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Use the AI SDK's chat hook
+  // Use the AI SDK's chat hook with debugging and better error handling
   const {
     messages,
     input,
@@ -47,15 +47,27 @@ export function WritersBlockModal({
       currentContent
     },
     onResponse: (response) => {
+      // Log response details for debugging
+      console.log("Chat response status:", response.status);
+      
       // Check for successful response
       if (response.status !== 200) {
         console.error("Chat response error:", response.statusText);
+        toast({
+          title: "Chat Error",
+          description: `Error ${response.status}: ${response.statusText}`,
+          variant: "destructive",
+        });
       }
+    },
+    onFinish: (message) => {
+      console.log("Chat finished with message:", message);
     },
     onError: (err) => {
       console.error("Chat error:", err);
+      // Show error to user
       toast({
-        title: "Error",
+        title: "Chat Error",
         description: "Failed to get a response. Please try again.",
         variant: "destructive",
       });

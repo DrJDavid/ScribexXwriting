@@ -466,11 +466,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Writer's block help endpoint with streaming support
   app.post('/api/writing/writers-block-help', async (req, res) => {
     try {
+      // Check if OpenAI is configured
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(503).json({ message: 'OpenAI service not configured' });
+      }
+      
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: 'Not authenticated' });
       }
       
-      const user = req.user as any;
+      console.log("Writer's block help API called with body:", JSON.stringify(req.body).substring(0, 200) + "...");
       
       // Validate required fields with more flexible schema
       const schema = z.object({
@@ -478,30 +483,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: z.string().optional(),
         messages: z.array(
           z.object({
-            id: z.string().optional(), // Make id optional to handle various message formats
+            id: z.string(),
             role: z.enum(["user", "assistant", "system"]),
             content: z.string(),
           })
-        ).optional().default([]), // Make messages optional with default empty array
+        ),
         currentContent: z.string().optional().default(""),
       });
       
-      const { questId, title, messages, currentContent } = schema.parse(req.body);
-      
-      // Get quest details to provide context
-      const quest = getQuestById(questId);
-      if (!quest) {
-        return res.status(404).json({ message: 'Quest not found' });
+      // Parse the request
+      const validation = schema.safeParse(req.body);
+      if (!validation.success) {
+        console.error("Validation error:", validation.error);
+        return res.status(400).json({ message: "Invalid request format" });
       }
       
-      // Import OpenAI
-      const { OpenAI } = await import('openai');
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const { questId, title, messages, currentContent } = validation.data;
+      console.log(`Received ${messages.length} messages for conversation`);
       
-      const currentMessage = messages[messages.length - 1];
+      if (messages.length === 0) {
+        return res.status(400).json({ message: 'No messages to process' });
+      }
+      
+      // Get quest details to provide context
+      let quest = null;
+      try {
+        if (questId !== 'free-write') {
+          quest = getQuestById(questId);
+          if (!quest) {
+            console.log(`Quest with ID ${questId} not found, using fallback context`);
+          }
+        } else {
+          console.log("Using free-write context");
+        }
+      } catch (error) {
+        console.error("Error getting quest details:", error);
+      }
       
       // Create a context for the AI with the quest details and any partial content
-      const questContext = `
+      let questContext = "";
+      
+      if (quest) {
+        questContext = `
 You are a supportive writing coach for a student working on the following assignment:
 - Assignment Title: ${title || quest.title}
 - Assignment Type: ${quest.skillFocus}
@@ -512,6 +535,22 @@ ${currentContent ? `Here's the student's current content so far:
 ----
 ${currentContent}
 ----` : ""}
+`.trim();
+      } else {
+        // Fallback for free-write or when quest is not found
+        questContext = `
+You are a supportive writing coach for a student working on a writing assignment.
+${title ? `- Assignment Title: ${title}` : ''}
+${currentContent ? `
+Here's the student's current content so far:
+----
+${currentContent}
+----` : "The student hasn't started writing yet"}
+`.trim();
+      }
+      
+      // Add the common instructions
+      questContext += `
 
 Provide specific, actionable advice to help the student move forward with their writing. Your responses should:
 1. Directly address their questions
@@ -520,58 +559,73 @@ Provide specific, actionable advice to help the student move forward with their 
 4. Focus on process, not just rules
 5. Use a friendly, conversational tone as if you're having a chat with them
 
-Important: Never simply write the content for them. Instead, guide them to develop their own ideas.
-      `.trim();
+Important: Never simply write the content for them. Instead, guide them to develop their own ideas.`;
       
-      // Create a simple array of message objects
-      const systemMessage = {
-        role: "system",
-        content: questContext
-      };
+      // Import OpenAI
+      const { OpenAI } = await import('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
-      // Prepare for the API call with correct types
-      const messageList = [systemMessage];
+      // Create a simple array of message objects for OpenAI API
+      const openaiMessages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
+        {
+          role: "system",
+          content: questContext
+        }
+      ];
       
       // Add the conversation history from client
       for (const msg of messages) {
         if (msg.role === "user") {
-          messageList.push({
+          openaiMessages.push({
             role: "user",
             content: msg.content
           });
-        } else {
-          messageList.push({
+        } else if (msg.role === "assistant") {
+          openaiMessages.push({
             role: "assistant",
             content: msg.content
           });
         }
       }
       
-      // Use the messages with type assertions
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: messageList as any,
-        stream: true,
+      console.log("Sending request to OpenAI with message count:", openaiMessages.length);
+      
+      // Set up streaming response headers
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
       });
       
-      // Set up streaming response
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      
-      // Stream the response properly formatted for the AI SDK
-      res.write(`data: ${JSON.stringify({ role: "assistant", content: "" })}\n\n`);
-      
-      let fullContent = "";
-      for await (const chunk of response) {
-        const content = chunk.choices[0]?.delta?.content || '';
-        if (content) {
-          fullContent += content;
-          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      try {
+        // Format for the Vercel AI SDK
+        // Initial message with an ID
+        const messageId = Date.now().toString();
+        res.write(`data: ${JSON.stringify({ id: messageId, role: "assistant", content: "" })}\n\n`);
+        
+        // Call OpenAI API with streaming
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+          messages: openaiMessages,
+          stream: true,
+        });
+        
+        // Stream the chunks as they come
+        for await (const chunk of response) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          if (content) {
+            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+          }
         }
+        
+        console.log("AI response completed successfully");
+        res.write('data: [DONE]\n\n');
+      } catch (error) {
+        console.error("Error with OpenAI API:", error);
+        res.write(`data: ${JSON.stringify({ error: "An error occurred while generating a response" })}\n\n`);
+        res.write('data: [DONE]\n\n');
       }
       
-      res.write('data: [DONE]\n\n');
       res.end();
     } catch (error) {
       console.error('Error in writer\'s block help:', error);
