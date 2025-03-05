@@ -213,18 +213,57 @@ Westlake Middle School, 7th Grade`
   }
   
   async createWritingSubmission(insertSubmission: InsertWritingSubmission): Promise<WritingSubmission> {
+    // Only include fields that are known to exist in the database
     const submissionToInsert = {
-      ...insertSubmission,
-      feedback: '',
+      userId: insertSubmission.userId,
+      questId: insertSubmission.questId,
+      title: insertSubmission.title,
+      content: insertSubmission.content,
       status: 'submitted',
+      feedback: '',
     };
     
-    const result = await db
-      .insert(writingSubmissions)
-      .values(submissionToInsert)
-      .returning();
+    try {
+      const result = await db
+        .insert(writingSubmissions)
+        .values(submissionToInsert)
+        .returning();
+        
+      return result[0];
+    } catch (error) {
+      console.error('Database error when creating writing submission:', error);
+      // If we get a schema mismatch error, try with an even more minimal set of fields
+      if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
+        console.log('Retrying with minimal fields due to schema mismatch');
+        
+        // Try a more minimal version with only the essential fields
+        const minimalSubmission = {
+          user_id: insertSubmission.userId,
+          quest_id: insertSubmission.questId,
+          title: insertSubmission.title,
+          content: insertSubmission.content,
+          status: 'submitted',
+        };
+        
+        // Use raw SQL to insert with just the known fields
+        const insertResult = await db.execute(`
+          INSERT INTO writing_submissions (user_id, quest_id, title, content, status)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING *
+        `, [
+          minimalSubmission.user_id,
+          minimalSubmission.quest_id,
+          minimalSubmission.title,
+          minimalSubmission.content,
+          minimalSubmission.status
+        ]);
+        
+        return insertResult.rows[0];
+      }
       
-    return result[0];
+      // Rethrow the error if it's not related to missing columns
+      throw error;
+    }
   }
   
   async updateWritingSubmission(id: number, updates: Partial<WritingSubmission>): Promise<WritingSubmission | undefined> {
