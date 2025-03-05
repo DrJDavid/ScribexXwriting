@@ -54,24 +54,26 @@ const OWLWritingQuest: React.FC = () => {
   // Handle submission
   const handleSubmit = async (questId: string, title: string, content: string) => {
     try {
-      await submitWritingMutation.mutateAsync({ questId, title, content });
+      const result = await submitWritingMutation.mutateAsync({ questId, title, content });
       
       // Record quest completion
       completeQuest(questId);
       
+      // Show toast but don't navigate away - this allows the confirmation dialog to remain visible
       toast({
         title: 'Quest Completed',
-        description: 'Your writing has been submitted!',
+        description: 'Your writing has been submitted successfully!',
       });
       
-      // Navigate back to town
-      navigate('/owl');
+      // Return success - WritingInterface will show success dialog
+      return result;
     } catch (error) {
       toast({
         title: 'Submission Error',
         description: 'There was a problem submitting your quest.',
         variant: 'destructive',
       });
+      throw error; // Re-throw to let WritingInterface know there was an error
     }
   };
   

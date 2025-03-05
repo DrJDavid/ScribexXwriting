@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocation } from 'wouter';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
   onSaveDraft,
 }) => {
   const { theme } = useTheme();
+  const [, navigate] = useLocation();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
@@ -52,15 +54,37 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
     : 'bg-[#3cb371] bg-opacity-20 text-[#ffd700]';
   const fontClass = isREDI ? 'font-orbitron' : 'font-montserrat';
   
-  const handleSubmit = () => {
+  const handleOpenSubmitDialog = () => {
     if (title.trim() && content.trim() && meetsWordCount) {
+      setSubmissionDialogOpen(true);
+    }
+  };
+  
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
       onSubmit(questId, title, content);
+      setSubmissionSuccess(true);
+      // Keep dialog open to show success message
+    } catch (error) {
+      console.error("Error submitting quest:", error);
+      setSubmissionSuccess(false);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
   const handleSaveDraft = () => {
     if (title.trim() || content.trim()) {
       onSaveDraft(questId, title, content);
+    }
+  };
+  
+  const closeSubmitDialog = () => {
+    setSubmissionDialogOpen(false);
+    // Reset success status when closing
+    if (submissionSuccess) {
+      setSubmissionSuccess(false);
     }
   };
 
@@ -118,13 +142,83 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
           Writer's Block Help
         </Button>
         <Button
-          onClick={handleSubmit}
+          onClick={handleOpenSubmitDialog}
           disabled={!title.trim() || !content.trim() || !meetsWordCount}
           className={`w-full py-2 font-medium text-white ${primaryBgClass} rounded-md shadow hover:opacity-90 transition text-sm ${fontClass}`}
         >
           Submit Quest
         </Button>
       </div>
+
+      {/* Submission Confirmation Dialog */}
+      <Dialog open={submissionDialogOpen} onOpenChange={closeSubmitDialog}>
+        <DialogContent className={`${fontClass} p-6 max-w-md`}>
+          {!submissionSuccess ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl mb-2">Submit Your Quest?</DialogTitle>
+                <DialogDescription>
+                  Are you ready to submit your writing? Once submitted, your writing will be analyzed and you'll receive personalized feedback and skill rewards.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="my-4 p-3 bg-gray-100 rounded-md">
+                <h4 className="font-medium mb-1">{title}</h4>
+                <p className="text-sm text-gray-700 truncate">{content.substring(0, 100)}...</p>
+                <p className="text-xs text-gray-500 mt-2">{wordCount} words</p>
+              </div>
+
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={closeSubmitDialog}
+                  className={`mr-2 ${secondaryBgClass}`}
+                >
+                  Keep Editing
+                </Button>
+                <Button 
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className={primaryBgClass}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Quest'}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className={`text-xl mb-2 ${accentColor}`}>Quest Submitted!</DialogTitle>
+                <DialogDescription>
+                  Your writing has been submitted successfully. You've earned stars for your effort!
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="my-6 text-center">
+                <div className="inline-block p-4 bg-yellow-100 rounded-full mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-lg font-medium mt-2">Your writing is being analyzed</p>
+                <p className="text-sm text-gray-600 mt-1">Visit the portfolio page to check for feedback!</p>
+              </div>
+
+              <DialogFooter>
+                <Button 
+                  onClick={() => {
+                    closeSubmitDialog();
+                    navigate('/owl/submissions');
+                  }}
+                  className={primaryBgClass}
+                >
+                  View Portfolio
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
