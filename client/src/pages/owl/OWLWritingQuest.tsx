@@ -50,7 +50,7 @@ const OWLWritingQuest: React.FC = () => {
   const freeWriteQuest = isFreeWrite ? {
     id: 'free-write',
     locationId: locationId || '',
-    title: `Free ${promptType?.charAt(0).toUpperCase() + promptType?.slice(1) || 'Creative'} Writing`,
+    title: `Free ${promptType ? promptType.charAt(0).toUpperCase() + promptType.slice(1) : 'Creative'} Writing`,
     description: `Express yourself freely in ${promptType || 'creative'} writing format.`,
     tags: ['free-writing', promptType || 'creative'],
     minWordCount: 100,
@@ -135,7 +135,7 @@ const OWLWritingQuest: React.FC = () => {
 
   return (
     <MainLayout 
-      title={quest.title} 
+      title={currentQuest.title} 
       showBackButton={true}
       onBackClick={handleBack}
       rightButton={
@@ -148,11 +148,11 @@ const OWLWritingQuest: React.FC = () => {
       }
     >
       <WritingInterface
-        questId={quest.id}
-        title={quest.title}
-        description={quest.description}
-        tags={quest.tags}
-        minWordCount={quest.minWordCount}
+        questId={currentQuest.id}
+        title={currentQuest.title}
+        description={currentQuest.description}
+        tags={currentQuest.tags}
+        minWordCount={currentQuest.minWordCount}
         onSubmit={handleSubmit}
         onSaveDraft={handleSaveDraft}
       />
