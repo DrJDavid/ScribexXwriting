@@ -448,23 +448,26 @@ const Header = () => (
 // Import the components
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 // App component with routes
 function App() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1">
-        <Switch>
-          <Route path="/auth" component={AuthPage} />
-          <ProtectedRoute path="/" component={Home} />
-          <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
-          <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-      <Toaster />
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">
+          <Switch>
+            <Route path="/auth" component={AuthPage} />
+            <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
+            <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
+            <ProtectedRoute path="/" component={Home} />
+            <Route component={NotFound} />
+          </Switch>
+        </main>
+        <Toaster />
+      </div>
+    </ThemeProvider>
   );
 }
 

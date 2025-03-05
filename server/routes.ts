@@ -35,14 +35,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = req.user as any;
-      const progress = await storage.getProgressByUserId(user.id);
+      let progress = await storage.getProgressByUserId(user.id);
       
+      // If progress doesn't exist for this user, create it with default values
       if (!progress) {
-        return res.status(404).json({ message: 'Progress not found' });
+        progress = await storage.createProgress({
+          userId: user.id,
+          skillMastery: { mechanics: 10, sequencing: 10, voice: 10 },
+          completedExercises: [],
+          completedQuests: [],
+          unlockedLocations: ['townHall'],
+          currency: 0,
+          achievements: []
+        });
       }
       
       res.json(progress);
     } catch (error) {
+      console.error('Error fetching/creating progress:', error);
       res.status(500).json({ message: 'Error fetching progress' });
     }
   });
