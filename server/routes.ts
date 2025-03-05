@@ -8,6 +8,7 @@ import {
   insertWritingSubmissionSchema, 
   Progress 
 } from "@shared/schema";
+// import { TOWN_LOCATIONS, getTownLocations, WRITING_QUESTS, getQuestById } from "../shared/quests";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -182,6 +183,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Writing submission created successfully:', submission.id);
       
+      // Immediately trigger AI analysis in the background
+      // We'll use a fire-and-forget approach to avoid blocking the response
+      (async () => {
+        try {
+          // Import required OpenAI service
+          const { analyzeWriting, generateSuggestedExercises } = await import('./services/openai');
+          
+          // Get current user progress to determine skill levels
+          const userProgress = await storage.getProgressByUserId(user.id);
+          if (!userProgress) {
+            console.error('User progress not found for analysis');
+            return;
+          }
+          
+          console.log(`Starting AI analysis for submission ${submission.id}`);
+          
+          // Analyze the writing using OpenAI
+          const { feedback, skillsAssessed } = await analyzeWriting(
+            title, 
+            content, 
+            questId, 
+            user.grade || 7 // Default to 7th grade if not specified
+          );
+          
+          // Generate suggested exercises based on the feedback and current skill levels
+          const suggestedExercises = await generateSuggestedExercises(
+            feedback,
+            userProgress.skillMastery as any
+          );
+          
+          // Update the submission with AI feedback
+          await storage.updateWritingSubmission(submission.id, {
+            status: "reviewed",
+            aiFeedback: feedback,
+            skillsAssessed,
+            suggestedExercises
+          });
+          
+          console.log(`AI analysis completed for submission ${submission.id}`);
+          
+          // Unlock additional town locations based on progress
+          const quest = await storage.getQuestById(questId);
+          if (quest && quest.locationId) {
+            const nextLocations = await determineLocationsToUnlock(userProgress);
+            if (nextLocations.length > 0) {
+              console.log(`Unlocking locations: ${nextLocations.join(', ')}`);
+              // We'll implement this function soon
+              await unlockLocations(userProgress, nextLocations);
+            }
+          }
+        } catch (analysisError) {
+          console.error('Error in background AI analysis:', analysisError);
+        }
+      })();
+      
+      // Respond with the submission immediately without waiting for analysis
       res.status(201).json(submission);
     } catch (error) {
       console.error('Error in writing submission:', error);

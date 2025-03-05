@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
 import { getTownLocations } from '@/data/quests';
 import { 
-  Building, Book, Theater, Coffee, Tree,
+  Building, Book, Theater, Coffee, TreePine,
   FileText, Pencil, BookOpen, Feather, PenTool
 } from 'lucide-react';
 
@@ -32,10 +32,31 @@ const OWLTown: React.FC = () => {
     }
   };
   
+  // Map icon strings to icon components
+  const getLocationIcon = (iconType: string) => {
+    const iconProps = { className: "h-8 w-8 text-white", strokeWidth: 1.5 };
+    
+    switch(iconType) {
+      case 'building':
+        return <Building {...iconProps} />;
+      case 'book':
+        return <Book {...iconProps} />;
+      case 'theater':
+        return <Theater {...iconProps} />;
+      case 'coffee':
+        return <Coffee {...iconProps} />;
+      case 'tree':
+        return <TreePine {...iconProps} />;
+      default:
+        return <Pencil {...iconProps} />;
+    }
+  };
+  
   // Get locations with proper status based on progress
   const locations = getTownLocations().map(location => ({
     ...location,
-    status: progress?.unlockedLocations.includes(location.id) ? 'unlocked' : 'locked'
+    status: progress?.unlockedLocations.includes(location.id) ? 'unlocked' : 'locked',
+    icon: getLocationIcon(location.icon)
   }));
 
   return (
