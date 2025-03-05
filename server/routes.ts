@@ -6,7 +6,8 @@ import {
   insertProgressSchema, 
   insertExerciseAttemptSchema, 
   insertWritingSubmissionSchema, 
-  Progress 
+  Progress,
+  SkillMastery
 } from "@shared/schema";
 // Import location and quest types from client-side
 import { type TownLocation, type WritingQuest } from "../client/src/data/quests";
@@ -67,7 +68,7 @@ async function determineLocationsToUnlock(progress: Progress): Promise<string[]>
 async function unlockLocations(progress: Progress, locationIds: string[]): Promise<Progress> {
   // Ensure unlockedLocations is an array (use empty array as fallback)
   const currentlyUnlocked: string[] = Array.isArray(progress.unlockedLocations) 
-    ? progress.unlockedLocations 
+    ? (progress.unlockedLocations as string[]) 
     : [];
   
   // Combine current locations with new ones, ensuring no duplicates
