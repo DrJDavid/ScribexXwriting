@@ -463,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Writer's block help endpoint
+  // Writer's block help endpoint with streaming support
   app.post('/api/writing/writers-block-help', async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
@@ -476,11 +476,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const schema = z.object({
         questId: z.string(),
         title: z.string().optional(),
-        prompt: z.string().min(1),
+        messages: z.array(
+          z.object({
+            id: z.string(),
+            role: z.enum(["user", "assistant"]),
+            content: z.string(),
+          })
+        ),
         currentContent: z.string().optional(),
       });
       
-      const { questId, title, prompt, currentContent } = schema.parse(req.body);
+      const { questId, title, messages, currentContent } = schema.parse(req.body);
       
       // Get quest details to provide context
       const quest = getQuestById(questId);
@@ -488,54 +494,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Quest not found' });
       }
       
-      // Import required OpenAI service
-      const { analyzeWriting } = await import('./services/openai');
+      // Import OpenAI
+      const { OpenAI } = await import('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      const currentMessage = messages[messages.length - 1];
       
       // Create a context for the AI with the quest details and any partial content
-      const context = `
-Quest Title: ${title || quest.title}
-Quest Description: ${quest.description}
-Writing Type: ${quest.skillFocus}
-Student's Current Content: ${currentContent || "(Not started yet)"}
-Student's Question/Prompt: ${prompt}
+      const questContext = `
+You are a supportive writing coach for a student working on the following assignment:
+- Assignment Title: ${title || quest.title}
+- Assignment Type: ${quest.skillFocus}
+- Assignment Description: ${quest.description}
+- Current Progress: ${currentContent ? "The student has written some content" : "The student hasn't started writing yet"}
+
+${currentContent ? `Here's the student's current content so far:
+----
+${currentContent}
+----` : ""}
+
+Provide specific, actionable advice to help the student move forward with their writing. Your responses should:
+1. Directly address their questions
+2. Offer examples they can use right away
+3. Ask follow-up questions when appropriate to better understand their needs
+4. Focus on process, not just rules
+5. Use a friendly, conversational tone as if you're having a chat with them
+
+Important: Never simply write the content for them. Instead, guide them to develop their own ideas.
       `.trim();
       
-      try {
-        // Call OpenAI service for help
-        const { feedback } = await analyzeWriting(
-          context,
-          "Writer's Block Help",
-          prompt,
-          "writers-block-help",
-          user.grade || 7
-        );
-        
-        // Simplify response for writers block help
-        let response = feedback.overallFeedback;
-        
-        // Add specific suggestions if available
-        if (feedback.suggestions) {
-          if (feedback.suggestions.mechanics && feedback.suggestions.mechanics.length > 0) {
-            response += "\n\n" + feedback.suggestions.mechanics.join("\n");
-          }
-          if (feedback.suggestions.sequencing && feedback.suggestions.sequencing.length > 0) {
-            response += "\n\n" + feedback.suggestions.sequencing.join("\n");
-          }
-          if (feedback.suggestions.voice && feedback.suggestions.voice.length > 0) {
-            response += "\n\n" + feedback.suggestions.voice.join("\n");
-          }
+      // Create a simple array of message objects
+      const systemMessage = {
+        role: "system",
+        content: questContext
+      };
+      
+      // Prepare for the API call with correct types
+      const messageList = [systemMessage];
+      
+      // Add the conversation history from client
+      for (const msg of messages) {
+        if (msg.role === "user") {
+          messageList.push({
+            role: "user",
+            content: msg.content
+          });
+        } else {
+          messageList.push({
+            role: "assistant",
+            content: msg.content
+          });
         }
-        
-        // Add next steps
-        if (feedback.nextSteps) {
-          response += "\n\n" + feedback.nextSteps;
-        }
-        
-        res.json({ response });
-      } catch (error) {
-        console.error('Error generating writer\'s block help:', error);
-        res.status(500).json({ message: 'Failed to generate help response' });
       }
+      
+      // Use the messages with type assertions
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: messageList as any,
+        stream: true,
+      });
+      
+      // Set up streaming response
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      
+      // Stream the response
+      for await (const chunk of response) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+      
+      res.write('data: [DONE]\n\n');
+      res.end();
     } catch (error) {
       console.error('Error in writer\'s block help:', error);
       if (error instanceof ZodError) {

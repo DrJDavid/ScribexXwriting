@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, SendIcon, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useChat } from 'ai/react';
+import { nanoid } from 'nanoid';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WritersBlockModalProps {
   open: boolean;
@@ -22,115 +24,137 @@ export function WritersBlockModal({
   title,
   currentContent
 }: WritersBlockModalProps) {
-  const [prompt, setPrompt] = useState("");
-  const [response, setResponse] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Clear state when dialog opens
-  React.useEffect(() => {
-    if (open) {
-      setPrompt("");
-      setResponse("");
-    }
-  }, [open]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!prompt.trim()) {
+  // Use the AI SDK's chat hook
+  const {
+    messages,
+    input,
+    setInput,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    error,
+    setMessages
+  } = useChat({
+    api: "/api/writing/writers-block-help",
+    body: {
+      questId,
+      title,
+      currentContent
+    },
+    onError: (err) => {
+      console.error("Chat error:", err);
       toast({
-        title: "No prompt provided",
-        description: "Please describe what you're struggling with",
+        title: "Error",
+        description: "Failed to get a response. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Clear messages when dialog is opened
+  useEffect(() => {
+    if (open) {
+      setMessages([]);
+    }
+  }, [open, setMessages]);
+
+  // Auto-scroll to the bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current && open) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, open]);
+
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) {
+      toast({
+        title: "No message",
+        description: "Please enter a message to send",
         variant: "destructive",
       });
       return;
     }
-    
-    setIsLoading(true);
-    
-    try {
-      const res = await apiRequest("POST", "/api/writing/writers-block-help", {
-        questId,
-        title,
-        prompt,
-        currentContent
-      });
-      
-      const data = await res.json();
-      setResponse(data.response);
-    } catch (error) {
-      console.error("Error getting writer's block help:", error);
-      toast({
-        title: "Failed to get help",
-        description: "There was a problem connecting to our writing assistant. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    handleSubmit(e);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Writer's Block Assistant</DialogTitle>
+      <DialogContent className="sm:max-w-[600px] h-[80vh] max-h-[700px] p-0 flex flex-col">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle>Writing Coach Chat</DialogTitle>
           <DialogDescription>
-            Feeling stuck? Describe what you're struggling with and our AI writing coach will provide suggestions to help you continue.
+            Chat with your AI writing coach to get help with your assignment.
           </DialogDescription>
         </DialogHeader>
         
-        {!response ? (
-          <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="prompt" className="text-left">
-                What are you struggling with?
-              </Label>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Chat Messages Area */}
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4 min-h-[300px]">
+              {messages.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-center p-8 text-muted-foreground">
+                  <div>
+                    <p className="mb-2">👋 Welcome to your Writing Coach Chat!</p>
+                    <p className="text-sm">
+                      Describe what you're struggling with, and I'll help you overcome your writer's block.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                messages.map((message) => (
+                  <div 
+                    key={message.id}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div 
+                      className={`max-w-[80%] px-4 py-2 rounded-lg ${
+                        message.role === 'user' 
+                          ? 'bg-primary text-primary-foreground rounded-tr-none' 
+                          : 'bg-muted rounded-tl-none'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap text-sm">
+                        {message.content}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+          
+          {/* Input Area */}
+          <div className="border-t p-4">
+            <form onSubmit={onFormSubmit} className="flex gap-2">
               <Textarea
-                id="prompt"
-                placeholder="I'm having trouble starting my conclusion paragraph..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                rows={5}
-                className="resize-none"
+                autoFocus
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    onFormSubmit(e);
+                  }
+                }}
+                placeholder="Ask for writing help..."
+                className="flex-1 min-h-[60px] resize-none"
                 disabled={isLoading}
               />
+              <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendIcon className="h-4 w-4" />}
+              </Button>
+            </form>
+            
+            <div className="mt-2 text-xs text-muted-foreground">
+              <p>Press Enter to send, Shift+Enter for a new line</p>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Getting help...
-                  </>
-                ) : (
-                  "Get help"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        ) : (
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label className="text-left">Suggestions from your Writing Coach:</Label>
-              <div className="bg-muted p-4 rounded-md whitespace-pre-line text-sm">
-                {response}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setResponse("")}>
-                Ask another question
-              </Button>
-              <Button type="button" onClick={() => onOpenChange(false)}>
-                Return to writing
-              </Button>
-            </DialogFooter>
           </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );
