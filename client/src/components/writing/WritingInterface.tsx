@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export interface WritingQuestProps {
   questId: string;
@@ -27,6 +28,9 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
   const { theme } = useTheme();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
   
   const isREDI = theme === 'redi';
   
