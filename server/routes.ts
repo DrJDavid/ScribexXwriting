@@ -17,7 +17,7 @@ import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 
 // Load all quests and locations from client (types only were imported earlier)
-import { TOWN_LOCATIONS, WRITING_QUESTS, getQuestById } from "../client/src/data/quests";
+import { TOWN_LOCATIONS, WRITING_QUESTS, getQuestById, getLocationById } from "../client/src/data/quests";
 
 // Functions to handle location unlocking
 async function determineLocationsToUnlock(progress: Progress): Promise<string[]> {
@@ -590,7 +590,7 @@ Important: Never simply write the content for them. Instead, guide them to devel
       
       // Validate request body
       const schema = z.object({
-        locationId: z.string(),
+        locationName: z.string(),
         locationType: z.enum([
           'argumentative', 
           'informative', 
@@ -598,9 +598,10 @@ Important: Never simply write the content for them. Instead, guide them to devel
           'reflective', 
           'descriptive'
         ]),
+        customFocus: z.string().nullable(),
       });
       
-      const { locationId, locationType } = schema.parse(req.body);
+      const { locationName, locationType, customFocus } = schema.parse(req.body);
       
       // Fetch the location to get more context
       const location = getLocationById(locationId);
