@@ -119,6 +119,52 @@ const WritingSubmissionDetails: React.FC = () => {
   const isAnalyzing = analysisMutation.isPending;
   const hasAIFeedback = submission.aiFeedback && submission.skillsAssessed;
   
+  // Render different sections based on state
+  const renderAnalysisButton = () => {
+    if (!hasAIFeedback && !isAnalyzing) {
+      return (
+        <div className="flex justify-center my-6">
+          <Button 
+            onClick={handleRequestAnalysis}
+            className="bg-primary hover:bg-primary/80 px-6"
+            size="lg"
+          >
+            Request AI Feedback
+          </Button>
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  const renderLoadingIndicator = () => {
+    if (isAnalyzing) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <p className="text-white text-center">
+            Analyzing your writing...<br />
+            This may take a moment
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  const renderFeedback = () => {
+    if (hasAIFeedback) {
+      return (
+        <WritingFeedback 
+          feedback={submission.aiFeedback as AIFeedback}
+          skillsAssessed={submission.skillsAssessed as SkillMastery}
+          suggestedExercises={(submission.suggestedExercises as string[]) || []}
+        />
+      );
+    }
+    return null;
+  };
+  
   return (
     <MainLayout 
       title={submission.title} 
@@ -138,36 +184,9 @@ const WritingSubmissionDetails: React.FC = () => {
         <Separator className="border-gray-600" />
         
         {/* Analysis State */}
-        {!hasAIFeedback && !isAnalyzing && (
-          <div className="flex justify-center my-6">
-            <Button 
-              onClick={handleRequestAnalysis}
-              className="bg-primary hover:bg-primary/80 px-6"
-              size="lg"
-            >
-              Request AI Feedback
-            </Button>
-          </div>
-        )}
-        
-        {isAnalyzing && (
-          <div className="flex flex-col items-center justify-center py-10">
-            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-            <p className="text-white text-center">
-              Analyzing your writing...<br />
-              This may take a moment
-            </p>
-          </div>
-        )}
-        
-        {/* AI Feedback Display */}
-        {hasAIFeedback && (
-          <WritingFeedback 
-            feedback={submission.aiFeedback as AIFeedback}
-            skillsAssessed={submission.skillsAssessed as SkillMastery}
-            suggestedExercises={(submission.suggestedExercises as string[]) || []}
-          />
-        )}
+        {renderAnalysisButton()}
+        {renderLoadingIndicator()}
+        {renderFeedback()}
       </div>
     </MainLayout>
   );

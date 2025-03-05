@@ -449,25 +449,32 @@ const Header = () => (
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/hooks/use-auth";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 
 // App component with routes
 function App() {
   return (
-    <ThemeProvider>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          <Switch>
-            <Route path="/auth" component={AuthPage} />
-            <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
-            <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
-            <ProtectedRoute path="/" component={Home} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-        <Toaster />
-      </div>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-1">
+              <Switch>
+                <Route path="/auth" component={AuthPage} />
+                <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
+                <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
+                <ProtectedRoute path="/" component={Home} />
+                <Route component={NotFound} />
+              </Switch>
+            </main>
+            <Toaster />
+          </div>
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
