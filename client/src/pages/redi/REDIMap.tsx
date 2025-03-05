@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
-import REDIMapNode, { SkillType } from '@/components/redi/REDIMapNode';
+import REDIMapNode, { SkillType, ExerciseType } from '@/components/redi/REDIMapNode';
 import SkillMasteryIndicator from '@/components/redi/SkillMasteryIndicator';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
@@ -22,16 +22,24 @@ const REDIMap: React.FC = () => {
     navigate(`/redi/exercise/${exerciseId}`);
   };
   
-  // Filter for skill type
-  const [activeFilter, setActiveFilter] = React.useState<SkillType | 'all'>('all');
+  // Filter for skill type and exercise type
+  const [activeSkillFilter, setActiveSkillFilter] = React.useState<SkillType | 'all'>('all');
+  const [activeTypeFilter, setActiveTypeFilter] = React.useState<ExerciseType | 'all'>('all');
   
   // Get nodes with proper status based on progress
   const nodes = getExerciseNodes(progress?.skillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
   
-  // Filter nodes by skill type
-  const filteredNodes = activeFilter === 'all' 
-    ? nodes 
-    : nodes.filter(node => node.skillType === activeFilter);
+  // Filter nodes by both skill type and exercise type
+  const filteredNodes = nodes.filter(node => {
+    // Filter by skill type
+    const skillFilterPassed = activeSkillFilter === 'all' || node.skillType === activeSkillFilter;
+    
+    // Filter by exercise type
+    const typeFilterPassed = activeTypeFilter === 'all' || node.type === activeTypeFilter;
+    
+    // Node must pass both filters
+    return skillFilterPassed && typeFilterPassed;
+  });
 
   return (
     <MainLayout 
@@ -41,31 +49,58 @@ const REDIMap: React.FC = () => {
       <div className="mb-4">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-orbitron text-white text-lg">Learning Path</h2>
-          <div className="flex space-x-2">
-            <button 
-              className={`${activeFilter === 'all' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeFilter === 'all' ? 'text-white' : 'text-gray-400'}`}
-              onClick={() => setActiveFilter('all')}
-            >
-              All
-            </button>
-            <button 
-              className={`${activeFilter === 'mechanics' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeFilter === 'mechanics' ? 'text-white' : 'text-gray-400'}`}
-              onClick={() => setActiveFilter('mechanics')}
-            >
-              Mechanics
-            </button>
-            <button 
-              className={`${activeFilter === 'sequencing' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeFilter === 'sequencing' ? 'text-white' : 'text-gray-400'}`}
-              onClick={() => setActiveFilter('sequencing')}
-            >
-              Sequencing
-            </button>
-            <button 
-              className={`${activeFilter === 'voice' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeFilter === 'voice' ? 'text-white' : 'text-gray-400'}`}
-              onClick={() => setActiveFilter('voice')}
-            >
-              Voice
-            </button>
+          <div className="flex flex-col space-y-2">
+            {/* Skill Type Filter */}
+            <div className="flex space-x-2">
+              <span className="text-white text-xs mr-1">Skills:</span>
+              <button 
+                className={`${activeSkillFilter === 'all' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeSkillFilter === 'all' ? 'text-white' : 'text-gray-400'}`}
+                onClick={() => setActiveSkillFilter('all')}
+              >
+                All
+              </button>
+              <button 
+                className={`${activeSkillFilter === 'mechanics' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeSkillFilter === 'mechanics' ? 'text-white' : 'text-gray-400'}`}
+                onClick={() => setActiveSkillFilter('mechanics')}
+              >
+                Mechanics
+              </button>
+              <button 
+                className={`${activeSkillFilter === 'sequencing' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeSkillFilter === 'sequencing' ? 'text-white' : 'text-gray-400'}`}
+                onClick={() => setActiveSkillFilter('sequencing')}
+              >
+                Sequencing
+              </button>
+              <button 
+                className={`${activeSkillFilter === 'voice' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeSkillFilter === 'voice' ? 'text-white' : 'text-gray-400'}`}
+                onClick={() => setActiveSkillFilter('voice')}
+              >
+                Voice
+              </button>
+            </div>
+            
+            {/* Exercise Type Filter */}
+            <div className="flex space-x-2">
+              <span className="text-white text-xs mr-1">Type:</span>
+              <button 
+                className={`${activeTypeFilter === 'all' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeTypeFilter === 'all' ? 'text-white' : 'text-gray-400'}`}
+                onClick={() => setActiveTypeFilter('all')}
+              >
+                All
+              </button>
+              <button 
+                className={`${activeTypeFilter === 'multiple-choice' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeTypeFilter === 'multiple-choice' ? 'text-white' : 'text-gray-400'}`}
+                onClick={() => setActiveTypeFilter('multiple-choice')}
+              >
+                Multiple Choice
+              </button>
+              <button 
+                className={`${activeTypeFilter === 'writing' ? 'bg-[#1e1e1e]' : ''} px-3 py-1 rounded-full text-xs ${activeTypeFilter === 'writing' ? 'text-white' : 'text-gray-400'}`}
+                onClick={() => setActiveTypeFilter('writing')}
+              >
+                Writing
+              </button>
+            </div>
           </div>
         </div>
         
@@ -74,17 +109,17 @@ const REDIMap: React.FC = () => {
           <SkillMasteryIndicator 
             skill="mechanics" 
             percentage={progress?.skillMastery.mechanics || 0} 
-            isActive={activeFilter === 'mechanics' || activeFilter === 'all'}
+            isActive={activeSkillFilter === 'mechanics' || activeSkillFilter === 'all'}
           />
           <SkillMasteryIndicator 
             skill="sequencing" 
             percentage={progress?.skillMastery.sequencing || 0} 
-            isActive={activeFilter === 'sequencing' || activeFilter === 'all'}
+            isActive={activeSkillFilter === 'sequencing' || activeSkillFilter === 'all'}
           />
           <SkillMasteryIndicator 
             skill="voice" 
             percentage={progress?.skillMastery.voice || 0} 
-            isActive={activeFilter === 'voice' || activeFilter === 'all'}
+            isActive={activeSkillFilter === 'voice' || activeSkillFilter === 'all'}
           />
         </div>
         
@@ -105,6 +140,7 @@ const REDIMap: React.FC = () => {
                 skillType={node.skillType}
                 position={node.position}
                 mastery={node.mastery}
+                type={node.type}
                 onPress={handleNodePress}
               />
             ))}

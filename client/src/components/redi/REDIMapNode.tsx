@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { PencilLine, ListChecks } from 'lucide-react';
 
 export type NodeStatus = 'locked' | 'available' | 'completed' | 'current';
 export type SkillType = 'mechanics' | 'sequencing' | 'voice';
+export type ExerciseType = 'multiple-choice' | 'writing';
 
 export interface REDIMapNodeProps {
   id: string;
@@ -12,6 +14,7 @@ export interface REDIMapNodeProps {
   skillType: SkillType;
   position: { x: number; y: number };
   mastery?: number;
+  type?: ExerciseType;
   onPress: (id: string) => void;
 }
 
@@ -23,6 +26,7 @@ const REDIMapNode: React.FC<REDIMapNodeProps> = ({
   skillType,
   position,
   mastery,
+  type = 'multiple-choice', // Default to multiple-choice if type not specified
   onPress,
 }) => {
   // Status-based styling
@@ -64,6 +68,14 @@ const REDIMapNode: React.FC<REDIMapNodeProps> = ({
     }
   };
 
+  // Type-based visual modifications
+  const isWritingExercise = type === 'writing';
+  
+  // Different shape for writing exercises
+  const nodeShape = isWritingExercise 
+    ? 'rounded-lg' // Square with rounded corners for writing
+    : 'rounded-full'; // Circle for multiple choice
+    
   const styles = getNodeStyles();
   
   const handlePress = () => {
@@ -83,16 +95,29 @@ const REDIMapNode: React.FC<REDIMapNodeProps> = ({
           whileHover={status !== 'locked' ? { scale: 1.05 } : {}}
           whileTap={status !== 'locked' ? { scale: 0.95 } : {}}
           onClick={handlePress}
-          className={`w-16 h-16 rounded-full ${styles.background} ${styles.border} ${styles.effect} ${styles.interaction} flex items-center justify-center shadow-lg`}
+          className={`w-16 h-16 ${nodeShape} ${styles.background} ${styles.border} ${styles.effect} ${styles.interaction} flex flex-col items-center justify-center shadow-lg`}
         >
-          <div className={`text-xs ${styles.text} text-center font-orbitron`}>
-            Level {level}
-            {status === 'completed' && mastery && (
-              <div className="text-[10px] text-[#39ff14]">{mastery}%</div>
-            )}
-          </div>
+          {isWritingExercise ? (
+            // Writing exercise content
+            <>
+              <PencilLine className={`${styles.text} mb-1`} size={16} />
+              <div className={`text-xs ${styles.text} text-center font-orbitron`}>
+                Writing
+              </div>
+            </>
+          ) : (
+            // Multiple choice content
+            <>
+              <div className={`text-xs ${styles.text} text-center font-orbitron`}>
+                Level {level}
+                {status === 'completed' && mastery && (
+                  <div className="text-[10px] text-[#39ff14]">{mastery}%</div>
+                )}
+              </div>
+            </>
+          )}
         </motion.div>
-        <div className={`mt-1 text-xs ${styles.text} text-center`}>{title}</div>
+        <div className={`mt-1 text-xs ${styles.text} text-center max-w-24 truncate`}>{title}</div>
         <div className="text-[10px] text-[#39ff14]">
           {status === 'completed' && 'COMPLETED'}
           {status === 'current' && 'CURRENT'}

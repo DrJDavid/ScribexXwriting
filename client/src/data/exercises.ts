@@ -341,25 +341,30 @@ export const EXERCISES: Exercise[] = [
 
 // Define node positions on the map
 const POSITIONS = {
+  // Mechanics exercises row
   'mechanics-1': { x: 30, y: 50 },
   'mechanics-2': { x: 120, y: 50 },
   'mechanics-3': { x: 210, y: 50 },
   'mechanics-4': { x: 300, y: 50 },
   'mechanics-5': { x: 390, y: 50 },
-  'mechanics-writing-1': { x: 210, y: 100 }, // Writing exercise for mechanics
   
+  // Writing exercises row - placed between main skill rows
+  'mechanics-writing-1': { x: 480, y: 50 }, // Writing exercise for mechanics - moved to the right
+  
+  // Sequencing exercises row
   'sequencing-1': { x: 60, y: 150 },
   'sequencing-2': { x: 150, y: 150 },
   'sequencing-3': { x: 240, y: 150 },
   'sequencing-4': { x: 330, y: 150 },
   'sequencing-5': { x: 420, y: 150 },
   
+  // Voice exercises row
   'voice-1': { x: 90, y: 250 },
   'voice-2': { x: 180, y: 250 },
   'voice-3': { x: 270, y: 250 },
   'voice-4': { x: 360, y: 250 },
   'voice-5': { x: 450, y: 250 },
-  'voice-writing-1': { x: 270, y: 300 }, // Writing exercise for voice
+  'voice-writing-1': { x: 540, y: 250 }, // Writing exercise for voice - moved to the right
 };
 
 // Create map nodes with positions and default status
