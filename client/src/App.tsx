@@ -493,6 +493,7 @@ const Header = () => {
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
 import OWLTown from "@/pages/owl/OWLTown";
+import OWLLocationDetail from "@/pages/owl/OWLLocationDetail";
 import OWLWritingQuest from "@/pages/owl/OWLWritingQuest";
 import REDIMap from "@/pages/redi/REDIMap";
 import REDIExercise from "@/pages/redi/REDIExercise";
@@ -519,6 +520,7 @@ function App() {
                   <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
                   <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
                   <ProtectedRoute path="/owl/quest/:questId" component={OWLWritingQuest} />
+                  <ProtectedRoute path="/owl/location/:locationId" component={OWLLocationDetail} />
                   <ProtectedRoute path="/owl" component={OWLTown} />
                   <ProtectedRoute path="/redi/exercise/:exerciseId" component={REDIExercise} />
                   <ProtectedRoute path="/redi" component={REDIMap} />

@@ -22,14 +22,8 @@ const OWLTown: React.FC = () => {
   
   // Handle location click
   const handleLocationPress = (locationId: string) => {
-    // In a real app, this would navigate to location detail first
-    // For simplicity, we'll just pick the first quest at this location
-    const locations = getTownLocations();
-    const location = locations.find(loc => loc.id === locationId);
-    
-    if (location && location.quests && location.quests.length > 0) {
-      navigate(`/owl/quest/${location.quests[0]}`);
-    }
+    // Navigate to the location detail page
+    navigate(`/owl/location/${locationId}`);
   };
   
   // Map icon strings to icon components

@@ -1,16 +1,10 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { TownLocation } from "@/data/quests";
-
-interface WritePromptGeneratorProps {
-  location: TownLocation;
-  onSelectPrompt: (promptData: GeneratedPrompt) => void;
-  className?: string;
-}
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, RefreshCw, Check } from 'lucide-react';
+import type { TownLocation } from '@/data/quests';
+import { useToast } from '@/hooks/use-toast';
 
 export interface GeneratedPrompt {
   prompt: string;
@@ -20,136 +14,168 @@ export interface GeneratedPrompt {
   challengeElement: string;
 }
 
+interface WritePromptGeneratorProps {
+  location: TownLocation;
+  onSelectPrompt: (promptData: GeneratedPrompt) => void;
+  className?: string;
+}
+
 export function WritePromptGenerator({ 
   location, 
   onSelectPrompt,
-  className = ""
+  className = '' 
 }: WritePromptGeneratorProps) {
-  const { toast } = useToast();
+  const [customFocus, setCustomFocus] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
+  const [generatedPrompts, setGeneratedPrompts] = useState<GeneratedPrompt[]>([]);
+  const { toast } = useToast();
 
-  const generatePrompt = async () => {
+  // Generate a prompt based on the location type and custom focus
+  async function generatePrompt() {
+    if (!customFocus.trim() && customFocus.length > 0) {
+      toast({
+        title: "Empty Focus",
+        description: "Please enter a custom focus or clear the field to use the default focus.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
+    
     try {
-      const response = await fetch("/api/writing/generate-prompt", {
-        method: "POST",
+      const response = await fetch('/api/writing/generate-prompt', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          locationId: location.id,
           locationType: location.type,
+          locationName: location.name,
+          customFocus: customFocus.trim() || null,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate prompt");
+        throw new Error('Failed to generate prompt');
       }
 
       const data = await response.json();
-      setGeneratedPrompt(data);
+      setGeneratedPrompts([data.prompt, ...generatedPrompts].slice(0, 3));
     } catch (error) {
-      console.error("Error generating prompt:", error);
+      console.error('Error generating prompt:', error);
       toast({
-        title: "Error",
+        title: "Generation Failed",
         description: "Failed to generate a writing prompt. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
+      
+      // Add fallback prompt if API fails
+      const fallbackPrompt = generateFallbackPrompt(location);
+      setGeneratedPrompts([fallbackPrompt, ...generatedPrompts].slice(0, 3));
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
-  const handleSelectPrompt = () => {
-    if (generatedPrompt) {
-      onSelectPrompt(generatedPrompt);
-    }
-  };
+  function generateFallbackPrompt(location: TownLocation): GeneratedPrompt {
+    const basePrompts = {
+      narrative: {
+        prompt: `Create a story set in ${location.name}`,
+        scenario: `You find yourself in ${location.name} and witness something unexpected.`,
+        guidingQuestions: ["Who are the main characters?", "What conflict occurs?", "How is it resolved?"],
+        suggestedElements: ["Character development", "Plot twist", "Vivid setting description"],
+        challengeElement: "Include dialogue that reveals something about a character's past"
+      },
+      descriptive: {
+        prompt: `Describe the sights, sounds, and feelings of ${location.name}`,
+        scenario: `You're visiting ${location.name} for the first time and want to capture every detail.`,
+        guidingQuestions: ["What sensory details stand out?", "How does the atmosphere feel?", "What makes this place unique?"],
+        suggestedElements: ["Sensory language", "Figurative language", "Specific details"],
+        challengeElement: "Describe one element using all five senses"
+      },
+      argumentative: {
+        prompt: `Make a case for why ${location.name} is important to the community`,
+        scenario: `The town council is considering closing ${location.name}. Write an argument to preserve it.`,
+        guidingQuestions: ["What main points support your argument?", "What counterarguments exist?", "How would you conclude?"],
+        suggestedElements: ["Clear thesis statement", "Supporting evidence", "Logical structure"],
+        challengeElement: "Address and refute a strong counterargument"
+      },
+      informative: {
+        prompt: `Explain the history and significance of ${location.name}`,
+        scenario: `You're writing an informative guide about ${location.name} for new visitors.`,
+        guidingQuestions: ["What key facts are important?", "How has it changed over time?", "Why should people care?"],
+        suggestedElements: ["Clear organization", "Factual information", "Explanatory details"],
+        challengeElement: "Explain a complex concept related to this location in simple terms"
+      },
+      reflective: {
+        prompt: `Reflect on a meaningful experience at ${location.name}`,
+        scenario: `You're journaling about a time at ${location.name} that changed your perspective.`,
+        guidingQuestions: ["What happened?", "How did it affect you?", "What did you learn?"],
+        suggestedElements: ["Personal voice", "Honest reflection", "Insight or realization"],
+        challengeElement: "Connect your experience to a broader life lesson or truth"
+      }
+    };
+
+    return basePrompts[location.type as keyof typeof basePrompts];
+  }
 
   return (
-    <Card className={`shadow-md ${className}`}>
-      <CardHeader>
-        <CardTitle>AI Writing Prompt</CardTitle>
-        <CardDescription>
-          Generate a custom writing prompt for {location.name} based on {location.type} writing.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {!generatedPrompt ? (
-          <div className="text-center py-8">
-            <p className="mb-4 text-muted-foreground">
-              Get a tailored writing prompt that fits the theme and atmosphere of this location!
-            </p>
-            <Button 
-              onClick={generatePrompt} 
-              disabled={isLoading}
-              className="w-full"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                "Generate Writing Prompt"
-              )}
-            </Button>
-          </div>
+    <div className={className}>
+      <div className="mb-4">
+        <label htmlFor="customFocus" className="block text-sm font-medium mb-1">
+          Custom Focus (Optional)
+        </label>
+        <Textarea
+          id="customFocus"
+          placeholder={`Add a specific theme, element, or focus for your ${location.type} writing prompt...`}
+          value={customFocus}
+          onChange={(e) => setCustomFocus(e.target.value)}
+          className="resize-none"
+          rows={3}
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Leave blank to generate a general prompt or specify what you'd like to focus on
+        </p>
+      </div>
+
+      <Button 
+        onClick={generatePrompt}
+        disabled={isLoading}
+        className="w-full mb-6"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Generating...
+          </>
         ) : (
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium text-lg mb-1">Writing Prompt</h3>
-              <p className="text-primary">{generatedPrompt.prompt}</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-lg mb-1">Scenario</h3>
-              <p>{generatedPrompt.scenario}</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-lg mb-1">Guiding Questions</h3>
-              <ul className="list-disc pl-5 space-y-1">
-                {generatedPrompt.guidingQuestions.map((question, i) => (
-                  <li key={i}>{question}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-lg mb-1">Suggested Elements</h3>
-              <div className="flex flex-wrap gap-2">
-                {generatedPrompt.suggestedElements.map((element, i) => (
-                  <Badge key={i} variant="outline">{element}</Badge>
-                ))}
-              </div>
-            </div>
-            
-            {generatedPrompt.challengeElement && (
-              <div>
-                <h3 className="font-medium text-lg mb-1">Challenge Element</h3>
-                <Badge variant="secondary">{generatedPrompt.challengeElement}</Badge>
-              </div>
-            )}
-          </div>
+          <>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Generate Prompt
+          </>
         )}
-      </CardContent>
-      {generatedPrompt && (
-        <CardFooter className="flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setGeneratedPrompt(null);
-            }}
-          >
-            Generate New Prompt
-          </Button>
-          <Button onClick={handleSelectPrompt}>
-            Use This Prompt
-          </Button>
-        </CardFooter>
+      </Button>
+
+      {generatedPrompts.length > 0 && (
+        <div className="space-y-4">
+          {generatedPrompts.map((prompt, index) => (
+            <Card 
+              key={index} 
+              className="p-4 hover:border-primary/50 cursor-pointer transition-colors"
+              onClick={() => onSelectPrompt(prompt)}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-medium">{prompt.prompt}</h3>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                  <Check className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{prompt.scenario}</p>
+            </Card>
+          ))}
+        </div>
       )}
-    </Card>
+    </div>
   );
 }

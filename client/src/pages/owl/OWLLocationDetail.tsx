@@ -1,177 +1,243 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'wouter';
+import React, { useState } from 'react';
+import { useRoute } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
-import { useTheme } from '@/context/ThemeContext';
-import { getLocationById, getQuestsForLocation } from '@/data/quests';
-import { Book, Building, Coffee, MapPin, Pencil, Theater, TreePine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WritePromptGenerator, GeneratedPrompt } from '@/components/writing/WritePromptGenerator';
-import { useToast } from '@/hooks/use-toast';
+import { getLocationById, getQuestsForLocation } from '@/data/quests';
+import { useProgress } from '@/context/ProgressContext';
+import { Link } from 'wouter';
+import { Pencil, ArrowLeft, MapPin } from 'lucide-react';
 
-const OWLLocationDetail = () => {
-  const { setTheme } = useTheme();
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
-  const params = useParams<{ locationId: string }>();
-  const [activeTab, setActiveTab] = useState("quests");
-  const [selectedPrompt, setSelectedPrompt] = useState<GeneratedPrompt | null>(null);
-  
-  // Make sure OWL theme is active
-  useEffect(() => {
-    setTheme('owl');
-  }, [setTheme]);
-  
-  // Get location data
-  const location = getLocationById(params.locationId);
-  const quests = location ? getQuestsForLocation(location.id) : [];
+export default function OWLLocationDetail() {
+  const [, params] = useRoute('/owl/location/:locationId');
+  const locationId = params?.locationId || '';
+  const location = getLocationById(locationId);
+  const quests = getQuestsForLocation(locationId);
+  const { progress } = useProgress();
+  const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   
   if (!location) {
     return (
-      <MainLayout title="Location Not Found" subtitle="This location doesn't exist in OWL Town.">
-        <div className="h-full flex flex-col items-center justify-center">
-          <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-6">We couldn't find this location in OWL Town.</p>
-          <Button onClick={() => navigate('/owl')}>Return to OWL Town</Button>
+      <MainLayout 
+        title="Location Not Found" 
+        subtitle="The requested location doesn't exist"
+        showBackButton
+        onBackClick={() => window.history.back()}
+      >
+        <div className="flex flex-col items-center justify-center h-64">
+          <p className="text-xl mb-4">This location doesn't seem to exist in OWL Town.</p>
+          <Link href="/owl">
+            <Button>Return to OWL Town</Button>
+          </Link>
         </div>
       </MainLayout>
     );
   }
-  
-  // Map icon string to component
-  const getLocationIcon = (iconType: string) => {
-    const iconProps = { className: "h-12 w-12 text-primary", strokeWidth: 1.5 };
-    
-    switch(iconType) {
-      case 'building':
-        return <Building {...iconProps} />;
-      case 'book':
-        return <Book {...iconProps} />;
-      case 'theater':
-        return <Theater {...iconProps} />;
-      case 'coffee':
-        return <Coffee {...iconProps} />;
-      case 'tree':
-        return <TreePine {...iconProps} />;
-      default:
-        return <Pencil {...iconProps} />;
-    }
-  };
-  
-  const handleStartQuestWithPrompt = (questId: string) => {
-    if (selectedPrompt) {
-      // In a real implementation, we would save the prompt data to be used in the quest
-      // Here, we're just navigating to the quest and showing a toast
-      toast({
-        title: "Prompt Selected",
-        description: "Your custom prompt will be used for this writing activity.",
-      });
-      navigate(`/owl/quest/${questId}`);
-    }
-  };
-  
-  const handleQuestStart = (questId: string) => {
-    navigate(`/owl/quest/${questId}`);
-  };
-  
+
   return (
-    <MainLayout 
-      title={location.name} 
+    <MainLayout
+      title={location.name}
       subtitle={`${location.type.charAt(0).toUpperCase() + location.type.slice(1)} Writing Venue`}
       showBackButton
-      onBackClick={() => navigate('/owl')}
+      onBackClick={() => window.history.back()}
     >
-      <div className="container max-w-4xl mx-auto p-4">
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
-          <div className="flex-shrink-0 flex justify-center">
-            <div className="w-24 h-24 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
-              {getLocationIcon(location.icon)}
-            </div>
-          </div>
-          
-          <div className="flex-grow">
-            <h1 className="text-2xl font-bold">{location.name}</h1>
-            <p className="text-muted-foreground mb-3">{location.description}</p>
-            <Badge>{location.type} writing</Badge>
-          </div>
-        </div>
-        
-        <Tabs defaultValue="quests" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-2 mb-6">
-            <TabsTrigger value="quests">Writing Quests</TabsTrigger>
-            <TabsTrigger value="prompt-generator">AI Prompt Generator</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="quests" className="space-y-4">
-            {quests.length > 0 ? (
-              quests.map(quest => (
-                <Card key={quest.id} className="overflow-hidden">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{quest.title}</CardTitle>
-                        <CardDescription>
-                          {quest.skillFocus.charAt(0).toUpperCase() + quest.skillFocus.slice(1)} · Level {quest.level} · {quest.minWordCount}+ words
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm">{quest.description}</p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {quest.tags.map(tag => (
-                        <Badge key={tag} variant="outline">{tag}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="bg-muted/30 flex justify-between">
-                    {selectedPrompt ? (
-                      <>
-                        <Button variant="outline" onClick={() => setSelectedPrompt(null)}>
-                          Remove Custom Prompt
-                        </Button>
-                        <Button onClick={() => handleStartQuestWithPrompt(quest.id)}>
-                          Start with Custom Prompt
-                        </Button>
-                      </>
-                    ) : (
-                      <Button className="ml-auto" onClick={() => handleQuestStart(quest.id)}>
-                        Start Quest
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <Pencil className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No quests available</h3>
-                <p className="text-muted-foreground">
-                  There are no writing quests available at this location yet.
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MapPin className="w-5 h-5 mr-2" />
+                Location Details
+              </CardTitle>
+              <CardDescription>Learn about this location and its writing focus</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">{location.description}</p>
+              <div className="bg-muted p-4 rounded-md mb-4">
+                <h3 className="font-semibold mb-2">Writing Type: {location.type.charAt(0).toUpperCase() + location.type.slice(1)}</h3>
+                <p className="text-sm">
+                  {location.type === 'narrative' && 'Focus on telling stories with characters, plot, and setting.'}
+                  {location.type === 'descriptive' && 'Paint vivid pictures with words, focusing on sensory details.'}
+                  {location.type === 'argumentative' && 'Convince readers of your position with evidence and reasoning.'}
+                  {location.type === 'informative' && 'Share knowledge and explain concepts clearly.'}
+                  {location.type === 'reflective' && 'Express personal thoughts and insights about experiences.'}
                 </p>
               </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="prompt-generator">
-            <WritePromptGenerator 
-              location={location}
-              onSelectPrompt={(promptData) => {
-                setSelectedPrompt(promptData);
-                setActiveTab("quests");
-                toast({
-                  title: "Prompt Generated",
-                  description: "Your custom prompt is ready! Select a quest to use it with.",
-                });
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Quests</CardTitle>
+              <CardDescription>Writing challenges at this location</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {quests.length > 0 ? (
+                <div className="space-y-4">
+                  {quests.map(quest => {
+                    const isCompleted = progress?.completedQuests.includes(quest.id);
+                    const isUnlocked = progress && progress.skillMastery ? (
+                      (progress.skillMastery.mechanics ?? 0) >= quest.unlockRequirements.skillMastery.mechanics &&
+                      (progress.skillMastery.sequencing ?? 0) >= quest.unlockRequirements.skillMastery.sequencing &&
+                      (progress.skillMastery.voice ?? 0) >= quest.unlockRequirements.skillMastery.voice
+                    ) : false;
+                    
+                    return (
+                      <Card key={quest.id} className={`border ${isCompleted ? 'border-green-500' : ''}`}>
+                        <CardHeader className="py-3">
+                          <CardTitle className="text-base flex justify-between">
+                            <span>{quest.title}</span>
+                            {isCompleted && <span className="text-green-500">✓ Completed</span>}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="py-2">
+                          <p className="text-sm">{quest.description}</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {quest.tags.map(tag => (
+                              <span key={tag} className="px-2 py-1 bg-muted text-xs rounded-full">{tag}</span>
+                            ))}
+                          </div>
+                        </CardContent>
+                        <CardFooter className="py-2">
+                          {isUnlocked ? (
+                            <Link href={`/owl/quest/${quest.id}`}>
+                              <Button size="sm" className="w-full">
+                                <Pencil className="w-4 h-4 mr-2" />
+                                {isCompleted ? 'Revisit Quest' : 'Start Quest'}
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button size="sm" className="w-full" variant="outline" disabled>
+                              Locked - Improve your skills first
+                            </Button>
+                          )}
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p>No quests are available at this location yet.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div>
+          <Tabs defaultValue="prompt-generator">
+            <TabsList className="w-full">
+              <TabsTrigger value="prompt-generator" className="flex-1">Prompt Generator</TabsTrigger>
+              <TabsTrigger value="free-write" className="flex-1">Free Write</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="prompt-generator" className="mt-4">
+              {!generatedPrompt ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Generate a Writing Prompt</CardTitle>
+                    <CardDescription>
+                      Create a custom {location.type} writing prompt based on this location
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <WritePromptGenerator 
+                      location={location}
+                      onSelectPrompt={(prompt) => setGeneratedPrompt(prompt)}
+                    />
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your Custom Prompt</CardTitle>
+                    <CardDescription>
+                      Start writing or generate a new prompt
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Prompt</h3>
+                        <p>{generatedPrompt.prompt}</p>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Scenario</h3>
+                        <p>{generatedPrompt.scenario}</p>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Guiding Questions</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {generatedPrompt.guidingQuestions.map((q, i) => (
+                            <li key={i}>{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Suggested Elements</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {generatedPrompt.suggestedElements.map((e, i) => (
+                            <li key={i}>{e}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Challenge Element</h3>
+                        <p>{generatedPrompt.challengeElement}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={() => setGeneratedPrompt(null)}>
+                      Generate New Prompt
+                    </Button>
+                    <Link href={`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}`}>
+                      <Button>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Start Writing
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="free-write" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Free Writing</CardTitle>
+                  <CardDescription>
+                    Express yourself freely without a specific prompt
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-4">
+                    Sometimes the best writing comes from complete freedom. Use this space to write 
+                    about anything that comes to mind related to {location.name}.
+                  </p>
+                  <p className="mb-4">
+                    This is a great way to practice your {location.type} writing skills without 
+                    the structure of a specific prompt or quest.
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Link href={`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}`}>
+                    <Button className="w-full">
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Start Free Writing
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </MainLayout>
   );
-};
-
-export default OWLLocationDetail;
+}
