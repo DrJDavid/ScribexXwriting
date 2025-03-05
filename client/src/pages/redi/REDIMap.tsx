@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import REDIMapNode, { SkillType, ExerciseType } from '@/components/redi/REDIMapNode';
@@ -23,8 +23,8 @@ const REDIMap: React.FC = () => {
   };
   
   // Filter for skill type and exercise type
-  const [activeSkillFilter, setActiveSkillFilter] = React.useState<SkillType | 'all'>('all');
-  const [activeTypeFilter, setActiveTypeFilter] = React.useState<ExerciseType | 'all'>('all');
+  const [activeSkillFilter, setActiveSkillFilter] = useState<SkillType | 'all'>('all');
+  const [activeTypeFilter, setActiveTypeFilter] = useState<ExerciseType | 'all'>('all');
   
   // Get nodes with proper status based on progress
   const nodes = getExerciseNodes(progress?.skillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
