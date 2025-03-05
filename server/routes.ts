@@ -170,7 +170,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { questId, title, content } = schema.parse(req.body);
       
-      // Create submission
+      console.log('Creating writing submission:', { userId: user.id, questId, title, contentLength: content.length });
+      
+      // Create submission with required fields only to avoid any issues
       const submission = await storage.createWritingSubmission({
         userId: user.id,
         questId,
@@ -178,8 +180,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content
       });
       
+      console.log('Writing submission created successfully:', submission.id);
+      
       res.status(201).json(submission);
     } catch (error) {
+      console.error('Error in writing submission:', error);
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
