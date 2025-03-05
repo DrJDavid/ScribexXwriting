@@ -13,7 +13,7 @@ export interface WritingQuestProps {
   description: string;
   tags: string[];
   minWordCount?: number;
-  onSubmit: (questId: string, title: string, content: string) => void;
+  onSubmit: (questId: string, title: string, content: string) => Promise<any>;
   onSaveDraft: (questId: string, title: string, content: string) => void;
 }
 

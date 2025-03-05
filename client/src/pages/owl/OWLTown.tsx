@@ -74,12 +74,17 @@ const OWLTown: React.FC = () => {
         </div>
         
         {/* Town Map */}
-        <div className="relative bg-[#2d4438] rounded-xl p-4 overflow-hidden min-h-[400px]">
+        <div className="relative bg-[#2d4438] rounded-xl p-4 overflow-hidden min-h-[500px]">
           {/* Map background with opacity */}
-          <div className="absolute inset-0 bg-[#1a2f23]/60 z-0"></div>
+          <div className="absolute inset-0 bg-[#1a2f23]/60 z-0">
+            {/* Map decoration elements */}
+            <div className="absolute top-[20%] left-[10%] w-16 h-16 rounded-full bg-[#1a2f23]/40"></div>
+            <div className="absolute bottom-[15%] right-[20%] w-20 h-20 rounded-full bg-[#1a2f23]/30"></div>
+            <div className="absolute top-[70%] left-[40%] w-12 h-12 rounded-full bg-[#1a2f23]/20"></div>
+          </div>
           
           {/* Map locations */}
-          <div className="relative z-10">
+          <div className="relative z-10" style={{ width: '600px', height: '400px' }}>
             {locations.map((location) => (
               <OWLMapLocation
                 key={location.id}
