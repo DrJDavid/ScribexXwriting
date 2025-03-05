@@ -187,6 +187,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Paragraph Flow',
     level: 3,
     skillType: 'sequencing',
+    type: 'multiple-choice',
     instructions: 'Select the sentence that best continues the paragraph',
     content: 'Recycling has many benefits for our environment. It reduces the amount of waste sent to landfills. It also conserves natural resources and prevents pollution.',
     options: [
@@ -202,6 +203,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Transition Words',
     level: 4,
     skillType: 'sequencing',
+    type: 'multiple-choice',
     instructions: 'Choose the best transition word or phrase',
     content: 'I wanted to go to the concert. __________, I couldn\'t afford the tickets.',
     options: [
@@ -217,6 +219,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Logical Organization',
     level: 5,
     skillType: 'sequencing',
+    type: 'multiple-choice',
     instructions: 'Identify the best organizational structure',
     content: 'You\'re writing an essay about the causes and effects of climate change. Which organizational structure would work best?',
     options: [
@@ -259,6 +262,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Audience Awareness',
     level: 1,
     skillType: 'voice',
+    type: 'multiple-choice',
     instructions: 'Select the sentence with appropriate tone for a formal essay',
     content: 'You\'re writing a research paper for school. Which sentence has the most appropriate tone?',
     options: [
@@ -274,6 +278,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Vivid Language',
     level: 2,
     skillType: 'voice',
+    type: 'multiple-choice',
     instructions: 'Choose the sentence with the most vivid descriptive language',
     content: 'Select the option that paints the clearest picture in the reader\'s mind.',
     options: [
@@ -289,6 +294,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Active vs. Passive Voice',
     level: 3,
     skillType: 'voice',
+    type: 'multiple-choice',
     instructions: 'Identify the sentence written in active voice',
     content: 'Select the option that uses active rather than passive voice.',
     options: [
@@ -304,6 +310,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Persuasive Language',
     level: 4,
     skillType: 'voice',
+    type: 'multiple-choice',
     instructions: 'Choose the most persuasive statement',
     content: 'You\'re writing to convince your school to start a recycling program. Which statement is most persuasive?',
     options: [
@@ -319,6 +326,7 @@ export const EXERCISES: Exercise[] = [
     title: 'Emotional Appeal',
     level: 5,
     skillType: 'voice',
+    type: 'multiple-choice',
     instructions: 'Select the sentence with the strongest emotional appeal',
     content: 'You\'re writing about animal adoption. Which sentence creates the strongest emotional connection?',
     options: [
