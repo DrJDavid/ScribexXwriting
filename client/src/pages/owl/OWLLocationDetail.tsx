@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -17,25 +17,21 @@ export default function OWLLocationDetail() {
   const location = getLocationById(locationId);
   const quests = getQuestsForLocation(locationId);
   const { progress } = useProgress();
+  
+  // Use regular state for the prompt and modal
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   
-  // Debug logging only - no state changes in useEffect to avoid loops
+  // Add a forceUpdate function to ensure renders when needed
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  
+  // Debug logging with no side effects
   useEffect(() => {
     console.log("generatedPrompt state changed:", generatedPrompt);
     console.log("Modal open state:", promptModalOpen);
-    // Do not set state here to avoid loops - the modal is controlled explicitly by the parent
   }, [generatedPrompt, promptModalOpen]);
   
-  // Prevent any unwanted state resets
-  useEffect(() => {
-    // This ensures the component doesn't reset state unexpectedly on re-renders
-    return () => {
-      // Intentionally empty cleanup to prevent state reset on unmount
-    };
-  }, []);
-  
-  // Handle back button click properly - use navigate instead of window.history
+  // Handle back button click 
   const handleBackClick = () => {
     navigate('/owl');
   };
@@ -210,14 +206,21 @@ export default function OWLLocationDetail() {
                         };
                         console.log("Setting generatedPrompt to:", updatedPrompt);
                         
-                        // First set the prompt
-                        setGeneratedPrompt(updatedPrompt);
+                        // First clear the current prompt (to force re-render)
+                        setGeneratedPrompt(null);
+                        setPromptModalOpen(false);
                         
-                        // Manually trigger the modal open with a slight delay to ensure state is updated
+                        // Force a component update
+                        forceUpdate();
+                        
+                        // Set the new prompt and open the modal with a delay
                         setTimeout(() => {
-                          console.log("Delayed opening of modal");
-                          setPromptModalOpen(true);
-                        }, 10);
+                          setGeneratedPrompt(updatedPrompt);
+                          setTimeout(() => {
+                            console.log("Opening modal with prompt:", updatedPrompt);
+                            setPromptModalOpen(true);
+                          }, 50);
+                        }, 50);
                       }
                     }}
                   />
