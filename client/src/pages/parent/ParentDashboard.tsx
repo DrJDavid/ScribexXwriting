@@ -173,65 +173,7 @@ export default function ParentDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Parent Resources</CardTitle>
-            <CardDescription>
-              Helpful tools and materials to support your child's writing journey
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="text-base">Writing Support Guide</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Learn how to support your child's writing development at home.
-                  </p>
-                  <Button variant="outline" size="sm">Read Guide</Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="text-base">Progress Tracking</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Understanding your child's writing progress reports.
-                  </p>
-                  <Button variant="outline" size="sm">View Tutorial</Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="text-base">Writing Prompts</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Additional writing activities to practice at home.
-                  </p>
-                  <Button variant="outline" size="sm">Get Prompts</Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="text-base">Contact Support</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Need help? Reach out to our parent support team.
-                  </p>
-                  <Button variant="outline" size="sm">Get Help</Button>
-                </CardContent>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </MainLayout>
   );

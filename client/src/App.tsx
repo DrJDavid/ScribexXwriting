@@ -216,6 +216,7 @@ import REDIMap from "@/pages/redi/REDIMap";
 import REDIExercise from "@/pages/redi/REDIExercise";
 import ProfilePage from "@/pages/Profile";
 import AchievementsPage from "@/pages/AchievementsPage";
+import TeacherParentProfile from "@/pages/TeacherParentProfile";
 import DailyWritingChallenge from "@/pages/challenges/DailyChallenge";
 import TeacherDashboard from "@/pages/teacher/TeacherDashboard";
 import StudentDetails from "@/pages/teacher/StudentDetails";
@@ -334,7 +335,16 @@ function App() {
                     component={AchievementsPage} 
                     allowedRoles={['student', 'teacher', 'parent']} 
                   />
-                  <ProtectedRoute path="/profile" component={ProfilePage} />
+                  <RoleBasedRoute 
+                    path="/profile" 
+                    component={TeacherParentProfile} 
+                    allowedRoles={['teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/profile" 
+                    component={ProfilePage} 
+                    allowedRoles={['student']} 
+                  />
                   
                   {/* Home routes (redirects based on role) */}
                   <ProtectedRoute path="/" component={Home} />

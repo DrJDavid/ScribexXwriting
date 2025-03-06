@@ -143,38 +143,36 @@ export default function TeacherDashboard() {
                     No students linked yet. Use the form above to link students.
                   </div>
                 ) : (
-                  <ScrollArea className="h-[300px]">
-                    <div className="space-y-4">
-                      {students.map((student) => (
-                        <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <div className="font-medium">{student.displayName}</div>
-                            <div className="text-sm text-muted-foreground">
-                              Username: {student.username}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              Grade: {student.grade}
-                            </div>
+                  <div className="space-y-4 max-h-[600px] overflow-auto pr-2">
+                    {students.map((student) => (
+                      <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <div className="font-medium">{student.displayName}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Username: {student.username}
                           </div>
-                          <div className="flex space-x-2">
-                            <Link href={`/teacher/student/${student.id}`}>
-                              <Button variant="outline" size="sm">
-                                View Details
-                              </Button>
-                            </Link>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => handleUnlinkStudent(student.id)}
-                              disabled={unlinkStudentMutation.isPending}
-                            >
-                              Unlink
-                            </Button>
+                          <div className="text-sm text-muted-foreground">
+                            Grade: {student.grade}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                        <div className="flex space-x-2">
+                          <Link href={`/teacher/student/${student.id}`}>
+                            <Button variant="outline" size="sm">
+                              View Details
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleUnlinkStudent(student.id)}
+                            disabled={unlinkStudentMutation.isPending}
+                          >
+                            Unlink
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
