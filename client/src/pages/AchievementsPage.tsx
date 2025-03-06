@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { 
@@ -20,7 +20,8 @@ import useProgress from '@/hooks/useProgress';
 import { getAllAchievements, Achievement } from '@/data/achievements';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
          BarChart as RechartsBarChart, Bar, Legend, CartesianGrid } from 'recharts';
-import { ProgressHistoryEntry } from '@shared/schema';
+import { ProgressHistoryEntry, SkillMastery } from '@shared/schema';
+import { format, subDays } from 'date-fns';
 
 // Helper function to create particles
 const createParticles = (count: number) => {
@@ -34,12 +35,106 @@ const createParticles = (count: number) => {
   }));
 };
 
+// Helper function to generate progress history data
+const generateProgressHistoryData = (currentProgress?: any) => {
+  const today = new Date();
+  const progressHistory: any[] = [];
+  
+  // If we have actual progress history data, use it
+  if (currentProgress?.progressHistory && Array.isArray(currentProgress.progressHistory) && 
+      currentProgress.progressHistory.length > 0) {
+    return currentProgress.progressHistory;
+  }
+  
+  // Otherwise, generate default progress data starting from today and going backward
+  // This ensures a new user always starts with their current date
+  for (let i = 6; i >= 0; i--) {
+    const date = subDays(today, i * 7); // Weekly data points
+    const dateStr = format(date, 'M/d');
+    
+    // Make current progress the final data point
+    if (i === 0 && currentProgress) {
+      const totalMastery = 
+        ((currentProgress.rediSkillMastery?.mechanics || 0) + 
+         (currentProgress.rediSkillMastery?.sequencing || 0) + 
+         (currentProgress.rediSkillMastery?.voice || 0) +
+         (currentProgress.owlSkillMastery?.mechanics || 0) + 
+         (currentProgress.owlSkillMastery?.sequencing || 0) + 
+         (currentProgress.owlSkillMastery?.voice || 0)) / 6;
+      
+      progressHistory.push({
+        date: dateStr,
+        redi: Math.round((currentProgress.rediSkillMastery?.mechanics || 0) + 
+               (currentProgress.rediSkillMastery?.sequencing || 0) + 
+               (currentProgress.rediSkillMastery?.voice || 0)),
+        owl: Math.round((currentProgress.owlSkillMastery?.mechanics || 0) + 
+              (currentProgress.owlSkillMastery?.sequencing || 0) + 
+              (currentProgress.owlSkillMastery?.voice || 0)),
+        total: Math.round(totalMastery * 2),
+        mechanics: currentProgress.rediSkillMastery?.mechanics || 0,
+        sequencing: currentProgress.rediSkillMastery?.sequencing || 0,
+        voice: currentProgress.rediSkillMastery?.voice || 0,
+        owlMechanics: currentProgress.owlSkillMastery?.mechanics || 0,
+        owlSequencing: currentProgress.owlSkillMastery?.sequencing || 0,
+        owlVoice: currentProgress.owlSkillMastery?.voice || 0
+      });
+    } else {
+      // Generate simulated past data with a reasonable progression curve
+      // The longer ago, the lower the values
+      const progressFactor = i === 0 ? 1 : (6 - i) / 6;
+      const initialValue = 5; // Start with this minimum value
+      
+      // For a brand new user, show minimal progression
+      if (!currentProgress) {
+        progressHistory.push({
+          date: dateStr,
+          redi: Math.round((initialValue + 10 * progressFactor)),
+          owl: Math.round((initialValue + 5 * progressFactor)),
+          total: Math.round((initialValue * 2 + 15 * progressFactor)),
+          mechanics: Math.round(initialValue * progressFactor),
+          sequencing: Math.round(initialValue * progressFactor),
+          voice: Math.round(initialValue * progressFactor),
+          owlMechanics: Math.round(initialValue * progressFactor),
+          owlSequencing: Math.round(initialValue * progressFactor),
+          owlVoice: Math.round(initialValue * progressFactor)
+        });
+      } else {
+        // Calculate reasonable progression leading up to current values
+        const rediMechanics = Math.round((currentProgress.rediSkillMastery?.mechanics || 0) * progressFactor);
+        const rediSequencing = Math.round((currentProgress.rediSkillMastery?.sequencing || 0) * progressFactor);
+        const rediVoice = Math.round((currentProgress.rediSkillMastery?.voice || 0) * progressFactor);
+        const owlMechanics = Math.round((currentProgress.owlSkillMastery?.mechanics || 0) * progressFactor);
+        const owlSequencing = Math.round((currentProgress.owlSkillMastery?.sequencing || 0) * progressFactor);
+        const owlVoice = Math.round((currentProgress.owlSkillMastery?.voice || 0) * progressFactor);
+        
+        progressHistory.push({
+          date: dateStr,
+          redi: rediMechanics + rediSequencing + rediVoice,
+          owl: owlMechanics + owlSequencing + owlVoice,
+          total: rediMechanics + rediSequencing + rediVoice + owlMechanics + owlSequencing + owlVoice,
+          mechanics: rediMechanics,
+          sequencing: rediSequencing,
+          voice: rediVoice,
+          owlMechanics: owlMechanics,
+          owlSequencing: owlSequencing,
+          owlVoice: owlVoice
+        });
+      }
+    }
+  }
+  
+  return progressHistory;
+};
+
 const AchievementsPage: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const [activeFilter, setActiveFilter] = useState<'all' | 'redi' | 'owl' | 'general'>('all');
   const { progress } = useProgress();
   const [particles] = useState(() => createParticles(15));
   const [activeAchievement, setActiveAchievement] = useState<Achievement | null>(null);
+  
+  // Generate progress history data for charts
+  const progressHistoryData = generateProgressHistoryData(progress);
   
   // Set theme based on filter
   useEffect(() => {
@@ -315,15 +410,7 @@ const AchievementsPage: React.FC = () => {
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={[
-                        { date: '1/1', redi: 10, owl: 5, total: 15 },
-                        { date: '1/8', redi: 20, owl: 15, total: 35 },
-                        { date: '1/15', redi: 35, owl: 25, total: 60 },
-                        { date: '1/22', redi: 45, owl: 40, total: 85 },
-                        { date: '1/29', redi: 60, owl: 55, total: 115 },
-                        { date: '2/5', redi: 70, owl: 70, total: 140 },
-                        { date: '2/12', redi: 85, owl: 75, total: 160 },
-                      ]}
+                      data={progressHistoryData}
                       margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                     >
                       <defs>
@@ -422,15 +509,7 @@ const AchievementsPage: React.FC = () => {
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={[
-                        { date: '1/1', mechanics: 5, sequencing: 10, voice: 15 },
-                        { date: '1/8', mechanics: 15, sequencing: 20, voice: 25 },
-                        { date: '1/15', mechanics: 25, sequencing: 30, voice: 35 },
-                        { date: '1/22', mechanics: 35, sequencing: 40, voice: 45 },
-                        { date: '1/29', mechanics: 45, sequencing: 50, voice: 55 },
-                        { date: '2/5', mechanics: 55, sequencing: 60, voice: 65 },
-                        { date: '2/12', mechanics: 65, sequencing: 70, voice: 75 },
-                      ]}
+                      data={progressHistoryData}
                       margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                     >
                       <defs>
@@ -512,15 +591,7 @@ const AchievementsPage: React.FC = () => {
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={[
-                        { date: '1/1', mechanics: 5, sequencing: 5, voice: 5 },
-                        { date: '1/8', mechanics: 10, sequencing: 15, voice: 15 },
-                        { date: '1/15', mechanics: 20, sequencing: 25, voice: 25 },
-                        { date: '1/22', mechanics: 30, sequencing: 40, voice: 35 },
-                        { date: '1/29', mechanics: 40, sequencing: 50, voice: 50 },
-                        { date: '2/5', mechanics: 55, sequencing: 65, voice: 65 },
-                        { date: '2/12', mechanics: 65, sequencing: 70, voice: 75 },
-                      ]}
+                      data={progressHistoryData}
                       margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                     >
                       <defs>
@@ -546,9 +617,9 @@ const AchievementsPage: React.FC = () => {
                           color: '#fff'
                         }} 
                       />
-                      <Area type="monotone" dataKey="mechanics" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlMechanics)" name="Mechanics" />
-                      <Area type="monotone" dataKey="sequencing" stroke="#0ea5e9" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlSequencing)" name="Sequencing" />
-                      <Area type="monotone" dataKey="voice" stroke="#84cc16" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlVoice)" name="Voice" />
+                      <Area type="monotone" dataKey="owlMechanics" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlMechanics)" name="Mechanics" />
+                      <Area type="monotone" dataKey="owlSequencing" stroke="#0ea5e9" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlSequencing)" name="Sequencing" />
+                      <Area type="monotone" dataKey="owlVoice" stroke="#84cc16" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlVoice)" name="Voice" />
                       <Legend />
                     </AreaChart>
                   </ResponsiveContainer>
