@@ -32,7 +32,7 @@ export const TOWN_LOCATIONS: TownLocation[] = [
     name: 'Town Hall',
     description: 'Perfect for persuasive and argumentative writing',
     icon: 'building',
-    position: { x: 150, y: 150 },
+    position: { x: 180, y: 180 },
     quests: ['town-hall-1', 'town-hall-2', 'town-hall-3'],
     type: 'argumentative'
   },
@@ -41,7 +41,7 @@ export const TOWN_LOCATIONS: TownLocation[] = [
     name: 'Library',
     description: 'Ideal for research-based and informative writing',
     icon: 'book',
-    position: { x: 300, y: 80 },
+    position: { x: 450, y: 150 },
     quests: ['library-1', 'library-2', 'library-3'],
     type: 'informative'
   },
@@ -50,7 +50,7 @@ export const TOWN_LOCATIONS: TownLocation[] = [
     name: 'Amphitheater',
     description: 'The place for narrative and creative storytelling',
     icon: 'theater',
-    position: { x: 100, y: 280 },
+    position: { x: 120, y: 380 },
     quests: ['music-hall-1', 'music-hall-2'],
     type: 'narrative'
   },
@@ -59,7 +59,7 @@ export const TOWN_LOCATIONS: TownLocation[] = [
     name: 'Café',
     description: 'A cozy spot for reflective and journal writing',
     icon: 'coffee',
-    position: { x: 350, y: 220 },
+    position: { x: 500, y: 320 },
     quests: ['cafe-1', 'cafe-2'],
     type: 'reflective'
   },
@@ -68,7 +68,7 @@ export const TOWN_LOCATIONS: TownLocation[] = [
     name: 'Nature Park',
     description: 'Inspiration for descriptive and nature writing',
     icon: 'tree',
-    position: { x: 450, y: 120 },
+    position: { x: 640, y: 180 },
     quests: ['park-1', 'park-2'],
     type: 'descriptive'
   }

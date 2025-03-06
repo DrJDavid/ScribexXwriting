@@ -63,12 +63,8 @@ const OWLTown: React.FC = () => {
   useEffect(() => {
     setTheme('owl');
     
-    // Hide initial animation after it plays
-    const timer = setTimeout(() => {
-      setShowAnimation(false);
-    }, 2300);
-    
-    return () => clearTimeout(timer);
+    // Don't show animation - immediately set to false for quick navigation
+    setShowAnimation(false);
   }, [setTheme]);
   
   // Handle location click
@@ -255,19 +251,8 @@ const OWLTown: React.FC = () => {
                 <div className="absolute bottom-[25%] right-[20%] w-32 h-32 rounded-full bg-gradient-to-r from-amber-300/10 to-yellow-200/10 blur-3xl"></div>
                 <div className="absolute top-[60%] left-[40%] w-16 h-16 rounded-full bg-gradient-to-r from-cyan-300/10 to-blue-200/10 blur-xl"></div>
                 
-                {/* Time of day indicator at the top */}
-                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-emerald-900/80 to-transparent z-10">
-                  <div className="flex justify-between items-center p-4">
-                    <div className="flex items-center space-x-3">
-                      <Sun size={20} className="text-amber-300 animate-pulse-slow" />
-                      <div className="w-40 h-1 bg-gradient-to-r from-emerald-900/80 via-amber-300/60 to-emerald-900/80 rounded-full"></div>
-                      <MoonStar size={20} className="text-emerald-200" />
-                    </div>
-                    <div className="text-emerald-200 text-sm font-medium tracking-wide backdrop-blur-sm bg-emerald-950/40 px-3 py-1 rounded-full">
-                      Golden Hour
-                    </div>
-                  </div>
-                </div>
+                {/* Top gradient overlay */}
+                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-emerald-900/80 to-transparent z-10"></div>
                 
                 {/* Map container */}
                 <div className="relative z-10 min-h-[600px] p-6 owl-map-container">
