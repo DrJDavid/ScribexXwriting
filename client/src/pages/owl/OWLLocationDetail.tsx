@@ -187,23 +187,36 @@ export default function OWLLocationDetail() {
                     location={location}
                     onSelectPrompt={(prompt) => {
                       if (prompt) {
-                        // Directly update the ref without state changes
-                        promptRef.current = {
-                          prompt: prompt.prompt,
-                          scenario: prompt.scenario,
-                          guidingQuestions: [...(prompt.guidingQuestions || [])],
-                          suggestedElements: [...(prompt.suggestedElements || [])],
-                          challengeElement: prompt.challengeElement || ""
-                        };
-                        
-                        // Just open the modal
-                        setModalOpen(true);
-                        
-                        // Show a toast
-                        toast({
-                          title: "Prompt Ready!",
-                          description: "Your custom writing prompt has been generated.",
-                        });
+                        try {
+                          console.log("Received prompt in onSelectPrompt:", prompt);
+                          
+                          // Create a deep copy of the prompt
+                          const promptCopy = {
+                            prompt: prompt.prompt,
+                            scenario: prompt.scenario,
+                            guidingQuestions: [...(prompt.guidingQuestions || [])],
+                            suggestedElements: [...(prompt.suggestedElements || [])],
+                            challengeElement: prompt.challengeElement || ""
+                          };
+                          
+                          // Assign to ref
+                          promptRef.current = promptCopy;
+                          
+                          console.log("Updated promptRef.current:", promptRef.current);
+                          
+                          // Set timeout to ensure the ref is updated before opening modal
+                          setTimeout(() => {
+                            console.log("Opening modal, promptRef.current:", promptRef.current);
+                            setModalOpen(true);
+                          }, 50);
+                        } catch (error) {
+                          console.error("Error handling prompt:", error);
+                          toast({
+                            title: "Error",
+                            description: "There was a problem displaying your prompt.",
+                            variant: "destructive"
+                          });
+                        }
                       }
                     }}
                   />

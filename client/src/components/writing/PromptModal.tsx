@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -26,24 +26,30 @@ export function PromptModal({
   onStartWriting, 
   onNewPrompt 
 }: PromptModalProps) {
+  // Local copy of prompt to ensure it's preserved
+  const [localPrompt, setLocalPrompt] = useState<GeneratedPrompt | null>(null);
+  
+  // Update local prompt when parent prompt changes
+  useEffect(() => {
+    if (prompt) {
+      console.log("Updating localPrompt from prompt:", prompt);
+      setLocalPrompt({
+        prompt: prompt.prompt,
+        scenario: prompt.scenario,
+        guidingQuestions: [...(prompt.guidingQuestions || [])],
+        suggestedElements: [...(prompt.suggestedElements || [])],
+        challengeElement: prompt.challengeElement || ""
+      });
+    }
+  }, [prompt]);
+  
   // Debug logging
   useEffect(() => {
-    console.log("PromptModal rendered with open:", open);
-    console.log("PromptModal prompt:", prompt);
-  }, [open, prompt]);
-
-  // Force Dialog to not close when clicking outside if we have a prompt
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && prompt) {
-      // If trying to close and we have a prompt, only allow via buttons
-      // This prevents accidental dismissal
-      return;
-    }
-    onOpenChange(newOpen);
-  };
-
+    console.log("PromptModal rendered with:", { open, promptExists: !!prompt, localPromptExists: !!localPrompt });
+  }, [open, prompt, localPrompt]);
+  
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-primary">Your Custom Prompt is Ready!</DialogTitle>
@@ -53,44 +59,44 @@ export function PromptModal({
         </DialogHeader>
         
         <div className="space-y-4 my-4">
-          {prompt ? (
+          {localPrompt ? (
             <>
               <div className="bg-muted p-4 rounded-md">
                 <h3 className="font-semibold mb-2">Prompt</h3>
-                <p>{prompt.prompt}</p>
+                <p>{localPrompt.prompt}</p>
               </div>
               
               <div className="bg-muted p-4 rounded-md">
                 <h3 className="font-semibold mb-2">Scenario</h3>
-                <p>{prompt.scenario}</p>
+                <p>{localPrompt.scenario}</p>
               </div>
               
-              {prompt.guidingQuestions && prompt.guidingQuestions.length > 0 && (
+              {localPrompt.guidingQuestions && localPrompt.guidingQuestions.length > 0 && (
                 <div className="bg-muted p-4 rounded-md">
                   <h3 className="font-semibold mb-2">Guiding Questions</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    {prompt.guidingQuestions.map((q, i) => (
+                    {localPrompt.guidingQuestions.map((q, i) => (
                       <li key={i}>{q}</li>
                     ))}
                   </ul>
                 </div>
               )}
               
-              {prompt.suggestedElements && prompt.suggestedElements.length > 0 && (
+              {localPrompt.suggestedElements && localPrompt.suggestedElements.length > 0 && (
                 <div className="bg-muted p-4 rounded-md">
                   <h3 className="font-semibold mb-2">Suggested Elements</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    {prompt.suggestedElements.map((e, i) => (
+                    {localPrompt.suggestedElements.map((e, i) => (
                       <li key={i}>{e}</li>
                     ))}
                   </ul>
                 </div>
               )}
               
-              {prompt.challengeElement && (
+              {localPrompt.challengeElement && (
                 <div className="bg-muted p-4 rounded-md">
                   <h3 className="font-semibold mb-2">Challenge Element</h3>
-                  <p>{prompt.challengeElement}</p>
+                  <p>{localPrompt.challengeElement}</p>
                 </div>
               )}
             </>
@@ -102,7 +108,7 @@ export function PromptModal({
         </div>
         
         <DialogFooter className="flex justify-between">
-          {prompt ? (
+          {localPrompt ? (
             <>
               <Button variant="outline" onClick={onNewPrompt}>
                 Generate New Prompt

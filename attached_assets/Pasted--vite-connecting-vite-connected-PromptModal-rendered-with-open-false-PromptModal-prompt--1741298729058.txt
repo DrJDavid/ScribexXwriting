@@ -1,0 +1,12 @@
+[vite] connecting...
+[vite] connected.
+PromptModal rendered with open: false
+PromptModal prompt: null
+Sending prompt generation request: 
+Object {locationType: "argumentative", locationName: "Town Hall", customFocus: null}
+Prompt generation response status: 200
+Raw response: {"prompt":"Write an argumentative piece debating whether the Town Hall in OWL Town should prioritize funding for environmental initiatives over expanding its historic library collection.","scenario":"In OWL Town, a recent community meeting at the Town Hall sparked a debate between preserving the town's rich literary history and addressing modern environmental challenges. The Town Hall, a symbol of civic pride and engagement, serves as the epicenter of these discussions, with its walls echoing the voices of concerned citizens and council members alike.","guidingQuestions":["What are the potential long-term benefits of prioritizing environmental initiatives for OWL Town?","How does the historical significance of the Town Hall's library collection contribute to the community's identity?","What compromises or alternative solutions could satisfy both sides of the debate?"],"suggestedElements":["Descriptions of the Town Hall's architecture and its role in community events","Quotes or paraphrases from recent community meetings","Historical anecdotes about the library's collection","Statistics or expert opinions on environmental issues relevant to OWL Town"],"challengeElement":"Incorporate a fictional town council member's personal story that influences their stance on the issue."}
+Parsed prompt data: 
+Object {prompt: "Write an argumentative piece debating whether the Town Hall in OWL Town should prioritize funding…", scenario: "In OWL Town, a recent community meeting at the Town Hall sparked a debate between preserving the…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Incorporate a fictional town council member's personal story that influences their stance on the…"}
+Calling onSelectPrompt with generated prompt
+PromptModal rendered with open: false
