@@ -9,8 +9,8 @@ import { getTownLocations } from '@/data/quests';
 import { 
   Building, Book, Theater, Coffee, TreePine,
   FileText, Pencil, BookOpen, Feather, PenTool, 
-  Leaf, Wind, Sparkles, Compass, Sun, MoonStar,
-  MapPin, ArrowRight, Flower2 as Plant, Flower, Star
+  Leaf, Wind, Sparkles, Compass,
+  MapPin, ArrowRight, Flower, Star
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +20,7 @@ const PlantElement = ({ className, speed = 6, delay = 0, type = 'leaf', size = 2
   
   const iconMap = {
     'leaf': <Leaf className="text-emerald-200/80" size={size} />,
-    'plant': <Plant className="text-emerald-300/80" size={size} />,
+    'plant': <Leaf className="text-emerald-300/80" size={size} />,
     'flower': <Flower className="text-teal-200/80" size={size} />,
     'sparkle': <Sparkles className="text-amber-100/80" size={size} />,
     'star': <Star className="text-yellow-200/80" size={size} />,
@@ -132,30 +132,7 @@ const OWLTown: React.FC = () => {
       title="OWL" 
       subtitle="Open World Learning"
     >
-      <AnimatePresence>
-        {showAnimation && (
-          <motion.div 
-            className="fixed inset-0 bg-emerald-900 z-50 flex items-center justify-center"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, delay: 1.8 }}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1, rotate: [0, 5, 0, -5, 0] }}
-              exit={{ scale: 1.5, opacity: 0 }}
-              transition={{ duration: 1.5, ease: "easeInOut" }}
-              className="text-center"
-            >
-              <div className="flex items-center justify-center mb-2">
-                <Plant size={40} className="text-emerald-400 mr-2" />
-                <span className="text-3xl font-bold bg-gradient-to-r from-emerald-200 via-teal-300 to-emerald-200 text-transparent bg-clip-text font-botanical">Writer's Town</span>
-              </div>
-              <p className="text-emerald-200/80 text-sm tracking-wide">A sanctuary for creative growth</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Loading animation removed for instant page transitions */}
       
       <div className="mb-8">
         <motion.div 
@@ -167,7 +144,7 @@ const OWLTown: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="font-botanical text-3xl font-bold mb-1 text-emerald-50 drop-shadow-md flex items-center">
-                <Plant className="inline-block mr-2 text-emerald-400" size={28} />
+                <Leaf className="inline-block mr-2 text-emerald-400" size={28} />
                 Writer's Town
               </h2>
               <p className="text-emerald-200/80 text-sm italic">Explore the garden of creative possibilities</p>
@@ -320,23 +297,23 @@ const OWLTown: React.FC = () => {
                   )}
                 </AnimatePresence>
                 
-                {/* Map legend */}
-                <div className="absolute bottom-6 left-6 bg-gradient-to-br from-emerald-900/90 to-emerald-950/90 backdrop-blur-md rounded-lg p-4 border border-emerald-700/50 shadow-glow-sm z-20">
-                  <h3 className="text-sm font-medium text-emerald-200 mb-2 flex items-center">
-                    <Compass className="h-4 w-4 mr-1 text-emerald-300" />
+                {/* Map legend - moved to top left */}
+                <div className="absolute top-24 left-6 bg-gradient-to-br from-emerald-900/90 to-emerald-950/90 backdrop-blur-md rounded-lg p-3 border border-emerald-700/50 shadow-glow-sm z-20">
+                  <h3 className="text-xs font-medium text-emerald-200 mb-1.5 flex items-center">
+                    <Compass className="h-3.5 w-3.5 mr-1 text-emerald-300" />
                     Map Legend
                   </h3>
-                  <div className="space-y-2 text-xs">
+                  <div className="space-y-1.5 text-xs">
                     <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full bg-emerald-400 mr-2"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 mr-1.5"></div>
                       <span className="text-emerald-100">Unlocked Location</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full bg-gray-500 mr-2"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-1.5"></div>
                       <span className="text-gray-400">Locked Location</span>
                     </div>
                     <div className="flex items-center">
-                      <Sparkles className="h-3 w-3 text-amber-300 mr-2" />
+                      <Sparkles className="h-2.5 w-2.5 text-amber-300 mr-1.5" />
                       <span className="text-amber-100">Creative Energy</span>
                     </div>
                   </div>
