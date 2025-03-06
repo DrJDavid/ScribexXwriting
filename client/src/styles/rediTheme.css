@@ -1,0 +1,269 @@
+/* Synthwave/Cyberpunk theme for REDI interface */
+
+/* Import our text shadow utilities */
+@import './textShadow.css';
+
+/* General REDI theme styles */
+.redi-theme {
+  background-color: #121212;
+  color: white;
+  font-family: 'Orbitron', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Animated grid background with perspective effect */
+.redi-grid-bg {
+  background-image: 
+    linear-gradient(
+      to right, 
+      rgba(57, 255, 20, 0.15) 1px, 
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom, 
+      rgba(57, 255, 20, 0.15) 1px, 
+      transparent 1px
+    );
+  background-size: 80px 80px;
+  animation: grid-move 3s linear infinite;
+  border-radius: 0.75rem;
+  transform: perspective(500px) rotateX(10deg);
+  transform-origin: center top;
+}
+
+/* Synthwave horizon background effect */
+.redi-horizon-bg {
+  background: linear-gradient(0deg, #ff3864 0%, #6320ee 60%, #1e1e1e 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Synthwave sun circle */
+.redi-sun {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(0deg, #ff3864, #ffdf00);
+  border-radius: 50%;
+  position: absolute;
+  bottom: -75px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 50px #ff3864, 0 0 100px #ff3864;
+}
+
+/* Neon text gradient */
+.redi-neon-text {
+  background: linear-gradient(90deg, #ff3864, #6320ee, #00fff5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-shift 8s ease infinite;
+  background-size: 400% 400%;
+}
+
+/* Neon button styles */
+.redi-neon-button {
+  position: relative;
+  color: #39ff14;
+  border: 1px solid #39ff14;
+  border-radius: 4px;
+  background-color: transparent;
+  text-shadow: 0 0 5px #39ff14;
+  box-shadow: 0 0 5px #39ff14, inset 0 0 5px #39ff14;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.redi-neon-button:hover {
+  color: #121212;
+  background-color: #39ff14;
+  box-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14, inset 0 0 10px rgba(0, 0, 0, 0.5);
+  text-shadow: none;
+}
+
+.redi-neon-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(57, 255, 20, 0.4),
+    transparent
+  );
+  transition: all 0.6s ease;
+}
+
+.redi-neon-button:hover::before {
+  left: 100%;
+}
+
+/* Scanline effect */
+.redi-scanlines::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.05) 0.5%,
+    transparent 1%
+  );
+  animation: scanline 10s linear infinite;
+  pointer-events: none;
+}
+
+/* Neon box with glow effect */
+.redi-neon-box {
+  background-color: rgba(30, 30, 30, 0.8);
+  border: 1px solid #39ff14;
+  box-shadow: 0 0 10px #39ff14, inset 0 0 5px rgba(57, 255, 20, 0.3);
+  border-radius: 8px;
+}
+
+/* Neon progress bar for skill mastery */
+.redi-progress-bar {
+  height: 8px;
+  background-color: #1e1e1e;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.redi-progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #39ff14, #00fff5);
+  background-size: 200% 100%;
+  animation: gradient-shift 3s ease infinite;
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
+}
+
+/* Accents and gradients */
+.redi-accent-gradient {
+  background: linear-gradient(90deg, #39ff14, #00fff5);
+  background-size: 200% 100%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.redi-accent-pink {
+  color: #ff3864;
+  text-shadow: 0 0 5px #ff3864;
+}
+
+.redi-accent-cyan {
+  color: #00fff5;
+  text-shadow: 0 0 5px #00fff5;
+}
+
+.redi-accent-green {
+  color: #39ff14;
+  text-shadow: 0 0 5px #39ff14;
+}
+
+.redi-accent-purple {
+  color: #6320ee;
+  text-shadow: 0 0 5px #6320ee;
+}
+
+/* Animated particle effects */
+.redi-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.redi-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background-color: #39ff14;
+  border-radius: 50%;
+  box-shadow: 0 0 5px #39ff14;
+  animation: float-slow 3s ease-in-out infinite;
+}
+
+/* Node and connection styles */
+.redi-node {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 5;
+}
+
+.redi-node.locked {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.redi-node.completed {
+  box-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14;
+}
+
+.redi-node.current {
+  animation: pulse-slow 2s ease-in-out infinite;
+  box-shadow: 0 0 15px #ff3864, 0 0 30px #ff3864;
+}
+
+.redi-node-connection {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, #39ff14, #00fff5);
+  transform-origin: left center;
+  z-index: 4;
+}
+
+.redi-node-connection.completed {
+  background: linear-gradient(90deg, #39ff14, #00fff5);
+  box-shadow: 0 0 5px #39ff14;
+}
+
+.redi-node-connection.locked {
+  background: #333;
+  opacity: 0.5;
+}
+
+/* Terminal-style text for coding elements */
+.redi-terminal-text {
+  font-family: ui-monospace, monospace;
+  color: #00fff5;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid #00fff5;
+}
+
+/* Glitch effect for text */
+.redi-glitch-text {
+  position: relative;
+  animation: glitch 200ms ease-in-out infinite;
+}
+
+/* VHS static effect overlay */
+.redi-vhs-static {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}

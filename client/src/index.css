@@ -1,6 +1,10 @@
 /* Font imports */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700&family=Cardo:wght@400;700&family=Quicksand:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
 
+/* Theme-specific styles */
+@import './styles/textShadow.css';
+@import './styles/rediTheme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,5 +16,37 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Synthwave/REDI theme component styles */
+  .synthwave-heading {
+    @apply font-orbitron bg-gradient-to-r from-synthwave-pink via-synthwave-purple to-synthwave-cyan bg-clip-text text-transparent;
+  }
+  
+  .synthwave-button {
+    @apply px-4 py-2 bg-synthwave-surface border border-synthwave-accent rounded transition-all duration-300 shadow-neon-green hover:bg-synthwave-accent hover:text-synthwave-background;
+  }
+  
+  .synthwave-card {
+    @apply bg-synthwave-surface/80 backdrop-blur-sm border border-synthwave-accent/50 rounded-md shadow-md overflow-hidden relative;
+  }
+  
+  .synthwave-grid {
+    @apply bg-synthwave-grid bg-[size:50px_50px] animate-grid-move;
+  }
+  
+  /* Botanical/OWL theme component styles */
+  .botanical-heading {
+    @apply font-serif bg-gradient-to-r from-botanical-leaf via-botanical-primary to-botanical-water bg-clip-text text-transparent;
+  }
+  
+  .botanical-button {
+    @apply px-4 py-2 bg-botanical-surface border border-botanical-accent rounded-lg transition-all duration-300 shadow-leaf hover:bg-botanical-accent hover:text-botanical-background;
+  }
+  
+  .botanical-card {
+    @apply bg-botanical-surface/80 backdrop-blur-sm border border-botanical-leaf/50 rounded-xl shadow-md overflow-hidden relative;
   }
 }
