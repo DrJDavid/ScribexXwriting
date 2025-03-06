@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WritePromptGenerator, GeneratedPrompt } from '@/components/writing/WritePromptGenerator';
-import { SimplestPromptModal } from '@/components/writing/SimplestPromptModal';
 import { getLocationById, getQuestsForLocation } from '@/data/quests';
 import { useProgress } from '@/context/ProgressContext';
 import { Pencil, MapPin } from 'lucide-react';
@@ -20,9 +19,8 @@ export default function OWLLocationDetail() {
   const { progress } = useProgress();
   const { toast } = useToast();
   
-  // Use state instead of ref for the prompt
+  // Use state for the prompt
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   
   // Handle back button click 
   const handleBackClick = () => {
@@ -41,24 +39,23 @@ export default function OWLLocationDetail() {
       challengeElement: prompt.challengeElement || ""
     };
     
-    // Set state directly
+    // Set state directly - this will display the prompt below
     setGeneratedPrompt(promptCopy);
     console.log("Updated generatedPrompt:", promptCopy);
     
-    // Open modal
-    setModalOpen(true);
-    console.log("Setting modalOpen to true", {promptData: promptCopy, isOpen: true});
-  };
-  
-  const handleCloseModal = () => {
-    console.log("Closing modal");
-    setModalOpen(false);
+    // Scroll to the generated prompt
+    setTimeout(() => {
+      // Find the element and scroll to it
+      const element = document.getElementById('generated-prompt');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
   
   const handleNewPrompt = () => {
     console.log("Generating new prompt");
     setGeneratedPrompt(null);
-    setModalOpen(false);
   };
   
   const handleStartWriting = () => {
@@ -190,15 +187,6 @@ export default function OWLLocationDetail() {
         </div>
 
         <div>
-          {/* Modal for prompt display */}
-          <SimplestPromptModal 
-            show={modalOpen}
-            data={generatedPrompt}
-            onClose={handleCloseModal}
-            onNew={handleNewPrompt}
-            onStart={handleStartWriting}
-          />
-
           <Tabs defaultValue="prompt-generator">
             <TabsList className="w-full">
               <TabsTrigger value="prompt-generator" className="flex-1">Prompt Generator</TabsTrigger>
@@ -220,6 +208,66 @@ export default function OWLLocationDetail() {
                   />
                 </CardContent>
               </Card>
+              
+              {generatedPrompt && (
+                <Card id="generated-prompt" className="mt-4 border-primary">
+                  <CardHeader className="bg-primary/10">
+                    <CardTitle>Generated Prompt</CardTitle>
+                    <CardDescription>
+                      Your custom writing prompt is ready to use
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 mt-2">
+                    <div className="bg-muted p-4 rounded-md">
+                      <h3 className="font-semibold mb-2">Prompt</h3>
+                      <p>{generatedPrompt.prompt}</p>
+                    </div>
+                    
+                    <div className="bg-muted p-4 rounded-md">
+                      <h3 className="font-semibold mb-2">Scenario</h3>
+                      <p>{generatedPrompt.scenario}</p>
+                    </div>
+                    
+                    {generatedPrompt.guidingQuestions && generatedPrompt.guidingQuestions.length > 0 && (
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Guiding Questions</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {generatedPrompt.guidingQuestions.map((q, i) => (
+                            <li key={i}>{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {generatedPrompt.suggestedElements && generatedPrompt.suggestedElements.length > 0 && (
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Suggested Elements</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {generatedPrompt.suggestedElements.map((e, i) => (
+                            <li key={i}>{e}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {generatedPrompt.challengeElement && (
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="font-semibold mb-2">Challenge Element</h3>
+                        <p>{generatedPrompt.challengeElement}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleNewPrompt}>
+                      Generate New Prompt
+                    </Button>
+                    <Button onClick={handleStartWriting} className="bg-primary text-primary-foreground">
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Start Writing
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
             </TabsContent>
             
             <TabsContent value="free-write" className="mt-4">
