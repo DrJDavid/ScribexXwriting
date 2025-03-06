@@ -36,26 +36,54 @@ const REDIExercise: React.FC = () => {
   useEffect(() => {
     if (exercise) {
       // Get all available exercises of the same skill type
-      const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
+      const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 }, 
+        progress?.completedExercises || []);
+      
+      // First, include all exercises of the same skill type
       const sameTypeExercises = nodes
-        .filter(node => node.skillType === exercise.skillType && node.status !== 'locked')
+        .filter(node => node.skillType === exercise.skillType && 
+                        (node.status === 'available' || 
+                         node.status === 'current' || 
+                         node.id === exercise.id))
         .map(node => node.id);
+      
+      console.log('Same type exercises:', sameTypeExercises);
       
       // If we don't have enough exercises of this type, include some from other types
       let exerciseSelection = [...sameTypeExercises];
       if (exerciseSelection.length < 5) {
         const otherExercises = nodes
-          .filter(node => node.skillType !== exercise.skillType && node.status !== 'locked')
+          .filter(node => node.skillType !== exercise.skillType && 
+                         (node.status === 'available' || node.status === 'current'))
           .map(node => node.id);
-        exerciseSelection = [...exerciseSelection, ...otherExercises].slice(0, 5);
+        
+        console.log('Other available exercises:', otherExercises);
+        exerciseSelection = [...exerciseSelection, ...otherExercises];
       }
       
       // Make sure the current exercise is included and is first
       exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
       exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
       
+      console.log('Final exercise set:', exerciseSelection);
+      
+      // Ensure we have exactly 5 exercises by duplicating some if needed
+      while (exerciseSelection.length < 5 && exerciseSelection.length > 0) {
+        // Add duplicates from the existing set (excluding the first one which is the current exercise)
+        const availableToDuplicate = exerciseSelection.slice(1);
+        if (availableToDuplicate.length > 0) {
+          // Duplicate a random exercise from the available set
+          const randomIndex = Math.floor(Math.random() * availableToDuplicate.length);
+          exerciseSelection.push(availableToDuplicate[randomIndex]);
+        } else {
+          // If no other exercises available, duplicate the current one
+          exerciseSelection.push(exerciseSelection[0]);
+        }
+      }
+      
       setExerciseSet(exerciseSelection);
       setTotalExercises(exerciseSelection.length);
+      console.log('Set total exercises to:', exerciseSelection.length);
     }
   }, [exercise, progress]);
   

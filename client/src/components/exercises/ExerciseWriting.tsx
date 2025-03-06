@@ -131,12 +131,7 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
             </p>
           </div>
           
-          <Button
-            className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-            onClick={() => window.location.href = '/redi'}
-          >
-            Continue
-          </Button>
+          {/* Removed continue button to allow parent component to handle navigation */}
         </div>
       )}
     </div>
