@@ -196,7 +196,7 @@ export default function OWLLocationDetail() {
                     <Button variant="outline" onClick={() => setGeneratedPrompt(null)}>
                       Generate New Prompt
                     </Button>
-                    <Link href={`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}`}>
+                    <Link href={`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated`}>
                       <Button>
                         <Pencil className="w-4 h-4 mr-2" />
                         Start Writing

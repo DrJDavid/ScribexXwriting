@@ -48,9 +48,18 @@ const OWLWritingQuest: React.FC = () => {
   const isFreeWrite = params.questId === 'free-write';
   console.log("Is free write mode:", isFreeWrite);
   
-  // For free-write, get location and prompt type from query parameters
+  // For free-write, get location, prompt type and mode from query parameters
   const locationId = searchParams.get('locationId');
   const promptType = searchParams.get('promptType');
+  const mode = searchParams.get('mode'); // 'generated' for generated prompts
+  
+  console.log("Extracted parameters:", { 
+    isFreeWrite, 
+    locationId, 
+    promptType, 
+    mode,
+    questId: params.questId 
+  });
   
   // Get the quest data for regular quests
   const quest = useMemo(() => {
@@ -115,6 +124,66 @@ const OWLWritingQuest: React.FC = () => {
     setIsLoading(false);
   }, [isFreeWrite, locationId, promptType, quest, navigate]);
   
+  // Submit writing mutation - defined unconditionally to avoid hooks ordering issues
+  const submitWritingMutation = useMutation({
+    mutationFn: async (data: { questId: string; title: string; content: string }) => {
+      const res = await apiRequest('POST', '/api/writing/submit', data);
+      return res.json();
+    },
+  });
+  
+  // Save draft mutation - defined unconditionally to avoid hooks ordering issues
+  const saveDraftMutation = useMutation({
+    mutationFn: async (data: { questId: string; title: string; content: string }) => {
+      const res = await apiRequest('POST', '/api/writing/draft', data);
+      return res.json();
+    },
+  });
+  
+  // Handle submission - defined unconditionally
+  const handleSubmit = async (questId: string, title: string, content: string) => {
+    try {
+      const result = await submitWritingMutation.mutateAsync({ questId, title, content });
+      
+      // Record quest completion
+      completeQuest(questId);
+      
+      // Show toast but don't navigate away - this allows the confirmation dialog to remain visible
+      toast({
+        title: 'Quest Completed',
+        description: 'Your writing has been submitted successfully!',
+      });
+      
+      // Return result - WritingInterface will display it and start analysis
+      return result;
+    } catch (error) {
+      toast({
+        title: 'Submission Error',
+        description: 'There was a problem submitting your quest.',
+        variant: 'destructive',
+      });
+      throw error; // Re-throw to let WritingInterface know there was an error
+    }
+  };
+  
+  // Handle saving draft - defined unconditionally
+  const handleSaveDraft = async (questId: string, title: string, content: string) => {
+    try {
+      await saveDraftMutation.mutateAsync({ questId, title, content });
+      
+      toast({
+        title: 'Draft Saved',
+        description: 'Your writing has been saved as a draft.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Save Error',
+        description: 'There was a problem saving your draft.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
   // Use either the real quest or the free-write quest
   const currentQuest = quest || freeWriteQuest;
   
@@ -147,66 +216,6 @@ const OWLWritingQuest: React.FC = () => {
       </MainLayout>
     );
   }
-  
-  // Submit writing mutation
-  const submitWritingMutation = useMutation({
-    mutationFn: async (data: { questId: string; title: string; content: string }) => {
-      const res = await apiRequest('POST', '/api/writing/submit', data);
-      return res.json();
-    },
-  });
-  
-  // Save draft mutation
-  const saveDraftMutation = useMutation({
-    mutationFn: async (data: { questId: string; title: string; content: string }) => {
-      const res = await apiRequest('POST', '/api/writing/draft', data);
-      return res.json();
-    },
-  });
-  
-  // Handle submission
-  const handleSubmit = async (questId: string, title: string, content: string) => {
-    try {
-      const result = await submitWritingMutation.mutateAsync({ questId, title, content });
-      
-      // Record quest completion
-      completeQuest(questId);
-      
-      // Show toast but don't navigate away - this allows the confirmation dialog to remain visible
-      toast({
-        title: 'Quest Completed',
-        description: 'Your writing has been submitted successfully!',
-      });
-      
-      // Return result - WritingInterface will display it and start analysis
-      return result;
-    } catch (error) {
-      toast({
-        title: 'Submission Error',
-        description: 'There was a problem submitting your quest.',
-        variant: 'destructive',
-      });
-      throw error; // Re-throw to let WritingInterface know there was an error
-    }
-  };
-  
-  // Handle saving draft
-  const handleSaveDraft = async (questId: string, title: string, content: string) => {
-    try {
-      await saveDraftMutation.mutateAsync({ questId, title, content });
-      
-      toast({
-        title: 'Draft Saved',
-        description: 'Your writing has been saved as a draft.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Save Error',
-        description: 'There was a problem saving your draft.',
-        variant: 'destructive',
-      });
-    }
-  };
   
   // Handle back button
   const handleBack = () => {
