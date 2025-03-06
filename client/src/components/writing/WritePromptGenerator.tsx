@@ -121,25 +121,31 @@ export function WritePromptGenerator({
         challengeElement: validatedPrompt.challengeElement
       };
       
-      // Show our own modal with the prompt instead of relying on parent component
-      console.log("Setting current prompt and opening modal");
-      // Force a delay to ensure state updates are processed correctly
-      setTimeout(() => {
-        setCurrentPrompt(promptToSend);
-        setModalOpen(true);
-      }, 100);
+      // Don't use modal at all - go directly to writing page
+      console.log("Skipping modal, going directly to writing page");
+      
+      // Store the generated prompt in sessionStorage to access it from the writing page
+      const promptKey = `prompt_${new Date().getTime()}`;
+      sessionStorage.setItem(promptKey, JSON.stringify(promptToSend));
+      console.log("Stored prompt data in sessionStorage with key:", promptKey);
+      
+      // Navigate directly to the writing page
+      const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+      console.log("Will navigate to:", destinationUrl);
+      
+      // Show a toast to confirm navigation
+      toast({
+        title: "Starting Writing Session",
+        description: "Taking you to the writing page...",
+      });
       
       // Also call the onSelectPrompt handler to maintain backward compatibility
-      setTimeout(() => {
-        console.log("Sending validated prompt to parent:", promptToSend);
-        onSelectPrompt(promptToSend);
-      }, 0);
+      onSelectPrompt(promptToSend);
       
-      // Show success toast
-      toast({
-        title: "Prompt Generated Successfully!",
-        description: "Your custom writing prompt is ready! Review it in the popup dialog and click 'Start Writing' when ready.",
-      });
+      // Navigate immediately - this has to be the last thing executed
+      setTimeout(() => {
+        window.location.href = destinationUrl;
+      }, 300); // Slight delay to ensure the toast is visible
       
     } catch (error) {
       console.error('Error generating prompt:', error);
@@ -153,16 +159,28 @@ export function WritePromptGenerator({
       const fallbackPrompt = generateFallbackPrompt(location);
       setGeneratedPrompts(prevPrompts => [fallbackPrompt, ...prevPrompts].slice(0, 3));
       
-      // Show our own modal with the fallback prompt
-      console.log("Setting fallback prompt and opening modal");
-      // Force a delay to ensure state updates are processed correctly
-      setTimeout(() => {
-        setCurrentPrompt(fallbackPrompt);
-        setModalOpen(true);
-      }, 100);
+      // Use the same direct navigation approach with the fallback prompt
+      console.log("Using fallback prompt for direct navigation");
       
-      // Also call onSelectPrompt handler to maintain backward compatibility
+      // Store the fallback prompt in sessionStorage to access it from the writing page
+      const promptKey = `prompt_${new Date().getTime()}`;
+      sessionStorage.setItem(promptKey, JSON.stringify(fallbackPrompt));
+      console.log("Stored fallback prompt data in sessionStorage with key:", promptKey);
+      
+      // Call onSelectPrompt handler to maintain backward compatibility
       onSelectPrompt(fallbackPrompt);
+      
+      // Show a toast to confirm navigation
+      toast({
+        title: "Starting Writing Session",
+        description: "Using a fallback prompt instead. Taking you to the writing page...",
+      });
+      
+      // Navigate directly to the writing page
+      const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+      setTimeout(() => {
+        window.location.href = destinationUrl;
+      }, 300);
     } finally {
       setIsLoading(false);
     }
@@ -387,9 +405,25 @@ export function WritePromptGenerator({
                 key={index} 
                 className="p-4 hover:border-primary/50 cursor-pointer transition-colors"
                 onClick={() => {
-                  setCurrentPrompt(prompt);
-                  setModalOpen(true);
+                  // Direct navigation to writing page instead of opening modal
+                  const promptKey = `prompt_${new Date().getTime()}`;
+                  sessionStorage.setItem(promptKey, JSON.stringify(prompt));
+                  console.log("Stored prompt data in sessionStorage with key:", promptKey);
+                  
+                  // Call onSelectPrompt handler to maintain backward compatibility
                   onSelectPrompt(prompt);
+                  
+                  // Show a toast to confirm navigation
+                  toast({
+                    title: "Starting Writing Session",
+                    description: "Taking you to the writing page...",
+                  });
+                  
+                  // Navigate directly to the writing page
+                  const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+                  setTimeout(() => {
+                    window.location.href = destinationUrl;
+                  }, 300);
                 }}
               >
                 <div className="flex justify-between items-start mb-2">
