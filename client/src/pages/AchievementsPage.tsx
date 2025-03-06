@@ -46,14 +46,39 @@ const generateProgressHistoryData = (currentProgress?: any) => {
     return currentProgress.progressHistory;
   }
   
-  // Otherwise, generate default progress data starting from today and going backward
-  // This ensures a new user always starts with their current date
-  for (let i = 6; i >= 0; i--) {
-    const date = subDays(today, i * 7); // Weekly data points
-    const dateStr = format(date, 'M/d');
+  // Use account creation date (default to March 4th, 2025 if not available)
+  let startDate = new Date(2025, 2, 4); // March 4th, 2025
+  if (currentProgress?.createdAt) {
+    startDate = new Date(currentProgress.createdAt);
+  }
+  
+  // Calculate the number of days since account creation
+  const daysActive = Math.max(Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)), 1);
+  
+  // For a short account history, show daily points
+  // For longer account history, aggregate into fewer points
+  let intervals = daysActive;
+  let dayIncrement = 1;
+  
+  // If account is older than 7 days, show weekly data points
+  if (daysActive > 7) {
+    intervals = Math.min(7, Math.ceil(daysActive / 7));
+    dayIncrement = Math.ceil(daysActive / intervals);
+  }
+  
+  // Generate data points starting from account creation date
+  for (let i = 0; i < intervals; i++) {
+    // Create dates from account creation to today, evenly spaced
+    const daysFromStart = i * dayIncrement;
+    const pointDate = new Date(startDate);
+    pointDate.setDate(startDate.getDate() + daysFromStart);
+    const dateStr = format(pointDate, 'M/d');
     
-    // Make current progress the final data point
-    if (i === 0 && currentProgress) {
+    // Is this the most recent data point?
+    const isLatestPoint = i === intervals - 1;
+    
+    if (isLatestPoint && currentProgress) {
+      // Use current progress for the latest point
       const totalMastery = 
         ((currentProgress.rediSkillMastery?.mechanics || 0) + 
          (currentProgress.rediSkillMastery?.sequencing || 0) + 
@@ -79,27 +104,30 @@ const generateProgressHistoryData = (currentProgress?: any) => {
         owlVoice: currentProgress.owlSkillMastery?.voice || 0
       });
     } else {
-      // Generate simulated past data with a reasonable progression curve
-      // The longer ago, the lower the values
-      const progressFactor = i === 0 ? 1 : (6 - i) / 6;
-      const initialValue = 5; // Start with this minimum value
+      // Generate simulated progress data with a progression curve
+      // The closer to the current date, the higher the values
+      const progressFactor = isLatestPoint ? 1 : i / Math.max(intervals - 1, 1);
+      const initialValue = 0; // Start with zero progress
       
-      // For a brand new user, show minimal progression
+      // For a brand new user, show gradual progression
       if (!currentProgress) {
+        // A new user shows minimal progress that increases gradually
+        const baseValue = progressFactor * 15; // Max value of 15 for new user
+        
         progressHistory.push({
           date: dateStr,
-          redi: Math.round((initialValue + 10 * progressFactor)),
-          owl: Math.round((initialValue + 5 * progressFactor)),
-          total: Math.round((initialValue * 2 + 15 * progressFactor)),
-          mechanics: Math.round(initialValue * progressFactor),
-          sequencing: Math.round(initialValue * progressFactor),
-          voice: Math.round(initialValue * progressFactor),
-          owlMechanics: Math.round(initialValue * progressFactor),
-          owlSequencing: Math.round(initialValue * progressFactor),
-          owlVoice: Math.round(initialValue * progressFactor)
+          redi: Math.round(baseValue),
+          owl: Math.round(baseValue / 2),
+          total: Math.round(baseValue * 1.5),
+          mechanics: Math.round(baseValue / 3),
+          sequencing: Math.round(baseValue / 3),
+          voice: Math.round(baseValue / 3),
+          owlMechanics: Math.round(baseValue / 6),
+          owlSequencing: Math.round(baseValue / 6),
+          owlVoice: Math.round(baseValue / 6)
         });
       } else {
-        // Calculate reasonable progression leading up to current values
+        // Calculate values that progress toward current values
         const rediMechanics = Math.round((currentProgress.rediSkillMastery?.mechanics || 0) * progressFactor);
         const rediSequencing = Math.round((currentProgress.rediSkillMastery?.sequencing || 0) * progressFactor);
         const rediVoice = Math.round((currentProgress.rediSkillMastery?.voice || 0) * progressFactor);
