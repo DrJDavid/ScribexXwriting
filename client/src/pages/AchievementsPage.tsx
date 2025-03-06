@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import { Award, Trophy, Medal, Star, BookOpen, FileText, Zap, Crown } from 'lucide-react';
+import { 
+  Award, Trophy, Medal, Star, BookOpen, FileText, Zap, Crown, 
+  TrendingUp, Activity, LineChart, BarChart
+} from 'lucide-react';
 import { 
   Card, 
   CardContent, 
@@ -10,10 +13,14 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MainLayout from '@/components/layouts/MainLayout';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
 import { getAllAchievements, Achievement } from '@/data/achievements';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+         BarChart as RechartsBarChart, Bar, Legend, CartesianGrid } from 'recharts';
+import { ProgressHistoryEntry } from '@shared/schema';
 
 // Helper function to create particles
 const createParticles = (count: number) => {
@@ -274,6 +281,319 @@ const AchievementsPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Progress Tracker */}
+      <Card className={`mb-8 ${
+        theme === 'redi' 
+          ? 'bg-gradient-to-br from-violet-950/70 to-blue-950/70 border-violet-700/30' 
+          : 'bg-gradient-to-br from-green-950/70 to-teal-950/70 border-green-700/30'
+      }`}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Progress Tracker
+          </CardTitle>
+          <CardDescription>
+            Track your skill development and achievements over time
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="redi">REDI Skills</TabsTrigger>
+              <TabsTrigger value="owl">OWL Skills</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="space-y-4">
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  <span>Learning Progression</span>
+                </h3>
+                
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={[
+                        { date: '1/1', redi: 10, owl: 5, total: 15 },
+                        { date: '1/8', redi: 20, owl: 15, total: 35 },
+                        { date: '1/15', redi: 35, owl: 25, total: 60 },
+                        { date: '1/22', redi: 45, owl: 40, total: 85 },
+                        { date: '1/29', redi: 60, owl: 55, total: 115 },
+                        { date: '2/5', redi: 70, owl: 70, total: 140 },
+                        { date: '2/12', redi: 85, owl: 75, total: 160 },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorRedi" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#9333ea" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#9333ea" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorOwl" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" stroke="#999" />
+                      <YAxis stroke="#999" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(15, 15, 30, 0.8)', 
+                          borderColor: '#444',
+                          color: '#fff',
+                          backdropFilter: 'blur(4px)'
+                        }} 
+                      />
+                      <Area type="monotone" dataKey="total" stroke="#f97316" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" name="Total" />
+                      <Area type="monotone" dataKey="redi" stroke="#9333ea" strokeWidth={2} fillOpacity={1} fill="url(#colorRedi)" name="REDI" />
+                      <Area type="monotone" dataKey="owl" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorOwl)" name="OWL" />
+                      <Legend />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <BarChart className="h-5 w-5 text-violet-500" />
+                    <span>REDI Skills</span>
+                  </h3>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsBarChart
+                        data={[
+                          { name: 'Mechanics', value: progress?.rediSkillMastery?.mechanics || 0 },
+                          { name: 'Sequencing', value: progress?.rediSkillMastery?.sequencing || 0 },
+                          { name: 'Voice', value: progress?.rediSkillMastery?.voice || 0 },
+                        ]}
+                        margin={{ top: 10, right: 10, left: 10, bottom: 30 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                        <XAxis dataKey="name" stroke="#999" />
+                        <YAxis stroke="#999" />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#9333ea" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                      </RechartsBarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                
+                <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <BarChart className="h-5 w-5 text-green-500" />
+                    <span>OWL Skills</span>
+                  </h3>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsBarChart
+                        data={[
+                          { name: 'Mechanics', value: progress?.owlSkillMastery?.mechanics || 0 },
+                          { name: 'Sequencing', value: progress?.owlSkillMastery?.sequencing || 0 },
+                          { name: 'Voice', value: progress?.owlSkillMastery?.voice || 0 },
+                        ]}
+                        margin={{ top: 10, right: 10, left: 10, bottom: 30 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                        <XAxis dataKey="name" stroke="#999" />
+                        <YAxis stroke="#999" />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                      </RechartsBarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="redi" className="space-y-4">
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <LineChart className="h-5 w-5 text-violet-500" />
+                  <span>REDI Skill Development</span>
+                </h3>
+                
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={[
+                        { date: '1/1', mechanics: 5, sequencing: 10, voice: 15 },
+                        { date: '1/8', mechanics: 15, sequencing: 20, voice: 25 },
+                        { date: '1/15', mechanics: 25, sequencing: 30, voice: 35 },
+                        { date: '1/22', mechanics: 35, sequencing: 40, voice: 45 },
+                        { date: '1/29', mechanics: 45, sequencing: 50, voice: 55 },
+                        { date: '2/5', mechanics: 55, sequencing: 60, voice: 65 },
+                        { date: '2/12', mechanics: 65, sequencing: 70, voice: 75 },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorMechanics" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#9333ea" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#9333ea" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorSequencing" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorVoice" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#ec4899" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" stroke="#999" />
+                      <YAxis stroke="#999" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(15, 15, 30, 0.8)', 
+                          borderColor: '#444',
+                          color: '#fff'
+                        }} 
+                      />
+                      <Area type="monotone" dataKey="mechanics" stroke="#9333ea" strokeWidth={2} fillOpacity={1} fill="url(#colorMechanics)" name="Mechanics" />
+                      <Area type="monotone" dataKey="sequencing" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorSequencing)" name="Sequencing" />
+                      <Area type="monotone" dataKey="voice" stroke="#ec4899" strokeWidth={2} fillOpacity={1} fill="url(#colorVoice)" name="Voice" />
+                      <Legend />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2">Current REDI Level: {progress?.rediLevel || 1}</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-400">Mechanics</p>
+                    <div className="h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-violet-600 rounded-full"
+                        style={{ width: `${progress?.rediSkillMastery?.mechanics || 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-right text-xs mt-1">{progress?.rediSkillMastery?.mechanics || 0}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Sequencing</p>
+                    <div className="h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-indigo-600 rounded-full"
+                        style={{ width: `${progress?.rediSkillMastery?.sequencing || 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-right text-xs mt-1">{progress?.rediSkillMastery?.sequencing || 0}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Voice</p>
+                    <div className="h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-pink-600 rounded-full"
+                        style={{ width: `${progress?.rediSkillMastery?.voice || 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-right text-xs mt-1">{progress?.rediSkillMastery?.voice || 0}%</p>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="owl" className="space-y-4">
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <LineChart className="h-5 w-5 text-green-500" />
+                  <span>OWL Skill Development</span>
+                </h3>
+                
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={[
+                        { date: '1/1', mechanics: 5, sequencing: 5, voice: 5 },
+                        { date: '1/8', mechanics: 10, sequencing: 15, voice: 15 },
+                        { date: '1/15', mechanics: 20, sequencing: 25, voice: 25 },
+                        { date: '1/22', mechanics: 30, sequencing: 40, voice: 35 },
+                        { date: '1/29', mechanics: 40, sequencing: 50, voice: 50 },
+                        { date: '2/5', mechanics: 55, sequencing: 65, voice: 65 },
+                        { date: '2/12', mechanics: 65, sequencing: 70, voice: 75 },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorOwlMechanics" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorOwlSequencing" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorOwlVoice" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#84cc16" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#84cc16" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" stroke="#999" />
+                      <YAxis stroke="#999" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(15, 15, 30, 0.8)', 
+                          borderColor: '#444',
+                          color: '#fff'
+                        }} 
+                      />
+                      <Area type="monotone" dataKey="mechanics" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlMechanics)" name="Mechanics" />
+                      <Area type="monotone" dataKey="sequencing" stroke="#0ea5e9" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlSequencing)" name="Sequencing" />
+                      <Area type="monotone" dataKey="voice" stroke="#84cc16" strokeWidth={2} fillOpacity={1} fill="url(#colorOwlVoice)" name="Voice" />
+                      <Legend />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2">Current OWL Level: {progress?.owlLevel || 1}</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-400">Mechanics</p>
+                    <div className="h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-600 rounded-full"
+                        style={{ width: `${progress?.owlSkillMastery?.mechanics || 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-right text-xs mt-1">{progress?.owlSkillMastery?.mechanics || 0}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Sequencing</p>
+                    <div className="h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-sky-600 rounded-full"
+                        style={{ width: `${progress?.owlSkillMastery?.sequencing || 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-right text-xs mt-1">{progress?.owlSkillMastery?.sequencing || 0}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Voice</p>
+                    <div className="h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-lime-600 rounded-full"
+                        style={{ width: `${progress?.owlSkillMastery?.voice || 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-right text-xs mt-1">{progress?.owlSkillMastery?.voice || 0}%</p>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
       
       {/* Achievement Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
