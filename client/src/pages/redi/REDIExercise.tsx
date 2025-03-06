@@ -67,38 +67,55 @@ const REDIExercise: React.FC = () => {
     return null;
   }
   
+  // Function to update REDI skill mastery after completing a set
+  const updateRediMastery = useCallback(async () => {
+    if (!progress) return;
+    
+    // Calculate skill increase based on correct answers in the set
+    const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
+    
+    // Create a skill update object based on the exercise type
+    let updatedRediSkillMastery = { ...progress.rediSkillMastery };
+    
+    if (exercise.skillType === 'mechanics') {
+      updatedRediSkillMastery.mechanics = Math.min(updatedRediSkillMastery.mechanics + skillIncrease, 100);
+    } else if (exercise.skillType === 'sequencing') {
+      updatedRediSkillMastery.sequencing = Math.min(updatedRediSkillMastery.sequencing + skillIncrease, 100);
+    } else if (exercise.skillType === 'voice') {
+      updatedRediSkillMastery.voice = Math.min(updatedRediSkillMastery.voice + skillIncrease, 100);
+    }
+    
+    // Calculate new REDI level with updated mastery
+    const exerciseCount = progress.completedExercises.length;
+    const totalMastery = updatedRediSkillMastery.mechanics + 
+                         updatedRediSkillMastery.sequencing + 
+                         updatedRediSkillMastery.voice;
+    const avgMastery = totalMastery / 3;
+    const exerciseFactor = Math.floor(exerciseCount / 3);
+    const masteryFactor = Math.floor(avgMastery / 10);
+    const rediLevel = Math.max(1, Math.min(10, 1 + exerciseFactor + masteryFactor));
+    
+    // Update progress with new mastery and level
+    await progress.updateProgress({
+      rediSkillMastery: updatedRediSkillMastery,
+      rediLevel,
+    });
+    
+    toast({
+      title: "Exercise Set Completed!",
+      description: `You got ${correctAnswers} out of ${totalExercises} correct. Your ${exercise.skillType} mastery increased by ${skillIncrease}%.`,
+    });
+  }, [correctAnswers, totalExercises, exercise.skillType, progress, toast]);
+
   // Function to handle advancing to next exercise
   const advanceToNextExercise = useCallback(() => {
     // If we've completed all exercises in the set
     if (exerciseIndex >= totalExercises) {
       // Update mastery only after completing the full set
-      const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
-      
-      // Create a skill update object based on the exercise type
-      let skillUpdate: Partial<{ mechanics: number; sequencing: number; voice: number }> = {};
-      
-      if (exercise.skillType === 'mechanics') {
-        skillUpdate = { 
-          mechanics: Math.min((progress?.rediSkillMastery?.mechanics || 0) + skillIncrease, 100) 
-        };
-      } else if (exercise.skillType === 'sequencing') {
-        skillUpdate = { 
-          sequencing: Math.min((progress?.rediSkillMastery?.sequencing || 0) + skillIncrease, 100) 
-        };
-      } else if (exercise.skillType === 'voice') {
-        skillUpdate = { 
-          voice: Math.min((progress?.rediSkillMastery?.voice || 0) + skillIncrease, 100) 
-        };
-      }
-      
-      // Defer updating of mastery to progress context (handled in ProgressContext.tsx)
-      toast({
-        title: "Exercise Set Completed!",
-        description: `You got ${correctAnswers} out of ${totalExercises} correct. Your mastery increased by ${skillIncrease}%.`,
+      updateRediMastery().then(() => {
+        // Navigate back to the REDI map after updating mastery
+        navigate('/redi');
       });
-      
-      // Navigate back to the REDI map
-      navigate('/redi');
       return;
     }
     
@@ -120,7 +137,7 @@ const REDIExercise: React.FC = () => {
       // Fallback if we don't have a next exercise
       navigate('/redi');
     }
-  }, [exerciseIndex, totalExercises, exerciseSet, navigate, correctAnswers, progress, exercise, toast]);
+  }, [exerciseIndex, totalExercises, exerciseSet, navigate, updateRediMastery]);
   
   // Handle multiple choice submission
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
