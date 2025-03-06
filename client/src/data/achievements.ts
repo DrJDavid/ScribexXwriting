@@ -4,10 +4,19 @@ export interface Achievement {
   title: string;
   description: string;
   icon: string;
+  category: 'redi' | 'owl' | 'general'; // Which part of the app this achievement belongs to
   requirements: {
     completedExercises?: number;
     completedQuests?: number;
-    skillMastery?: {
+    rediLevel?: number;
+    owlLevel?: number;
+    rediSkillMastery?: {
+      mechanics?: number;
+      sequencing?: number;
+      voice?: number;
+      total?: number;
+    };
+    owlSkillMastery?: {
       mechanics?: number;
       sequencing?: number;
       voice?: number;
@@ -200,16 +209,26 @@ export const getAchievementById = (id: string): Achievement | undefined => {
 export const checkAchievementUnlocked = (
   achievementId: string,
   progress: {
-    skillMastery: { mechanics: number; sequencing: number; voice: number };
+    rediSkillMastery: { mechanics: number; sequencing: number; voice: number };
+    owlSkillMastery: { mechanics: number; sequencing: number; voice: number };
     completedExercises: string[];
     completedQuests: string[];
+    rediLevel: number;
+    owlLevel: number;
   }
 ): boolean => {
   const achievement = getAchievementById(achievementId);
   if (!achievement) return false;
   
   const requirements = achievement.requirements;
-  const { completedExercises, completedQuests, skillMastery } = progress;
+  const { 
+    completedExercises, 
+    completedQuests, 
+    rediSkillMastery, 
+    owlSkillMastery,
+    rediLevel,
+    owlLevel 
+  } = progress;
   
   // Check completed exercises count
   if (requirements.completedExercises && completedExercises.length < requirements.completedExercises) {
@@ -221,20 +240,76 @@ export const checkAchievementUnlocked = (
     return false;
   }
   
-  // Check skill mastery
-  if (requirements.skillMastery) {
-    if (requirements.skillMastery.mechanics && skillMastery.mechanics < requirements.skillMastery.mechanics) {
+  // Check REDI level
+  if (requirements.rediLevel && rediLevel < requirements.rediLevel) {
+    return false;
+  }
+  
+  // Check OWL level
+  if (requirements.owlLevel && owlLevel < requirements.owlLevel) {
+    return false;
+  }
+  
+  // Check REDI skill mastery
+  if (requirements.rediSkillMastery) {
+    if (requirements.rediSkillMastery.mechanics && 
+        rediSkillMastery.mechanics < requirements.rediSkillMastery.mechanics) {
       return false;
     }
-    if (requirements.skillMastery.sequencing && skillMastery.sequencing < requirements.skillMastery.sequencing) {
+    if (requirements.rediSkillMastery.sequencing && 
+        rediSkillMastery.sequencing < requirements.rediSkillMastery.sequencing) {
       return false;
     }
-    if (requirements.skillMastery.voice && skillMastery.voice < requirements.skillMastery.voice) {
+    if (requirements.rediSkillMastery.voice && 
+        rediSkillMastery.voice < requirements.rediSkillMastery.voice) {
       return false;
     }
-    if (requirements.skillMastery.total) {
-      const totalMastery = (skillMastery.mechanics + skillMastery.sequencing + skillMastery.voice) / 3;
-      if (totalMastery < requirements.skillMastery.total) {
+    if (requirements.rediSkillMastery.total) {
+      const totalMastery = (rediSkillMastery.mechanics + rediSkillMastery.sequencing + rediSkillMastery.voice) / 3;
+      if (totalMastery < requirements.rediSkillMastery.total) {
+        return false;
+      }
+    }
+  }
+  
+  // Check OWL skill mastery
+  if (requirements.owlSkillMastery) {
+    if (requirements.owlSkillMastery.mechanics && 
+        owlSkillMastery.mechanics < requirements.owlSkillMastery.mechanics) {
+      return false;
+    }
+    if (requirements.owlSkillMastery.sequencing && 
+        owlSkillMastery.sequencing < requirements.owlSkillMastery.sequencing) {
+      return false;
+    }
+    if (requirements.owlSkillMastery.voice && 
+        owlSkillMastery.voice < requirements.owlSkillMastery.voice) {
+      return false;
+    }
+    if (requirements.owlSkillMastery.total) {
+      const totalMastery = (owlSkillMastery.mechanics + owlSkillMastery.sequencing + owlSkillMastery.voice) / 3;
+      if (totalMastery < requirements.owlSkillMastery.total) {
+        return false;
+      }
+    }
+  }
+  
+  // Support legacy skillMastery field (for backward compatibility)
+  if ((achievement as any).requirements.skillMastery) {
+    const skillMastery = (achievement as any).requirements.skillMastery;
+    // Use OWL mastery as default since it's more likely to be higher for legacy achievements
+    if (skillMastery.mechanics && owlSkillMastery.mechanics < skillMastery.mechanics) {
+      return false;
+    }
+    if (skillMastery.sequencing && owlSkillMastery.sequencing < skillMastery.sequencing) {
+      return false;
+    }
+    if (skillMastery.voice && owlSkillMastery.voice < skillMastery.voice) {
+      return false;
+    }
+    if (skillMastery.total) {
+      const totalMastery = (owlSkillMastery.mechanics + owlSkillMastery.sequencing + owlSkillMastery.voice) / 3;
+      if (totalMastery < skillMastery.total) {
         return false;
       }
     }

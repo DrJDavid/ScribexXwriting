@@ -23,10 +23,15 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const progress = pgTable("progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  skillMastery: jsonb("skill_mastery").notNull(), // { mechanics: number, sequencing: number, voice: number }
+  // REDI specific mastery skills
+  rediSkillMastery: jsonb("redi_skill_mastery").notNull(), // { mechanics: number, sequencing: number, voice: number }
+  // OWL specific mastery skills
+  owlSkillMastery: jsonb("owl_skill_mastery").notNull(), // { mechanics: number, sequencing: number, voice: number }
   completedExercises: jsonb("completed_exercises").notNull(), // array of exercise IDs
   completedQuests: jsonb("completed_quests").notNull(), // array of quest IDs
   unlockedLocations: jsonb("unlocked_locations").notNull(), // array of location IDs
+  rediLevel: integer("redi_level").notNull().default(1), // REDI specific level
+  owlLevel: integer("owl_level").notNull().default(1), // OWL specific level
   currency: integer("currency").notNull().default(0),
   achievements: jsonb("achievements").notNull(), // array of achievement IDs
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
