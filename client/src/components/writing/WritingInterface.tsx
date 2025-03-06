@@ -16,6 +16,8 @@ import { apiRequest } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
 import type { AIFeedback, SkillMastery } from '@shared/schema';
 
+import type { GeneratedPrompt } from './WritePromptGenerator';
+
 export interface WritingQuestProps {
   questId: string;
   title: string;
@@ -24,6 +26,7 @@ export interface WritingQuestProps {
   minWordCount?: number;
   onSubmit: (questId: string, title: string, content: string) => Promise<any>;
   onSaveDraft: (questId: string, title: string, content: string) => void;
+  generatedPrompt?: GeneratedPrompt | null;
 }
 
 const WritingInterface: React.FC<WritingQuestProps> = ({
@@ -34,6 +37,7 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
   minWordCount = 0,
   onSubmit,
   onSaveDraft,
+  generatedPrompt
 }) => {
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -159,6 +163,41 @@ const WritingInterface: React.FC<WritingQuestProps> = ({
       <div className={`${questBgClass} rounded-lg p-4 mb-4`}>
         <h3 className={`text-white ${fontClass} text-lg mb-2`}>Quest: {questTitle}</h3>
         <p className="text-gray-200 text-sm mb-3">{description}</p>
+        
+        {/* Show generated prompt elements if available */}
+        {generatedPrompt && (
+          <div className="mt-3 mb-4 border-t border-gray-600 pt-3">
+            {generatedPrompt.guidingQuestions?.length > 0 && (
+              <div className="mb-3">
+                <h4 className={`${accentColor} font-medium text-sm mb-1`}>Guiding Questions:</h4>
+                <ul className="list-disc list-inside text-gray-200 text-sm space-y-1 pl-2">
+                  {generatedPrompt.guidingQuestions.map((question, i) => (
+                    <li key={i}>{question}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {generatedPrompt.suggestedElements?.length > 0 && (
+              <div className="mb-3">
+                <h4 className={`${accentColor} font-medium text-sm mb-1`}>Consider Including:</h4>
+                <ul className="list-disc list-inside text-gray-200 text-sm space-y-1 pl-2">
+                  {generatedPrompt.suggestedElements.map((element, i) => (
+                    <li key={i}>{element}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {generatedPrompt.challengeElement && (
+              <div className="mb-2">
+                <h4 className={`${accentColor} font-medium text-sm mb-1`}>Challenge Element:</h4>
+                <p className="text-gray-200 text-sm pl-2">{generatedPrompt.challengeElement}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
         <div className="flex flex-wrap gap-2">
           {tags.map((tag, index) => (
             <Badge key={index} className={tagBgClass}>

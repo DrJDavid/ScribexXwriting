@@ -39,7 +39,9 @@ const OWLWritingQuest: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URL params:", {
       locationId: urlParams.get('locationId'),
-      promptType: urlParams.get('promptType')
+      promptType: urlParams.get('promptType'),
+      mode: urlParams.get('mode'),
+      promptData: urlParams.get('prompt')
     });
     return urlParams;
   }, []);
@@ -52,12 +54,29 @@ const OWLWritingQuest: React.FC = () => {
   const locationId = searchParams.get('locationId');
   const promptType = searchParams.get('promptType');
   const mode = searchParams.get('mode'); // 'generated' for generated prompts
+  const promptData = searchParams.get('prompt');
+  
+  // Parse the prompt data if it exists
+  const [generatedPromptData, setGeneratedPromptData] = useState<GeneratedPrompt | null>(null);
+  
+  useEffect(() => {
+    if (promptData && mode === 'generated') {
+      try {
+        const parsedPrompt = JSON.parse(decodeURIComponent(promptData));
+        console.log("Parsed prompt data:", parsedPrompt);
+        setGeneratedPromptData(parsedPrompt);
+      } catch (err) {
+        console.error("Error parsing prompt data:", err);
+      }
+    }
+  }, [promptData, mode]);
   
   console.log("Extracted parameters:", { 
     isFreeWrite, 
     locationId, 
     promptType, 
     mode,
+    hasPromptData: !!promptData,
     questId: params.questId 
   });
   
@@ -287,11 +306,14 @@ const OWLWritingQuest: React.FC = () => {
       <WritingInterface
         questId={currentQuest.id}
         title={currentQuest.title}
-        description={currentQuest.description}
+        description={generatedPromptData ? 
+          `${generatedPromptData.prompt}\n\n${generatedPromptData.scenario}` : 
+          currentQuest.description}
         tags={currentQuest.tags}
         minWordCount={currentQuest.minWordCount}
         onSubmit={handleSubmit}
         onSaveDraft={handleSaveDraft}
+        generatedPrompt={generatedPromptData}
       />
     </MainLayout>
   );
