@@ -4,6 +4,8 @@ import {
   exerciseAttempts, 
   writingSubmissions,
   dailyChallenges,
+  teacherStudents,
+  parentStudents,
   type User, 
   type InsertUser, 
   type Progress,
@@ -15,7 +17,11 @@ import {
   type DailyChallenge,
   type InsertDailyChallenge,
   type ProgressHistoryEntry,
-  type SkillMastery
+  type SkillMastery,
+  type TeacherStudent,
+  type InsertTeacherStudent,
+  type ParentStudent,
+  type InsertParentStudent
 } from "@shared/schema";
 import session from "express-session";
 import { db } from "./db";
@@ -33,6 +39,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUsersByRole(role: string): Promise<User[]>;
   
   // Progress methods
   getProgressByUserId(userId: number): Promise<Progress | undefined>;
@@ -56,6 +63,18 @@ export interface IStorage {
   
   // Streak methods
   updateStreak(userId: number, completed: boolean): Promise<{currentStreak: number, longestStreak: number}>;
+  
+  // Teacher-Student relationship methods
+  linkTeacherToStudent(teacherId: number, studentId: number): Promise<TeacherStudent>;
+  getStudentsByTeacherId(teacherId: number): Promise<User[]>;
+  getTeachersByStudentId(studentId: number): Promise<User[]>;
+  unlinkTeacherFromStudent(teacherId: number, studentId: number): Promise<void>;
+  
+  // Parent-Student relationship methods
+  linkParentToStudent(parentId: number, studentId: number): Promise<ParentStudent>;
+  getStudentsByParentId(parentId: number): Promise<User[]>;
+  getParentsByStudentId(studentId: number): Promise<User[]>;
+  unlinkParentFromStudent(parentId: number, studentId: number): Promise<void>;
   
   // Session store
   sessionStore: session.Store;

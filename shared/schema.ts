@@ -8,8 +8,10 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
-  age: integer("age").notNull().default(0),
-  grade: integer("grade").notNull().default(0),
+  email: text("email"),
+  role: text("role").notNull().default("student"),
+  age: integer("age"),
+  grade: integer("grade"),
   avatarUrl: text("avatar_url").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -154,3 +156,35 @@ export type ProgressHistoryEntry = {
   owlLevel: number;
   completedItems: number; // exercises + quests completed that day
 };
+
+// Teacher-Student Relationships schema
+export const teacherStudents = pgTable("teacher_students", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").notNull(),
+  studentId: integer("student_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTeacherStudentSchema = createInsertSchema(teacherStudents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type TeacherStudent = typeof teacherStudents.$inferSelect;
+export type InsertTeacherStudent = z.infer<typeof insertTeacherStudentSchema>;
+
+// Parent-Student Relationships schema
+export const parentStudents = pgTable("parent_students", {
+  id: serial("id").primaryKey(),
+  parentId: integer("parent_id").notNull(),
+  studentId: integer("student_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertParentStudentSchema = createInsertSchema(parentStudents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ParentStudent = typeof parentStudents.$inferSelect;
+export type InsertParentStudent = z.infer<typeof insertParentStudentSchema>;
