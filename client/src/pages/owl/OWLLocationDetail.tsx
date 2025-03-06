@@ -83,10 +83,10 @@ export default function OWLLocationDetail() {
                 <div className="space-y-4">
                   {quests.map(quest => {
                     const isCompleted = progress?.completedQuests.includes(quest.id);
-                    const isUnlocked = progress && progress.skillMastery ? (
-                      (progress.skillMastery.mechanics ?? 0) >= quest.unlockRequirements.skillMastery.mechanics &&
-                      (progress.skillMastery.sequencing ?? 0) >= quest.unlockRequirements.skillMastery.sequencing &&
-                      (progress.skillMastery.voice ?? 0) >= quest.unlockRequirements.skillMastery.voice
+                    const isUnlocked = progress && progress.owlSkillMastery ? (
+                      (progress.owlSkillMastery.mechanics ?? 0) >= quest.unlockRequirements.skillMastery.mechanics &&
+                      (progress.owlSkillMastery.sequencing ?? 0) >= quest.unlockRequirements.skillMastery.sequencing &&
+                      (progress.owlSkillMastery.voice ?? 0) >= quest.unlockRequirements.skillMastery.voice
                     ) : false;
                     
                     return (

@@ -118,8 +118,11 @@ export default function ProfilePage() {
     return <div>Loading...</div>;
   }
 
-  // Calculate overall mastery
-  const totalMastery = (progress.skillMastery.mechanics + progress.skillMastery.sequencing + progress.skillMastery.voice) / 3;
+  // Calculate overall mastery from both REDI and OWL systems
+  const rediTotalMastery = (progress.rediSkillMastery.mechanics + progress.rediSkillMastery.sequencing + progress.rediSkillMastery.voice) / 3;
+  const owlTotalMastery = (progress.owlSkillMastery.mechanics + progress.owlSkillMastery.sequencing + progress.owlSkillMastery.voice) / 3;
+  // Use average for overall mastery display
+  const totalMastery = (rediTotalMastery + owlTotalMastery) / 2;
 
   return (
     <MainLayout title="Your Profile" subtitle="Manage your account and view your progress">
@@ -440,13 +443,13 @@ export default function ProfilePage() {
                           <span className="h-3 w-3 rounded-full bg-green-300 dark:bg-green-700"></span>
                           <span className="text-sm font-medium text-green-700 dark:text-green-300">Mechanics</span>
                         </div>
-                        <span className="text-sm font-medium text-green-700 dark:text-green-300">{progress.skillMastery.mechanics}%</span>
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">{progress.rediSkillMastery.mechanics}%</span>
                       </div>
                       
                       <div className="h-3 bg-green-100/50 dark:bg-green-900/30 rounded-full overflow-hidden shadow-inner border border-green-200/50 dark:border-green-800/30">
                         <div 
                           className="h-full bg-green-400 dark:bg-green-600 rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
-                          style={{ width: `${progress.skillMastery.mechanics}%` }}
+                          style={{ width: `${progress.rediSkillMastery.mechanics}%` }}
                         >
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/skill:translate-x-full transition-transform duration-1500 ease-in-out"></div>
                         </div>
@@ -461,13 +464,13 @@ export default function ProfilePage() {
                           <span className="h-3 w-3 rounded-full bg-emerald-300 dark:bg-emerald-700"></span>
                           <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Sequencing</span>
                         </div>
-                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{progress.skillMastery.sequencing}%</span>
+                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{progress.rediSkillMastery.sequencing}%</span>
                       </div>
                       
                       <div className="h-3 bg-emerald-100/50 dark:bg-emerald-900/30 rounded-full overflow-hidden shadow-inner border border-emerald-200/50 dark:border-emerald-800/30">
                         <div 
                           className="h-full bg-emerald-400 dark:bg-emerald-600 rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
-                          style={{ width: `${progress.skillMastery.sequencing}%` }}
+                          style={{ width: `${progress.rediSkillMastery.sequencing}%` }}
                         >
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/skill:translate-x-full transition-transform duration-1500 ease-in-out"></div>
                         </div>
@@ -482,13 +485,13 @@ export default function ProfilePage() {
                           <span className="h-3 w-3 rounded-full bg-teal-300 dark:bg-teal-700"></span>
                           <span className="text-sm font-medium text-teal-700 dark:text-teal-300">Voice</span>
                         </div>
-                        <span className="text-sm font-medium text-teal-700 dark:text-teal-300">{progress.skillMastery.voice}%</span>
+                        <span className="text-sm font-medium text-teal-700 dark:text-teal-300">{progress.rediSkillMastery.voice}%</span>
                       </div>
                       
                       <div className="h-3 bg-teal-100/50 dark:bg-teal-900/30 rounded-full overflow-hidden shadow-inner border border-teal-200/50 dark:border-teal-800/30">
                         <div 
                           className="h-full bg-teal-400 dark:bg-teal-600 rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
-                          style={{ width: `${progress.skillMastery.voice}%` }}
+                          style={{ width: `${progress.rediSkillMastery.voice}%` }}
                         >
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/skill:translate-x-full transition-transform duration-1500 ease-in-out"></div>
                         </div>
