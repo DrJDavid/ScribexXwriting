@@ -3,6 +3,7 @@ import {
   progress, 
   exerciseAttempts, 
   writingSubmissions,
+  dailyChallenges,
   type User, 
   type InsertUser, 
   type Progress,
@@ -10,11 +11,15 @@ import {
   type ExerciseAttempt,
   type InsertExerciseAttempt,
   type WritingSubmission,
-  type InsertWritingSubmission
+  type InsertWritingSubmission,
+  type DailyChallenge,
+  type InsertDailyChallenge,
+  type ProgressHistoryEntry,
+  type SkillMastery
 } from "@shared/schema";
 import session from "express-session";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, and, gte, sql } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import { Pool } from '@neondatabase/serverless';
 import { hashPassword } from "./auth";
@@ -294,6 +299,153 @@ Westlake Middle School, 7th Grade`
       .where(eq(writingSubmissions.id, id));
       
     return result[0];
+  }
+
+  // Daily challenge methods
+  async getDailyChallenge(): Promise<DailyChallenge | undefined> {
+    // Get the most recent challenge that hasn't expired
+    const now = new Date();
+    
+    const result = await db
+      .select()
+      .from(dailyChallenges)
+      .where(
+        and(
+          gte(dailyChallenges.expiresAt || now, now) // Not expired or no expiration
+        )
+      )
+      .orderBy(desc(dailyChallenges.challengeDate))
+      .limit(1);
+    
+    return result[0];
+  }
+
+  async createDailyChallenge(challenge: InsertDailyChallenge): Promise<DailyChallenge> {
+    // Set expiration to 24 hours from now if not provided
+    const challengeToInsert = {
+      ...challenge,
+      expiresAt: challenge.expiresAt || new Date(Date.now() + 24 * 60 * 60 * 1000)
+    };
+    
+    const result = await db
+      .insert(dailyChallenges)
+      .values(challengeToInsert)
+      .returning();
+      
+    return result[0];
+  }
+
+  async updateDailyChallengeStatus(userId: number, challengeId: number | string, completed: boolean): Promise<Progress> {
+    // Get user progress
+    const userProgress = await this.getProgressByUserId(userId);
+    if (!userProgress) {
+      throw new Error('User progress not found');
+    }
+    
+    // Update challenge completion status
+    const result = await db
+      .update(progress)
+      .set({
+        dailyChallengeId: challengeId.toString(),
+        dailyChallengeCompleted: completed,
+        // If completed, also record the current date as last writing date
+        ...(completed ? { lastWritingDate: new Date() } : {})
+      })
+      .where(eq(progress.userId, userId))
+      .returning();
+    
+    // If challenge was completed, update the streak
+    if (completed) {
+      await this.updateStreak(userId, true);
+    }
+    
+    return result[0];
+  }
+
+  // Streak methods
+  async updateStreak(userId: number, completed: boolean): Promise<{currentStreak: number, longestStreak: number}> {
+    // Get user progress
+    const userProgress = await this.getProgressByUserId(userId);
+    if (!userProgress) {
+      throw new Error('User progress not found');
+    }
+    
+    let { currentStreak = 0, longestStreak = 0, lastWritingDate } = userProgress;
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Format dates to YYYY-MM-DD for comparison
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const lastWritingStr = lastWritingDate ? new Date(lastWritingDate).toISOString().split('T')[0] : '';
+    
+    if (completed) {
+      // If already wrote today, don't increase streak
+      if (lastWritingStr === todayStr) {
+        // Do nothing, already counted today
+      }
+      // If wrote yesterday, continue streak
+      else if (lastWritingStr === yesterdayStr) {
+        currentStreak += 1;
+      } 
+      // Otherwise, start a new streak
+      else {
+        currentStreak = 1;
+      }
+      
+      // Update longest streak if current streak is longer
+      longestStreak = Math.max(currentStreak, longestStreak);
+      
+      // Update progress record
+      await db
+        .update(progress)
+        .set({
+          currentStreak,
+          longestStreak,
+          lastWritingDate: today
+        })
+        .where(eq(progress.userId, userId));
+        
+      // Update progress history - add today's progress snapshot
+      if (userProgress.progressHistory) {
+        const historyEntries = userProgress.progressHistory as ProgressHistoryEntry[];
+        
+        // Create today's progress snapshot
+        const todayEntry: ProgressHistoryEntry = {
+          date: todayStr,
+          rediSkillMastery: userProgress.rediSkillMastery as SkillMastery,
+          owlSkillMastery: userProgress.owlSkillMastery as SkillMastery,
+          rediLevel: userProgress.rediLevel,
+          owlLevel: userProgress.owlLevel,
+          completedItems: (userProgress.completedExercises as string[]).length + 
+                         (userProgress.completedQuests as string[]).length
+        };
+        
+        // Check if today already has an entry
+        const existingEntryIndex = historyEntries.findIndex(entry => entry.date === todayStr);
+        if (existingEntryIndex >= 0) {
+          // Update existing entry
+          historyEntries[existingEntryIndex] = todayEntry;
+        } else {
+          // Add new entry, keeping up to 90 days of history
+          historyEntries.push(todayEntry);
+          if (historyEntries.length > 90) {
+            historyEntries.shift(); // Remove oldest entry
+          }
+        }
+        
+        // Update the progress history in the database
+        await db
+          .update(progress)
+          .set({
+            progressHistory: historyEntries
+          })
+          .where(eq(progress.userId, userId));
+      }
+    }
+    
+    return { currentStreak, longestStreak };
   }
 }
 
