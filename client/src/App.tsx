@@ -452,6 +452,9 @@ const Home = () => {
 const Header = () => {
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
+  
+  // Force component to recognize auth state
+  const isAuthenticated = user !== null;
 
   return (
     <header className="bg-primary text-white py-4 px-6">
@@ -461,7 +464,7 @@ const Header = () => {
             ScribexX
           </Link>
 
-          {user !== null && (
+          {isAuthenticated && (
             <nav className="hidden md:flex items-center space-x-4">
               <Link href="/" className={`hover:text-white/80 transition-colors ${location === '/' ? 'underline' : ''}`}>
                 Home
@@ -479,7 +482,7 @@ const Header = () => {
           )}
         </div>
 
-        {user && (
+        {isAuthenticated && (
           <div className="flex items-center gap-4">
             <span className="hidden md:inline">Welcome, {user.displayName || user.username}</span>
             <Button

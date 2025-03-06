@@ -38,7 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Immediately update the query cache with the user data
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Force a refresh of queries that depend on authentication state
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
       // Notify the application about auth state change
       window.dispatchEvent(new Event('auth-state-changed'));
@@ -63,7 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Immediately update the query cache with the user data
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Force a refresh of queries that depend on authentication state
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Notify the application about auth state change
+      window.dispatchEvent(new Event('auth-state-changed'));
+      
       toast({
         title: "Registration successful",
         description: `Welcome to ScribexX, ${user.displayName}!`,
