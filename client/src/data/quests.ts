@@ -130,7 +130,7 @@ export const WRITING_QUESTS: WritingQuest[] = [
     skillFocus: 'sequencing',
     level: 1,
     unlockRequirements: {
-      skillMastery: { mechanics: 10, sequencing: 10, voice: 0 }
+      skillMastery: { mechanics: 0, sequencing: 0, voice: 0 }
     }
   },
   {
@@ -173,7 +173,7 @@ export const WRITING_QUESTS: WritingQuest[] = [
     skillFocus: 'voice',
     level: 1,
     unlockRequirements: {
-      skillMastery: { mechanics: 10, sequencing: 0, voice: 10 }
+      skillMastery: { mechanics: 0, sequencing: 0, voice: 0 }
     }
   },
   {
@@ -202,7 +202,7 @@ export const WRITING_QUESTS: WritingQuest[] = [
     skillFocus: 'sequencing',
     level: 2,
     unlockRequirements: {
-      skillMastery: { mechanics: 40, sequencing: 30, voice: 20 }
+      skillMastery: { mechanics: 0, sequencing: 0, voice: 0 }
     }
   },
   {
@@ -231,7 +231,7 @@ export const WRITING_QUESTS: WritingQuest[] = [
     skillFocus: 'voice',
     level: 2,
     unlockRequirements: {
-      skillMastery: { mechanics: 30, sequencing: 20, voice: 30 }
+      skillMastery: { mechanics: 0, sequencing: 0, voice: 0 }
     }
   },
   {

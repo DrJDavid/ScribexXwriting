@@ -60,13 +60,18 @@ const OWLWritingQuest: React.FC = () => {
   const [generatedPromptData, setGeneratedPromptData] = useState<GeneratedPrompt | null>(null);
   
   useEffect(() => {
+    console.log("Checking for prompt data:", { promptData, mode });
     if (promptData && mode === 'generated') {
       try {
-        const parsedPrompt = JSON.parse(decodeURIComponent(promptData));
+        console.log("Raw prompt data:", promptData);
+        const decodedData = decodeURIComponent(promptData);
+        console.log("Decoded prompt data:", decodedData);
+        const parsedPrompt = JSON.parse(decodedData);
         console.log("Parsed prompt data:", parsedPrompt);
         setGeneratedPromptData(parsedPrompt);
       } catch (err) {
         console.error("Error parsing prompt data:", err);
+        console.error("Error details:", String(err));
       }
     }
   }, [promptData, mode]);
