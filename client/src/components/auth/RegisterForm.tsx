@@ -29,6 +29,7 @@ const RegisterForm: React.FC = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showEmailField, setShowEmailField] = React.useState(false);
+  const [showAgeGradeFields, setShowAgeGradeFields] = React.useState(true);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -43,12 +44,15 @@ const RegisterForm: React.FC = () => {
     },
   });
 
-  // Watch the role field to conditionally display email field
+  // Watch the role field to conditionally display fields
   const selectedRole = form.watch('role');
   
   React.useEffect(() => {
+    const isTeacherOrParent = selectedRole === 'teacher' || selectedRole === 'parent';
     // Email is required for teachers and parents
-    setShowEmailField(selectedRole === 'teacher' || selectedRole === 'parent');
+    setShowEmailField(isTeacherOrParent);
+    // Age and grade are only required for students
+    setShowAgeGradeFields(!isTeacherOrParent);
   }, [selectedRole]);
 
   const onSubmit = async (values: RegisterFormValues) => {
@@ -56,10 +60,14 @@ const RegisterForm: React.FC = () => {
       username: values.username,
       password: values.password,
       displayName: values.displayName,
-      age: Number(values.age),
-      grade: Number(values.grade),
       role: values.role,
     };
+    
+    // For student accounts, add age and grade
+    if (values.role === 'student') {
+      userData.age = Number(values.age);
+      userData.grade = Number(values.grade);
+    }
     
     // Add email for teacher/parent accounts
     if (values.role === 'teacher' || values.role === 'parent') {
@@ -197,53 +205,55 @@ const RegisterForm: React.FC = () => {
           />
         )}
         
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="age"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Age</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Your age" 
-                    type="number" 
-                    {...field} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6320ee]"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="grade"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Grade</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+        {showAgeGradeFields && (
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="age"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select grade" />
-                    </SelectTrigger>
+                    <Input 
+                      placeholder="Your age" 
+                      type="number" 
+                      {...field} 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6320ee]"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="6">6th Grade</SelectItem>
-                    <SelectItem value="7">7th Grade</SelectItem>
-                    <SelectItem value="8">8th Grade</SelectItem>
-                    <SelectItem value="9">9th Grade</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="grade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Grade</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select grade" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="6">6th Grade</SelectItem>
+                      <SelectItem value="7">7th Grade</SelectItem>
+                      <SelectItem value="8">8th Grade</SelectItem>
+                      <SelectItem value="9">9th Grade</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
         
         <Button 
           type="submit"

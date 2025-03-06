@@ -30,11 +30,7 @@ export default function ParentDashboard() {
   // Mutation for linking a student to this parent
   const linkStudentMutation = useMutation({
     mutationFn: async (username: string) => {
-      return apiRequest('/api/parent/link-student', {
-        method: 'POST',
-        body: JSON.stringify({ studentUsername: username }),
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return apiRequest('/api/parent/link-student', 'POST', { studentUsername: username });
     },
     onSuccess: () => {
       toast({
@@ -57,9 +53,7 @@ export default function ParentDashboard() {
   // Mutation for unlinking a student
   const unlinkStudentMutation = useMutation({
     mutationFn: async (studentId: number) => {
-      return apiRequest(`/api/parent/unlink-student/${studentId}`, {
-        method: 'DELETE',
-      });
+      return apiRequest(`/api/parent/unlink-student/${studentId}`, 'DELETE');
     },
     onSuccess: () => {
       toast({
