@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,11 @@ export default function OWLLocationDetail() {
   const quests = getQuestsForLocation(locationId);
   const { progress } = useProgress();
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
+  
+  // Debug when generatedPrompt changes
+  useEffect(() => {
+    console.log("generatedPrompt state changed:", generatedPrompt);
+  }, [generatedPrompt]);
   
   // Handle back button click properly - use navigate instead of window.history
   const handleBackClick = () => {
@@ -149,7 +154,10 @@ export default function OWLLocationDetail() {
                   <CardContent>
                     <WritePromptGenerator 
                       location={location}
-                      onSelectPrompt={(prompt) => setGeneratedPrompt(prompt)}
+                      onSelectPrompt={(prompt) => {
+                        console.log("Prompt selected in OWLLocationDetail:", prompt);
+                        setGeneratedPrompt(prompt);
+                      }}
                     />
                   </CardContent>
                 </Card>

@@ -106,8 +106,8 @@ export function WritePromptGenerator({
       
       // Show success toast
       toast({
-        title: "Prompt Generated",
-        description: "Your writing prompt is ready. Click 'Start Writing' to begin.",
+        title: "Prompt Generated Successfully!",
+        description: "Your custom writing prompt is now ready. You can see it below and click 'Start Writing' to begin.",
       });
       
     } catch (error) {
