@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,13 @@ export default function FixedLocationDetail() {
   // State for prompt generator
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  
+  // Debug log the current state values on every render
+  console.log("Current state values:", {
+    generatedPrompt: generatedPrompt ? "exists" : "null",
+    showPrompt,
+    locationId
+  });
   
   // Handle prompt selection
   const handleSelectPrompt = (prompt: GeneratedPrompt) => {
