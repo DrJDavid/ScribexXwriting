@@ -49,8 +49,11 @@ const LoginFormSimple = () => {
         throw new Error('Login failed');
       }
       
-      // Successfully logged in, redirect to home
-      navigate("/");
+      // Successfully logged in, refresh user data and redirect to home
+      // Small timeout to ensure state updates before navigation
+      setTimeout(() => {
+        navigate("/");
+      }, 100);
     } catch (error) {
       console.error("Login error:", error);
       // Show error message
@@ -443,7 +446,7 @@ const Header = () => {
             ScribexX
           </Link>
           
-          {user && (
+          {user !== null && (
             <nav className="hidden md:flex items-center space-x-4">
               <Link href="/" className={`hover:text-white/80 transition-colors ${location === '/' ? 'underline' : ''}`}>
                 Home

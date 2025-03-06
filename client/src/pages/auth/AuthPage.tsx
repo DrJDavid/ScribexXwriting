@@ -61,8 +61,11 @@ export default function AuthPage() {
 
     const onSubmit = async (values: LoginFormValues) => {
       loginMutation.mutate(values, {
-        onSuccess: () => {
-          navigate('/');
+        onSuccess: (userData) => {
+          // Force a state update before navigation
+          setTimeout(() => {
+            navigate('/');
+          }, 100);
         }
       });
     };
