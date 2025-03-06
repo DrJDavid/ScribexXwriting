@@ -26,7 +26,7 @@ export function PromptModal({
   onStartWriting, 
   onNewPrompt 
 }: PromptModalProps) {
-  if (!prompt) return null;
+  // Don't return null even if prompt is null - render the Dialog with condition checks inside
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,48 +39,64 @@ export function PromptModal({
         </DialogHeader>
         
         <div className="space-y-4 my-4">
-          <div className="bg-muted p-4 rounded-md">
-            <h3 className="font-semibold mb-2">Prompt</h3>
-            <p>{prompt.prompt}</p>
-          </div>
-          
-          <div className="bg-muted p-4 rounded-md">
-            <h3 className="font-semibold mb-2">Scenario</h3>
-            <p>{prompt.scenario}</p>
-          </div>
-          
-          <div className="bg-muted p-4 rounded-md">
-            <h3 className="font-semibold mb-2">Guiding Questions</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {prompt.guidingQuestions.map((q, i) => (
-                <li key={i}>{q}</li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="bg-muted p-4 rounded-md">
-            <h3 className="font-semibold mb-2">Suggested Elements</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {prompt.suggestedElements.map((e, i) => (
-                <li key={i}>{e}</li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="bg-muted p-4 rounded-md">
-            <h3 className="font-semibold mb-2">Challenge Element</h3>
-            <p>{prompt.challengeElement}</p>
-          </div>
+          {prompt ? (
+            <>
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-semibold mb-2">Prompt</h3>
+                <p>{prompt?.prompt}</p>
+              </div>
+              
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-semibold mb-2">Scenario</h3>
+                <p>{prompt?.scenario}</p>
+              </div>
+              
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-semibold mb-2">Guiding Questions</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {prompt?.guidingQuestions?.map((q, i) => (
+                    <li key={i}>{q}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-semibold mb-2">Suggested Elements</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {prompt?.suggestedElements?.map((e, i) => (
+                    <li key={i}>{e}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-semibold mb-2">Challenge Element</h3>
+                <p>{prompt?.challengeElement}</p>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center p-8">
+              <p className="text-muted-foreground">Prompt is being generated...</p>
+            </div>
+          )}
         </div>
         
         <DialogFooter className="flex justify-between">
-          <Button variant="outline" onClick={onNewPrompt}>
-            Generate New Prompt
-          </Button>
-          <Button variant="default" size="lg" className="animate-pulse" onClick={onStartWriting}>
-            <Pencil className="w-4 h-4 mr-2" />
-            Start Writing
-          </Button>
+          {prompt ? (
+            <>
+              <Button variant="outline" onClick={onNewPrompt}>
+                Generate New Prompt
+              </Button>
+              <Button variant="default" size="lg" className="animate-pulse" onClick={onStartWriting}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Start Writing
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" onClick={onOpenChange.bind(null, false)}>
+              Close
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

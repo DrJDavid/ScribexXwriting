@@ -23,12 +23,14 @@ export default function OWLLocationDetail() {
   // Debug when generatedPrompt changes and open the modal
   useEffect(() => {
     console.log("generatedPrompt state changed:", generatedPrompt);
+    console.log("Modal open state:", promptModalOpen);
     
     // If a prompt was generated, open the modal
     if (generatedPrompt) {
+      console.log("Setting modal to open because prompt is available");
       setPromptModalOpen(true);
     }
-  }, [generatedPrompt]);
+  }, [generatedPrompt, promptModalOpen]);
   
   // Prevent any unwanted state resets
   useEffect(() => {
