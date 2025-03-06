@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,20 @@ export default function OWLLocationDetail() {
   const { progress } = useProgress();
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   
-  // Debug when generatedPrompt changes
+  // Reference for auto-scrolling to prompt
+  const promptSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Debug when generatedPrompt changes and scroll to it
   useEffect(() => {
     console.log("generatedPrompt state changed:", generatedPrompt);
+    
+    // If a prompt was generated, scroll to the section
+    if (generatedPrompt && promptSectionRef.current) {
+      // Add a slight delay to ensure the component has rendered
+      setTimeout(() => {
+        promptSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
   }, [generatedPrompt]);
   
   // Handle back button click properly - use navigate instead of window.history
@@ -162,11 +173,11 @@ export default function OWLLocationDetail() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Your Custom Prompt</CardTitle>
+                <Card className="border-primary border-2 shadow-lg" ref={promptSectionRef}>
+                  <CardHeader className="bg-primary/10">
+                    <CardTitle>Your Custom Prompt is Ready!</CardTitle>
                     <CardDescription>
-                      Start writing or generate a new prompt
+                      Review your custom prompt and start writing when ready
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -205,11 +216,11 @@ export default function OWLLocationDetail() {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between">
+                  <CardFooter className="flex justify-between bg-primary/5">
                     <Button variant="outline" onClick={() => setGeneratedPrompt(null)}>
                       Generate New Prompt
                     </Button>
-                    <Button onClick={() => {
+                    <Button variant="default" size="lg" className="animate-pulse" onClick={() => {
                       // Store the generated prompt in sessionStorage instead of trying to encode it in URL
                       const promptKey = `prompt_${new Date().getTime()}`;
                       const promptData = {
