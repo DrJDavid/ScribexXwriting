@@ -106,6 +106,7 @@ export class DatabaseStorage implements IStorage {
         username: 'demo',
         password: 'password', // Will be hashed in createUser
         displayName: 'Demo User',
+        role: 'student',
         age: 13,
         grade: 7,
       });
@@ -150,6 +151,29 @@ Sincerely,
 Demo User
 Westlake Middle School, 7th Grade`
       });
+      
+      // Create a demo teacher
+      const teacherUser = await this.createUser({
+        username: 'teacher',
+        password: 'password',
+        displayName: 'Mrs. Johnson',
+        email: 'teacher@example.com',
+        role: 'teacher'
+      });
+      
+      // Create a demo parent
+      const parentUser = await this.createUser({
+        username: 'parent',
+        password: 'password',
+        displayName: 'David\'s Parent',
+        email: 'parent@example.com',
+        role: 'parent'
+      });
+      
+      // Link demo student to teacher and parent
+      await this.linkTeacherToStudent(teacherUser.id, demoUser.id);
+      await this.linkParentToStudent(parentUser.id, demoUser.id);
+      
     } catch (error) {
       console.error('Error creating demo user:', error);
     }
@@ -165,13 +189,18 @@ Westlake Middle School, 7th Grade`
     const result = await db.select().from(users).where(eq(users.username, username));
     return result[0];
   }
+  
+  async getUsersByRole(role: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, role));
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     // Ensure required fields have defaults
     const userToInsert = {
       ...insertUser,
-      age: insertUser.age || 0,
-      grade: insertUser.grade || 0,
+      role: insertUser.role || 'student',
+      age: insertUser.age || null,
+      grade: insertUser.grade || null,
       avatarUrl: insertUser.avatarUrl || "",
     };
     
@@ -182,6 +211,151 @@ Westlake Middle School, 7th Grade`
     
     const result = await db.insert(users).values(userToInsert).returning();
     return result[0];
+  }
+  
+  // Teacher-Student relationship methods
+  async linkTeacherToStudent(teacherId: number, studentId: number): Promise<TeacherStudent> {
+    const result = await db
+      .insert(teacherStudents)
+      .values({
+        teacherId,
+        studentId
+      })
+      .returning();
+    
+    return result[0];
+  }
+  
+  async getStudentsByTeacherId(teacherId: number): Promise<User[]> {
+    const links = await db
+      .select()
+      .from(teacherStudents)
+      .where(eq(teacherStudents.teacherId, teacherId));
+    
+    const studentIds = links.map(link => link.studentId);
+    
+    if (studentIds.length === 0) {
+      return [];
+    }
+    
+    // For now we'll do a simple implementation using multiple queries
+    // In a production environment, this could be optimized with a join
+    const students: User[] = [];
+    for (const studentId of studentIds) {
+      const student = await this.getUser(studentId);
+      if (student) {
+        students.push(student);
+      }
+    }
+    
+    return students;
+  }
+  
+  async getTeachersByStudentId(studentId: number): Promise<User[]> {
+    const links = await db
+      .select()
+      .from(teacherStudents)
+      .where(eq(teacherStudents.studentId, studentId));
+    
+    const teacherIds = links.map(link => link.teacherId);
+    
+    if (teacherIds.length === 0) {
+      return [];
+    }
+    
+    // For now we'll do a simple implementation using multiple queries
+    const teachers: User[] = [];
+    for (const teacherId of teacherIds) {
+      const teacher = await this.getUser(teacherId);
+      if (teacher) {
+        teachers.push(teacher);
+      }
+    }
+    
+    return teachers;
+  }
+  
+  async unlinkTeacherFromStudent(teacherId: number, studentId: number): Promise<void> {
+    await db
+      .delete(teacherStudents)
+      .where(
+        and(
+          eq(teacherStudents.teacherId, teacherId),
+          eq(teacherStudents.studentId, studentId)
+        )
+      );
+  }
+  
+  // Parent-Student relationship methods
+  async linkParentToStudent(parentId: number, studentId: number): Promise<ParentStudent> {
+    const result = await db
+      .insert(parentStudents)
+      .values({
+        parentId,
+        studentId
+      })
+      .returning();
+    
+    return result[0];
+  }
+  
+  async getStudentsByParentId(parentId: number): Promise<User[]> {
+    const links = await db
+      .select()
+      .from(parentStudents)
+      .where(eq(parentStudents.parentId, parentId));
+    
+    const studentIds = links.map(link => link.studentId);
+    
+    if (studentIds.length === 0) {
+      return [];
+    }
+    
+    // For now we'll do a simple implementation using multiple queries
+    const students: User[] = [];
+    for (const studentId of studentIds) {
+      const student = await this.getUser(studentId);
+      if (student) {
+        students.push(student);
+      }
+    }
+    
+    return students;
+  }
+  
+  async getParentsByStudentId(studentId: number): Promise<User[]> {
+    const links = await db
+      .select()
+      .from(parentStudents)
+      .where(eq(parentStudents.studentId, studentId));
+    
+    const parentIds = links.map(link => link.parentId);
+    
+    if (parentIds.length === 0) {
+      return [];
+    }
+    
+    // For now we'll do a simple implementation using multiple queries
+    const parents: User[] = [];
+    for (const parentId of parentIds) {
+      const parent = await this.getUser(parentId);
+      if (parent) {
+        parents.push(parent);
+      }
+    }
+    
+    return parents;
+  }
+  
+  async unlinkParentFromStudent(parentId: number, studentId: number): Promise<void> {
+    await db
+      .delete(parentStudents)
+      .where(
+        and(
+          eq(parentStudents.parentId, parentId),
+          eq(parentStudents.studentId, studentId)
+        )
+      );
   }
   
   // Progress methods
