@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { PromptModal } from '@/components/writing/PromptModal';
 import { getLocationById, getQuestsForLocation } from '@/data/quests';
 import { useProgress } from '@/context/ProgressContext';
 import { Pencil, ArrowLeft, MapPin } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function OWLLocationDetail() {
   const [, params] = useRoute('/owl/location/:locationId');
@@ -17,19 +18,11 @@ export default function OWLLocationDetail() {
   const location = getLocationById(locationId);
   const quests = getQuestsForLocation(locationId);
   const { progress } = useProgress();
+  const { toast } = useToast();
   
-  // Use regular state for the prompt and modal
-  const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
-  const [promptModalOpen, setPromptModalOpen] = useState(false);
-  
-  // Add a forceUpdate function to ensure renders when needed
-  const [, forceUpdate] = useReducer(x => x + 1, 0);
-  
-  // Debug logging with no side effects
-  useEffect(() => {
-    console.log("generatedPrompt state changed:", generatedPrompt);
-    console.log("Modal open state:", promptModalOpen);
-  }, [generatedPrompt, promptModalOpen]);
+  // Use refs instead of state to avoid re-render issues
+  const promptRef = useRef<GeneratedPrompt | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   
   // Handle back button click 
   const handleBackClick = () => {
@@ -146,28 +139,28 @@ export default function OWLLocationDetail() {
         <div>
           {/* Modal for prompt display */}
           <PromptModal 
-            open={promptModalOpen}
-            onOpenChange={setPromptModalOpen}
-            prompt={generatedPrompt}
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+            prompt={promptRef.current}
             onNewPrompt={() => {
-              setGeneratedPrompt(null);
-              setPromptModalOpen(false);
+              // Reset everything
+              promptRef.current = null;
+              setModalOpen(false);
             }}
             onStartWriting={() => {
               // Store the generated prompt in sessionStorage
-              if (generatedPrompt) {
+              if (promptRef.current) {
                 const promptKey = `prompt_${new Date().getTime()}`;
                 const promptData = {
-                  prompt: generatedPrompt.prompt,
-                  scenario: generatedPrompt.scenario,
-                  guidingQuestions: generatedPrompt.guidingQuestions || [],
-                  suggestedElements: generatedPrompt.suggestedElements || [],
-                  challengeElement: generatedPrompt.challengeElement || ""
+                  prompt: promptRef.current.prompt,
+                  scenario: promptRef.current.scenario,
+                  guidingQuestions: promptRef.current.guidingQuestions || [],
+                  suggestedElements: promptRef.current.suggestedElements || [],
+                  challengeElement: promptRef.current.challengeElement || ""
                 };
                 
                 // Store the data in sessionStorage
                 sessionStorage.setItem(promptKey, JSON.stringify(promptData));
-                console.log("Stored prompt data in sessionStorage with key:", promptKey);
                 
                 // Navigate to the writing page
                 navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`);
@@ -192,35 +185,25 @@ export default function OWLLocationDetail() {
                 <CardContent>
                   <WritePromptGenerator 
                     location={location}
-                    initialPrompt={generatedPrompt}
                     onSelectPrompt={(prompt) => {
-                      console.log("Prompt selected in OWLLocationDetail:", prompt);
                       if (prompt) {
-                        // Deep clone the prompt to prevent reference issues
-                        const updatedPrompt = {
+                        // Directly update the ref without state changes
+                        promptRef.current = {
                           prompt: prompt.prompt,
                           scenario: prompt.scenario,
                           guidingQuestions: [...(prompt.guidingQuestions || [])],
                           suggestedElements: [...(prompt.suggestedElements || [])],
                           challengeElement: prompt.challengeElement || ""
                         };
-                        console.log("Setting generatedPrompt to:", updatedPrompt);
                         
-                        // First clear the current prompt (to force re-render)
-                        setGeneratedPrompt(null);
-                        setPromptModalOpen(false);
+                        // Just open the modal
+                        setModalOpen(true);
                         
-                        // Force a component update
-                        forceUpdate();
-                        
-                        // Set the new prompt and open the modal with a delay
-                        setTimeout(() => {
-                          setGeneratedPrompt(updatedPrompt);
-                          setTimeout(() => {
-                            console.log("Opening modal with prompt:", updatedPrompt);
-                            setPromptModalOpen(true);
-                          }, 50);
-                        }, 50);
+                        // Show a toast
+                        toast({
+                          title: "Prompt Ready!",
+                          description: "Your custom writing prompt has been generated.",
+                        });
                       }
                     }}
                   />

@@ -1,0 +1,20 @@
+Prompt selected in OWLLocationDetail: 
+Object {prompt: "Write an argumentative piece debating whether the OWL Town Hall should prioritize preserving its…", scenario: "The OWL Town Hall is a cornerstone of the community, known for its unique blend of Victorian…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Integrate a quote from a fictional town resident who is passionate about one side of the debate."}
+challengeElement: "Integrate a quote from a fictional town resident who is passionate about one side of the debate."
+guidingQuestions: Array(3)
+prompt: "Write an argumentative piece debating whether the OWL Town Hall should prioritize preserving its historical architecture or modernizing its facilities to better serve the community's needs."
+scenario: "The OWL Town Hall is a cornerstone of the community, known for its unique blend of Victorian architecture and community spaces. Recently, a proposal to renovate the town hall has sparked a heated debate among residents, with some advocating for preservation and others pushing for modernization to meet growing demands."
+suggestedElements: Array(4)
+[[Prototype]]: Object
+Setting generatedPrompt to: 
+Object {prompt: "Write an argumentative piece debating whether the OWL Town Hall should prioritize preserving its…", scenario: "The OWL Town Hall is a cornerstone of the community, known for its unique blend of Victorian…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Integrate a quote from a fictional town resident who is passionate about one side of the debate."}
+PromptModal rendered with open: false
+PromptModal prompt: null
+generatedPrompt state changed: null
+Modal open state: false
+Opening modal with prompt: 
+Object {prompt: "Write an argumentative piece debating whether the OWL Town Hall should prioritize preserving its…", scenario: "The OWL Town Hall is a cornerstone of the community, known for its unique blend of Victorian…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Integrate a quote from a fictional town resident who is passionate about one side of the debate."}
+PromptModal rendered with open: false
+PromptModal prompt: null
+generatedPrompt state changed: null
+Modal open state: false
