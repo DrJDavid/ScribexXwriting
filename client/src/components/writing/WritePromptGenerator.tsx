@@ -114,8 +114,12 @@ export function WritePromptGenerator({
       };
       
       // Call onSelectPrompt callback to inform parent component about the new prompt
-      console.log("Calling onSelectPrompt with generated prompt");
-      onSelectPrompt(promptToSend);
+      console.log("Calling onSelectPrompt with generated prompt:", promptToSend);
+      
+      // Add a very slight delay to ensure state updates properly
+      setTimeout(() => {
+        onSelectPrompt(promptToSend);
+      }, 50);
       
       // Show success toast
       toast({
@@ -137,7 +141,11 @@ export function WritePromptGenerator({
       
       // Call onSelectPrompt with the fallback prompt
       console.log("Calling onSelectPrompt with fallback prompt");
-      onSelectPrompt(fallbackPrompt);
+      
+      // Add a very slight delay to ensure state updates properly
+      setTimeout(() => {
+        onSelectPrompt(fallbackPrompt);
+      }, 50);
       
       // Show toast
       toast({
@@ -204,8 +212,11 @@ export function WritePromptGenerator({
       challengeElement: prompt.challengeElement
     };
     
-    // Call onSelectPrompt callback with the copied prompt
-    onSelectPrompt(promptToSend);
+    // Call onSelectPrompt callback with the copied prompt after a slight delay
+    setTimeout(() => {
+      console.log("Calling onSelectPrompt with selected prompt:", promptToSend);
+      onSelectPrompt(promptToSend);
+    }, 50);
     
     // Show toast notification
     toast({

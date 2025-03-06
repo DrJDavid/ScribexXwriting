@@ -48,13 +48,36 @@ export default function FixedLocationDetail() {
       title: "Prompt Generated!",
       description: "Your writing prompt is now visible below.",
     });
+    
+    // Log the state updates to verify
+    console.log("Updated state:", {
+      generatedPrompt: promptCopy,
+      showPrompt: true
+    });
+    
+    // Scroll to the prompt after a short delay to ensure rendering
+    setTimeout(() => {
+      const promptSection = document.getElementById('generated-prompt-section');
+      if (promptSection) {
+        promptSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 300);
   };
   
   // Handle generating a new prompt
   const handleNewPrompt = () => {
+    console.log("Clearing prompt state");
     setGeneratedPrompt(null);
     setShowPrompt(false);
   };
+  
+  // Effect to ensure showPrompt is true when generatedPrompt is not null
+  useEffect(() => {
+    if (generatedPrompt && !showPrompt) {
+      console.log("Setting showPrompt to true because generatedPrompt exists");
+      setShowPrompt(true);
+    }
+  }, [generatedPrompt, showPrompt]);
   
   // Handle starting the writing process
   const handleStartWriting = () => {
@@ -212,6 +235,7 @@ export default function FixedLocationDetail() {
               {/* Generated Prompt Display - only shown when a prompt exists and should be shown */}
               {showPrompt && generatedPrompt && (
                 <Card 
+                  id="generated-prompt-section"
                   className="border-primary border-2 shadow-lg animate-in fade-in-0 duration-200 mt-4"
                 >
                   <CardHeader className="bg-primary/10">
