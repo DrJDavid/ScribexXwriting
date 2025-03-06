@@ -44,6 +44,14 @@ export interface IStorage {
   createWritingSubmission(submission: InsertWritingSubmission): Promise<WritingSubmission>;
   updateWritingSubmission(id: number, submission: Partial<WritingSubmission>): Promise<WritingSubmission | undefined>;
   
+  // Daily challenge methods
+  getDailyChallenge(): Promise<DailyChallenge | undefined>;
+  createDailyChallenge(challenge: InsertDailyChallenge): Promise<DailyChallenge>;
+  updateDailyChallengeStatus(userId: number, challengeId: number | string, completed: boolean): Promise<Progress>;
+  
+  // Streak methods
+  updateStreak(userId: number, completed: boolean): Promise<{currentStreak: number, longestStreak: number}>;
+  
   // Session store
   sessionStore: session.Store;
 }

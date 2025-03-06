@@ -34,6 +34,13 @@ export const progress = pgTable("progress", {
   owlLevel: integer("owl_level").notNull().default(1), // OWL specific level
   currency: integer("currency").notNull().default(0),
   achievements: jsonb("achievements").notNull(), // array of achievement IDs
+  // Streaks and gamification
+  currentStreak: integer("current_streak").notNull().default(0), // Current consecutive days of writing
+  longestStreak: integer("longest_streak").notNull().default(0), // Longest streak ever achieved
+  lastWritingDate: timestamp("last_writing_date"), // Last date user did any writing
+  dailyChallengeId: text("daily_challenge_id"), // Current daily challenge ID
+  dailyChallengeCompleted: boolean("daily_challenge_completed").default(false), // Whether today's challenge is completed
+  progressHistory: jsonb("progress_history").default([]), // Array of daily progress snapshots for sparkline visualization
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
@@ -116,4 +123,34 @@ export type AIFeedback = {
     voice?: string[];
   };
   nextSteps: string;
+};
+
+// Daily Writing Challenge schema
+export const dailyChallenges = pgTable("daily_challenges", {
+  id: serial("id").primaryKey(),
+  challengeDate: timestamp("challenge_date").notNull().defaultNow(),
+  prompt: text("prompt").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  wordMinimum: integer("word_minimum").notNull().default(100),
+  skillFocus: text("skill_focus").notNull(), // mechanics, sequencing, or voice
+  difficulty: integer("difficulty").notNull().default(1), // 1-5 scale
+  expiresAt: timestamp("expires_at"), // when this challenge expires
+});
+
+export const insertDailyChallengeSchema = createInsertSchema(dailyChallenges).omit({
+  id: true,
+});
+
+export type DailyChallenge = typeof dailyChallenges.$inferSelect;
+export type InsertDailyChallenge = z.infer<typeof insertDailyChallengeSchema>;
+
+// Progress History entry type for sparkline visualization
+export type ProgressHistoryEntry = {
+  date: string; // ISO date string
+  rediSkillMastery: SkillMastery;
+  owlSkillMastery: SkillMastery;
+  rediLevel: number;
+  owlLevel: number;
+  completedItems: number; // exercises + quests completed that day
 };
