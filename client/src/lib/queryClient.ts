@@ -20,10 +20,16 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
-  // Parse JSON response if it has content
+  
+  // Check if the response has content and is JSON
   if (res.status !== 204) { // No Content
-    return await res.json();
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await res.json();
+    }
   }
+  
+  // For non-JSON responses or no content
   return null;
 }
 
