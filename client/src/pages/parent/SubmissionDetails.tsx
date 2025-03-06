@@ -30,7 +30,7 @@ export default function SubmissionDetails() {
 
   const handleBackClick = () => {
     if (student) {
-      navigate(`/parent/child/${student.id}`);
+      navigate(`/parent/child/${student.id}/submissions`);
     } else {
       navigate('/parent');
     }
