@@ -28,13 +28,13 @@ export default function StudentDetails() {
 
   // Fetch student progress
   const { data: progress, isLoading: isLoadingProgress } = useQuery<StudentProgress>({
-    queryKey: ['/api/teacher/student', studentId, 'progress'],
+    queryKey: [`/api/teacher/student/${studentId}/progress`],
     enabled: !!studentId,
   });
 
   // Fetch student submissions
   const { data: submissions = [], isLoading: isLoadingSubmissions } = useQuery<WritingSubmission[]>({
-    queryKey: ['/api/teacher/student', studentId, 'submissions'],
+    queryKey: [`/api/teacher/student/${studentId}/submissions`],
     enabled: !!studentId,
   });
 
@@ -312,7 +312,7 @@ export default function StudentDetails() {
                           <div className="flex justify-between items-center mt-2">
                             <div className="text-sm">
                               <span className="font-medium">Status: </span>
-                              <span className={submission.status === 'completed' ? 'text-green-500' : 'text-amber-500'}>
+                              <span className={submission.status === 'submitted' || submission.status === 'reviewed' ? 'text-green-500' : 'text-amber-500'}>
                                 {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                               </span>
                             </div>
