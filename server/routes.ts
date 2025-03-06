@@ -814,6 +814,35 @@ Keep the entire response concise and focused on inspiring creativity.`;
     }
   });
   
+  // Get a specific daily challenge by ID
+  app.get('/api/daily-challenge/:challengeId', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const challengeId = parseInt(req.params.challengeId);
+      
+      if (isNaN(challengeId)) {
+        return res.status(400).json({ message: 'Invalid challenge ID' });
+      }
+      
+      // Get the daily challenge by ID
+      // For now, we can use the getDailyChallenge function since we typically only have one active challenge
+      const challenge = await storage.getDailyChallenge();
+      
+      // If there's no challenge or the IDs don't match, return a 404
+      if (!challenge || challenge.id !== challengeId) {
+        return res.status(404).json({ message: 'Challenge not found' });
+      }
+      
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error fetching daily challenge by ID:', error);
+      res.status(500).json({ message: 'Error fetching daily challenge' });
+    }
+  });
+  
   app.post('/api/daily-challenge/generate', async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
@@ -965,6 +994,136 @@ Format the response as JSON with these fields:
         return res.status(400).json({ message: validationError.message });
       }
       res.status(500).json({ message: 'Error completing daily challenge' });
+    }
+  });
+  
+  // Submit daily challenge writing
+  app.post('/api/daily-challenge/submit', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as any;
+      
+      // Schema validation
+      const schema = z.object({
+        challengeId: z.union([z.string(), z.number()]),
+        title: z.string(),
+        content: z.string()
+      });
+      
+      const { challengeId, title, content } = schema.parse(req.body);
+      
+      // Verify the challenge exists
+      const challenge = await storage.getDailyChallenge();
+      
+      if (!challenge || challenge.id.toString() !== challengeId.toString()) {
+        return res.status(404).json({ message: 'Challenge not found' });
+      }
+      
+      // Create a writing submission for this challenge
+      const submission = await storage.createWritingSubmission({
+        title,
+        content,
+        userId: user.id,
+        questId: `daily-${challengeId}`, // Use a special prefix for daily challenges
+        submittedAt: new Date(),
+        status: 'completed'
+      });
+      
+      // Mark the challenge as completed
+      const updatedProgress = await storage.updateDailyChallengeStatus(
+        user.id, 
+        challengeId, 
+        true
+      );
+      
+      // Update the user's streak
+      const streakData = await storage.updateStreak(user.id, true);
+      
+      res.status(201).json({
+        submission,
+        progress: updatedProgress,
+        streak: streakData
+      });
+    } catch (error) {
+      console.error('Error submitting daily challenge:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error submitting daily challenge' });
+    }
+  });
+  
+  // Save draft of daily challenge
+  app.post('/api/daily-challenge/draft', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as any;
+      
+      // Schema validation
+      const schema = z.object({
+        challengeId: z.union([z.string(), z.number()]),
+        title: z.string(),
+        content: z.string()
+      });
+      
+      const { challengeId, title, content } = schema.parse(req.body);
+      
+      // For drafts, we don't need to verify the challenge
+      // Create or update a writing submission for this challenge
+      const submission = await storage.createWritingSubmission({
+        title,
+        content,
+        userId: user.id,
+        questId: `daily-${challengeId}`, // Use a special prefix for daily challenges
+        submittedAt: null, // null indicates a draft
+        status: 'draft'
+      });
+      
+      res.status(201).json({ submission });
+    } catch (error) {
+      console.error('Error saving challenge draft:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error saving challenge draft' });
+    }
+  });
+  
+  // Update streak endpoint
+  app.post('/api/streak/update', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as any;
+      
+      // Schema validation
+      const schema = z.object({
+        completed: z.boolean().default(true)
+      });
+      
+      const { completed } = schema.parse(req.body);
+      
+      // Update the streak
+      const streakData = await storage.updateStreak(user.id, completed);
+      
+      res.json(streakData);
+    } catch (error) {
+      console.error('Error updating streak:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error updating streak' });
     }
   });
 
