@@ -202,8 +202,9 @@ export default function OWLLocationDetail() {
                       Generate New Prompt
                     </Button>
                     <Button onClick={() => {
-                      // Create a simplified object with only the needed data
-                      const promptDataForUrl = {
+                      // Store the generated prompt in sessionStorage instead of trying to encode it in URL
+                      const promptKey = `prompt_${new Date().getTime()}`;
+                      const promptData = {
                         prompt: generatedPrompt.prompt,
                         scenario: generatedPrompt.scenario,
                         guidingQuestions: generatedPrompt.guidingQuestions || [],
@@ -211,18 +212,13 @@ export default function OWLLocationDetail() {
                         challengeElement: generatedPrompt.challengeElement || ""
                       };
                       
-                      // Encode the JSON string for the URL
-                      const encodedPrompt = encodeURIComponent(JSON.stringify(promptDataForUrl));
+                      // Store the data in sessionStorage (this avoids URL encoding issues)
+                      sessionStorage.setItem(promptKey, JSON.stringify(promptData));
                       
-                      // Log the data being sent (for debugging)
-                      console.log("Navigation with prompt data:", promptDataForUrl);
-                      console.log("Encoded length:", encodedPrompt.length);
+                      console.log("Stored prompt data in sessionStorage with key:", promptKey);
                       
-                      // Generate the URL
-                      const url = `/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&prompt=${encodedPrompt}`;
-                      
-                      // Navigate to the URL 
-                      navigate(url);
+                      // Navigate to the page with just the key reference
+                      navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`);
                     }}>
                       <Pencil className="w-4 h-4 mr-2" />
                       Start Writing

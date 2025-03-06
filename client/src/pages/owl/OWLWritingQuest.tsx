@@ -54,34 +54,61 @@ const OWLWritingQuest: React.FC = () => {
   const locationId = searchParams.get('locationId');
   const promptType = searchParams.get('promptType');
   const mode = searchParams.get('mode'); // 'generated' for generated prompts
-  const promptData = searchParams.get('prompt');
+  const promptKey = searchParams.get('promptKey'); // New approach using sessionStorage
   
   // Parse the prompt data if it exists
   const [generatedPromptData, setGeneratedPromptData] = useState<GeneratedPrompt | null>(null);
   
   useEffect(() => {
-    console.log("Checking for prompt data:", { promptData, mode });
-    if (promptData && mode === 'generated') {
+    console.log("Checking for prompt key:", { promptKey, mode });
+    
+    if (promptKey && mode === 'generated') {
       try {
-        console.log("Raw prompt data:", promptData);
-        const decodedData = decodeURIComponent(promptData);
-        console.log("Decoded prompt data:", decodedData);
-        const parsedPrompt = JSON.parse(decodedData);
-        console.log("Parsed prompt data:", parsedPrompt);
-        setGeneratedPromptData(parsedPrompt);
+        // Get the prompt data from sessionStorage
+        const storedData = sessionStorage.getItem(promptKey);
+        console.log("Retrieved data from sessionStorage:", storedData);
+        
+        if (!storedData) {
+          console.error("No data found in sessionStorage for key:", promptKey);
+          return;
+        }
+        
+        // Parse the JSON data
+        const parsedPrompt = JSON.parse(storedData);
+        console.log("Parsed prompt data from sessionStorage:", parsedPrompt);
+        
+        // Verify the parsed prompt has the required fields
+        if (parsedPrompt && parsedPrompt.prompt) {
+          // Ensure all the expected properties are present
+          const validatedPrompt = {
+            prompt: parsedPrompt.prompt || "",
+            scenario: parsedPrompt.scenario || "",
+            guidingQuestions: Array.isArray(parsedPrompt.guidingQuestions) ? parsedPrompt.guidingQuestions : [],
+            suggestedElements: Array.isArray(parsedPrompt.suggestedElements) ? parsedPrompt.suggestedElements : [],
+            challengeElement: parsedPrompt.challengeElement || ""
+          };
+          
+          console.log("Valid prompt data loaded:", validatedPrompt);
+          setGeneratedPromptData(validatedPrompt);
+          
+          // Clean up - remove from sessionStorage after loading
+          // sessionStorage.removeItem(promptKey);
+        } else {
+          console.error("Parsed prompt does not have required fields:", parsedPrompt);
+        }
       } catch (err) {
-        console.error("Error parsing prompt data:", err);
+        console.error("Error retrieving prompt data from sessionStorage:", err);
         console.error("Error details:", String(err));
       }
     }
-  }, [promptData, mode]);
+  }, [promptKey, mode]);
   
   console.log("Extracted parameters:", { 
     isFreeWrite, 
     locationId, 
     promptType, 
     mode,
-    hasPromptData: !!promptData,
+    hasPromptKey: !!promptKey,
     questId: params.questId 
   });
   
