@@ -51,8 +51,13 @@ export function DailyWritingStreak({
   const fetchDailyChallenge = async () => {
     try {
       setLoading(true);
-      const result = await apiRequest<DailyChallenge>('/api/daily-challenge', { method: 'GET' });
-      setChallenge(result);
+      const result = await apiRequest({
+        endpoint: '/api/daily-challenge',
+        method: 'GET'
+      });
+      if (result) {
+        setChallenge(result as DailyChallenge);
+      }
     } catch (error) {
       console.error('Error fetching daily challenge', error);
     } finally {
@@ -63,12 +68,17 @@ export function DailyWritingStreak({
   const generateNewChallenge = async () => {
     try {
       setGenerating(true);
-      const result = await apiRequest<DailyChallenge>('/api/daily-challenge/generate', { method: 'POST' });
-      setChallenge(result);
-      toast({
-        title: "New Challenge Generated!",
-        description: "Your daily writing challenge has been refreshed.",
+      const result = await apiRequest({
+        endpoint: '/api/daily-challenge/generate',
+        method: 'POST'
       });
+      if (result) {
+        setChallenge(result as DailyChallenge);
+        toast({
+          title: "New Challenge Generated!",
+          description: "Your daily writing challenge has been refreshed.",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",

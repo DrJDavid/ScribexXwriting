@@ -1,15 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/context/ThemeContext';
-import { Loader, Sparkles, Leaf, PenTool, FileText, LayoutDashboard } from 'lucide-react';
+import { Loader, Sparkles, Leaf, PenTool, FileText, LayoutDashboard, Trophy } from 'lucide-react';
+import { DailyWritingStreak } from '@/components/home/DailyWritingStreak';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Home() {
   const [, navigate] = useLocation();
   const { user, isLoading } = useAuth();
   const { theme, setTheme } = useTheme();
+  
+  // Fetch user progress for streak data
+  const { data: progressData } = useQuery({
+    queryKey: ['/api/progress'],
+    enabled: !!user
+  });
 
   // Apply theme-specific background effects
   useEffect(() => {
@@ -230,13 +238,28 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* Shortcuts Row - Now with 2 columns instead of 3 */}
+          {/* Daily Writing Streak */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="w-full"
+          >
+            <DailyWritingStreak 
+              currentStreak={progressData?.currentStreak || 0}
+              longestStreak={progressData?.longestStreak || 0}
+              isChallengeCompleted={progressData?.dailyChallengeCompleted || false}
+              lastWritingDate={progressData?.lastWritingDate ? new Date(progressData.lastWritingDate).toISOString() : null}
+            />
+          </motion.div>
+
+          {/* Shortcuts Row - Now with 2 columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Submissions shortcut */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
               onClick={() => navigate('/writing/submissions')}
               className={`group cursor-pointer rounded-xl overflow-hidden shadow-md backdrop-blur-sm ${
                 theme === 'redi'
@@ -269,12 +292,12 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* Profile shortcut */}
+            {/* Achievements shortcut */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/achievements')}
               className={`group cursor-pointer rounded-xl overflow-hidden shadow-md backdrop-blur-sm ${
                 theme === 'redi'
                   ? 'bg-gradient-to-br from-indigo-900/80 to-indigo-950/80 border border-indigo-700/50 hover:border-indigo-500/70 hover:shadow-indigo-900/20 hover:shadow-lg'
@@ -287,7 +310,7 @@ export default function Home() {
                     ? 'bg-indigo-800/80' 
                     : 'bg-teal-800/80'
                 }`}>
-                  <LayoutDashboard className={`h-5 w-5 ${
+                  <Trophy className={`h-5 w-5 ${
                     theme === 'redi' ? 'text-indigo-100' : 'text-teal-100'
                   }`} />
                 </div>
@@ -295,12 +318,12 @@ export default function Home() {
                   <h3 className={`text-base font-medium group-hover:translate-x-1 transition-transform ${
                     theme === 'redi' ? 'text-indigo-50' : 'text-teal-50'
                   }`}>
-                    Profile
+                    Achievements
                   </h3>
                   <p className={`text-xs ${
                     theme === 'redi' ? 'text-indigo-200/70' : 'text-teal-200/70'
                   }`}>
-                    Update your account settings
+                    View your progress and badges
                   </p>
                 </div>
               </div>

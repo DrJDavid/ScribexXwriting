@@ -792,6 +792,182 @@ Keep the entire response concise and focused on inspiring creativity.`;
     }
   });
 
+  // Daily Writing Challenge Routes
+  app.get('/api/daily-challenge', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      // Get the current daily challenge
+      const challenge = await storage.getDailyChallenge();
+      
+      // If there's no challenge, return a 404
+      if (!challenge) {
+        return res.status(404).json({ message: 'No daily challenge available' });
+      }
+      
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error fetching daily challenge:', error);
+      res.status(500).json({ message: 'Error fetching daily challenge' });
+    }
+  });
+  
+  app.post('/api/daily-challenge/generate', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      // Check if OpenAI is configured for AI generation
+      const isOpenAIConfigured = process.env.OPENAI_API_KEY && 
+                              process.env.OPENAI_API_KEY.length > 10;
+      
+      let challengeData;
+      
+      // If OpenAI is configured, generate a challenge
+      if (isOpenAIConfigured) {
+        // Import OpenAI
+        const { OpenAI } = await import('openai');
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        
+        // Generate a random focus and difficulty
+        const skills = ['mechanics', 'sequencing', 'voice'];
+        const randomSkill = skills[Math.floor(Math.random() * skills.length)];
+        const randomDifficulty = Math.floor(Math.random() * 3) + 1; // 1-3 difficulty
+        
+        // Create a prompt for the AI
+        const promptContent = `Generate a creative daily writing challenge for middle school students focused on developing their ${randomSkill} skills.
+
+The challenge should:
+- Be engaging and appropriate for grades 6-8
+- Have a difficulty level of ${randomDifficulty} (on a scale of 1-3)
+- Include a clear writing goal
+- Suggest a target word count between ${100 + (randomDifficulty * 50)}-${150 + (randomDifficulty * 50)} words
+- Be completable in about 15-20 minutes
+
+Format the response as JSON with these fields:
+- title: A catchy title for the challenge (1 short sentence)
+- description: Brief explanation of the challenge (2-3 sentences)
+- prompt: The specific writing instructions
+- wordMinimum: Minimum word count (integer)
+- skillFocus: Must be "${randomSkill}"
+- difficulty: Must be ${randomDifficulty}`;
+        
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          temperature: 0.7,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: "You are an educational writing coach who specializes in creating engaging daily writing challenges."
+            },
+            {
+              role: "user",
+              content: promptContent
+            }
+          ],
+        });
+        
+        // Parse the response
+        try {
+          const content = response.choices[0].message.content || "{}";
+          challengeData = JSON.parse(content);
+          challengeData.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+        } catch (parseError) {
+          console.error("Error parsing OpenAI response:", parseError);
+          throw new Error('Error parsing challenge data');
+        }
+      } else {
+        // Fallback - create a static challenge if OpenAI is not available
+        const skills = ['mechanics', 'sequencing', 'voice'];
+        const randomSkill = skills[Math.floor(Math.random() * skills.length)];
+        
+        // Selection of pre-defined challenges
+        const challenges = [
+          {
+            title: "A Day in the Future",
+            description: "Imagine what a typical day might look like 100 years from now. What technologies exist? How do people communicate, work, and play?",
+            prompt: "Include at least three new technologies that don't exist today.\nConsider: transportation, communication, education",
+            wordMinimum: 150,
+            skillFocus: randomSkill,
+            difficulty: 2
+          },
+          {
+            title: "The Unknown Letter",
+            description: "You find a mysterious letter addressed to you from someone you've never met. They're asking for your help with something important.",
+            prompt: "Who wrote the letter?\nWhat do they need help with?\nHow will you respond?",
+            wordMinimum: 200,
+            skillFocus: randomSkill,
+            difficulty: 2
+          },
+          {
+            title: "The Perfect Solution",
+            description: "Identify a problem in your school or community and propose a creative solution.",
+            prompt: "Clearly describe the problem\nExplain why this problem matters\nDetail your proposed solution\nDiscuss potential challenges",
+            wordMinimum: 250,
+            skillFocus: randomSkill,
+            difficulty: 3
+          }
+        ];
+        
+        // Pick a random challenge
+        challengeData = challenges[Math.floor(Math.random() * challenges.length)];
+        challengeData.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+      }
+      
+      // Create the challenge in the database
+      const challenge = await storage.createDailyChallenge(challengeData);
+      
+      res.status(201).json(challenge);
+    } catch (error) {
+      console.error('Error generating daily challenge:', error);
+      res.status(500).json({ message: 'Error generating daily challenge' });
+    }
+  });
+  
+  app.post('/api/daily-challenge/complete', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as any;
+      
+      // Schema validation
+      const schema = z.object({
+        challengeId: z.union([z.string(), z.number()]),
+        completed: z.boolean().default(true)
+      });
+      
+      const { challengeId, completed } = schema.parse(req.body);
+      
+      // Update the challenge status
+      const updatedProgress = await storage.updateDailyChallengeStatus(
+        user.id, 
+        challengeId, 
+        completed
+      );
+      
+      // Also update the streak
+      const streakData = await storage.updateStreak(user.id, completed);
+      
+      res.json({
+        progress: updatedProgress,
+        streak: streakData
+      });
+    } catch (error) {
+      console.error('Error completing daily challenge:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error completing daily challenge' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   
