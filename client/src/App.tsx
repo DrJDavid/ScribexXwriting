@@ -2,6 +2,7 @@ import { Route, Switch, Link, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { RoleBasedRoute } from "@/lib/role-based-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import { Button } from "@/components/ui/button";
@@ -239,19 +240,82 @@ function App() {
               <Header />
               <main className="flex-1 pb-4">
                 <Switch>
+                  {/* Public route */}
                   <Route path="/auth" component={AuthPage} />
+                  
+                  {/* Teacher routes */}
+                  <RoleBasedRoute 
+                    path="/teacher/student/:studentId" 
+                    component={StudentDetails} 
+                    allowedRoles={['teacher']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/teacher" 
+                    component={TeacherDashboard} 
+                    allowedRoles={['teacher']} 
+                  />
+                  
+                  {/* Parent routes */}
+                  <RoleBasedRoute 
+                    path="/parent/child/:childId" 
+                    component={ChildDetails} 
+                    allowedRoles={['parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/parent" 
+                    component={ParentDashboard} 
+                    allowedRoles={['parent']} 
+                  />
+                  
+                  {/* Student routes - allowed for students, teachers and parents */}
                   <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
                   <ProtectedRoute path="/writing/submissions" component={OWLSubmissionsList} />
-                  <ProtectedRoute path="/owl/quest/free-write" component={OWLWritingQuest} />
-                  <ProtectedRoute path="/owl/quest/:questId" component={OWLWritingQuest} />
-                  <ProtectedRoute path="/owl/location/:locationId" component={OWLLocationDetail} />
-                  <ProtectedRoute path="/owl" component={OWLTown} />
-                  <ProtectedRoute path="/redi/exercise/:exerciseId" component={REDIExercise} />
-                  <ProtectedRoute path="/redi" component={REDIMap} />
-                  <ProtectedRoute path="/challenges/daily/:challengeId" component={DailyWritingChallenge} />
-                  <ProtectedRoute path="/achievements" component={AchievementsPage} />
+                  <RoleBasedRoute 
+                    path="/owl/quest/free-write" 
+                    component={OWLWritingQuest} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/owl/quest/:questId" 
+                    component={OWLWritingQuest} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/owl/location/:locationId" 
+                    component={OWLLocationDetail} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/owl" 
+                    component={OWLTown} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/redi/exercise/:exerciseId" 
+                    component={REDIExercise} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/redi" 
+                    component={REDIMap} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/challenges/daily/:challengeId" 
+                    component={DailyWritingChallenge} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
+                  <RoleBasedRoute 
+                    path="/achievements" 
+                    component={AchievementsPage} 
+                    allowedRoles={['student', 'teacher', 'parent']} 
+                  />
                   <ProtectedRoute path="/profile" component={ProfilePage} />
+                  
+                  {/* Home routes (redirects based on role) */}
                   <ProtectedRoute path="/" component={Home} />
+                  
+                  {/* 404 route */}
                   <Route component={NotFound} />
                 </Switch>
               </main>

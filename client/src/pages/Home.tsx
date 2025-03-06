@@ -13,6 +13,24 @@ export default function Home() {
   const { user, isLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   
+  // Redirect users based on their role
+  useEffect(() => {
+    if (user) {
+      switch (user.role) {
+        case 'teacher':
+          navigate('/teacher');
+          break;
+        case 'parent':
+          navigate('/parent');
+          break;
+        // Student remains on home page
+        default:
+          // No redirect needed
+          break;
+      }
+    }
+  }, [user, navigate]);
+  
   // Fetch user progress for streak data
   const { data: progressData } = useQuery<{
     currentStreak?: number;
