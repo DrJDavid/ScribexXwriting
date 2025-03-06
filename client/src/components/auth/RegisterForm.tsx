@@ -14,10 +14,12 @@ const registerSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   displayName: z.string().min(2, 'Display name must be at least 2 characters'),
+  email: z.string().email('Invalid email address').optional(),
   age: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: 'Age must be a positive number',
   }),
   grade: z.string(),
+  role: z.enum(['student', 'teacher', 'parent']).default('student'),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -26,6 +28,7 @@ const RegisterForm: React.FC = () => {
   const { registerMutation } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [showEmailField, setShowEmailField] = React.useState(false);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -33,20 +36,46 @@ const RegisterForm: React.FC = () => {
       username: '',
       password: '',
       displayName: '',
+      email: '',
       age: '',
       grade: '',
+      role: 'student',
     },
   });
 
+  // Watch the role field to conditionally display email field
+  const selectedRole = form.watch('role');
+  
+  React.useEffect(() => {
+    // Email is required for teachers and parents
+    setShowEmailField(selectedRole === 'teacher' || selectedRole === 'parent');
+  }, [selectedRole]);
+
   const onSubmit = async (values: RegisterFormValues) => {
+    const userData: any = {
+      username: values.username,
+      password: values.password,
+      displayName: values.displayName,
+      age: Number(values.age),
+      grade: Number(values.grade),
+      role: values.role,
+    };
+    
+    // Add email for teacher/parent accounts
+    if (values.role === 'teacher' || values.role === 'parent') {
+      if (!values.email) {
+        toast({
+          title: "Email Required",
+          description: `Email is required for ${values.role} accounts.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      userData.email = values.email;
+    }
+    
     registerMutation.mutate(
-      {
-        username: values.username,
-        password: values.password,
-        displayName: values.displayName,
-        age: Number(values.age),
-        grade: Number(values.grade),
-      },
+      userData,
       {
         onSuccess: () => {
           // Wait a small delay to ensure React Query updates are processed

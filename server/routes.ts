@@ -1127,6 +1127,300 @@ Format the response as JSON with these fields:
     }
   });
 
+  // Teacher account routes
+  
+  // Middleware to check if user is a teacher
+  const ensureTeacher = (req: any, res: any, next: any) => {
+    if (req.isAuthenticated() && req.user.role === 'teacher') {
+      return next();
+    }
+    
+    res.status(403).json({ message: 'Unauthorized: Teacher role required' });
+  };
+  
+  // Middleware to check if user is a parent
+  const ensureParent = (req: any, res: any, next: any) => {
+    if (req.isAuthenticated() && req.user.role === 'parent') {
+      return next();
+    }
+    
+    res.status(403).json({ message: 'Unauthorized: Parent role required' });
+  };
+
+  // Get all students for a teacher
+  app.get('/api/teacher/students', ensureTeacher, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const students = await storage.getStudentsByTeacherId(user.id);
+      
+      // Remove passwords from student data
+      const studentsWithoutPasswords = students.map(student => {
+        const { password, ...studentWithoutPassword } = student;
+        return studentWithoutPassword;
+      });
+      
+      res.json(studentsWithoutPasswords);
+    } catch (error) {
+      console.error('Error getting students for teacher:', error);
+      res.status(500).json({ message: 'Error getting students' });
+    }
+  });
+  
+  // Link a teacher to a student by username
+  app.post('/api/teacher/link-student', ensureTeacher, async (req, res) => {
+    try {
+      const user = req.user as any;
+      
+      // Schema validation
+      const schema = z.object({
+        studentUsername: z.string()
+      });
+      
+      const { studentUsername } = schema.parse(req.body);
+      
+      // Find the student by username
+      const student = await storage.getUserByUsername(studentUsername);
+      
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
+      
+      if (student.role !== 'student') {
+        return res.status(400).json({ message: 'User is not a student' });
+      }
+      
+      // Link the teacher to the student
+      await storage.linkTeacherToStudent(user.id, student.id);
+      
+      res.json({ message: 'Student linked successfully' });
+    } catch (error) {
+      console.error('Error linking student:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error linking student' });
+    }
+  });
+  
+  // Unlink a teacher from a student
+  app.delete('/api/teacher/unlink-student/:studentId', ensureTeacher, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const studentId = parseInt(req.params.studentId);
+      
+      if (isNaN(studentId)) {
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+      
+      // Unlink the teacher from the student
+      await storage.unlinkTeacherFromStudent(user.id, studentId);
+      
+      res.json({ message: 'Student unlinked successfully' });
+    } catch (error) {
+      console.error('Error unlinking student:', error);
+      res.status(500).json({ message: 'Error unlinking student' });
+    }
+  });
+  
+  // Get student progress as a teacher
+  app.get('/api/teacher/student/:studentId/progress', ensureTeacher, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const studentId = parseInt(req.params.studentId);
+      
+      if (isNaN(studentId)) {
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+      
+      // Verify that the teacher is linked to this student
+      const students = await storage.getStudentsByTeacherId(user.id);
+      const isTeacherOfStudent = students.some(student => student.id === studentId);
+      
+      if (!isTeacherOfStudent) {
+        return res.status(403).json({ message: 'You are not authorized to view this student\'s progress' });
+      }
+      
+      // Get the student's progress
+      const progress = await storage.getProgressByUserId(studentId);
+      
+      if (!progress) {
+        return res.status(404).json({ message: 'Progress not found for student' });
+      }
+      
+      res.json(progress);
+    } catch (error) {
+      console.error('Error getting student progress:', error);
+      res.status(500).json({ message: 'Error retrieving student progress' });
+    }
+  });
+  
+  // Get student writing submissions as a teacher
+  app.get('/api/teacher/student/:studentId/submissions', ensureTeacher, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const studentId = parseInt(req.params.studentId);
+      
+      if (isNaN(studentId)) {
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+      
+      // Verify that the teacher is linked to this student
+      const students = await storage.getStudentsByTeacherId(user.id);
+      const isTeacherOfStudent = students.some(student => student.id === studentId);
+      
+      if (!isTeacherOfStudent) {
+        return res.status(403).json({ message: 'You are not authorized to view this student\'s submissions' });
+      }
+      
+      // Get the student's writing submissions
+      const submissions = await storage.getWritingSubmissionsByUserId(studentId);
+      
+      res.json(submissions);
+    } catch (error) {
+      console.error('Error getting student submissions:', error);
+      res.status(500).json({ message: 'Error retrieving student submissions' });
+    }
+  });
+  
+  // Parent account routes
+  
+  // Get all students for a parent
+  app.get('/api/parent/students', ensureParent, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const students = await storage.getStudentsByParentId(user.id);
+      
+      // Remove passwords from student data
+      const studentsWithoutPasswords = students.map(student => {
+        const { password, ...studentWithoutPassword } = student;
+        return studentWithoutPassword;
+      });
+      
+      res.json(studentsWithoutPasswords);
+    } catch (error) {
+      console.error('Error getting students for parent:', error);
+      res.status(500).json({ message: 'Error getting students' });
+    }
+  });
+  
+  // Link a parent to a student by username
+  app.post('/api/parent/link-student', ensureParent, async (req, res) => {
+    try {
+      const user = req.user as any;
+      
+      // Schema validation
+      const schema = z.object({
+        studentUsername: z.string()
+      });
+      
+      const { studentUsername } = schema.parse(req.body);
+      
+      // Find the student by username
+      const student = await storage.getUserByUsername(studentUsername);
+      
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
+      
+      if (student.role !== 'student') {
+        return res.status(400).json({ message: 'User is not a student' });
+      }
+      
+      // Link the parent to the student
+      await storage.linkParentToStudent(user.id, student.id);
+      
+      res.json({ message: 'Student linked successfully' });
+    } catch (error) {
+      console.error('Error linking student:', error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: 'Error linking student' });
+    }
+  });
+  
+  // Unlink a parent from a student
+  app.delete('/api/parent/unlink-student/:studentId', ensureParent, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const studentId = parseInt(req.params.studentId);
+      
+      if (isNaN(studentId)) {
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+      
+      // Unlink the parent from the student
+      await storage.unlinkParentFromStudent(user.id, studentId);
+      
+      res.json({ message: 'Student unlinked successfully' });
+    } catch (error) {
+      console.error('Error unlinking student:', error);
+      res.status(500).json({ message: 'Error unlinking student' });
+    }
+  });
+  
+  // Get student progress as a parent
+  app.get('/api/parent/student/:studentId/progress', ensureParent, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const studentId = parseInt(req.params.studentId);
+      
+      if (isNaN(studentId)) {
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+      
+      // Verify that the parent is linked to this student
+      const students = await storage.getStudentsByParentId(user.id);
+      const isParentOfStudent = students.some(student => student.id === studentId);
+      
+      if (!isParentOfStudent) {
+        return res.status(403).json({ message: 'You are not authorized to view this student\'s progress' });
+      }
+      
+      // Get the student's progress
+      const progress = await storage.getProgressByUserId(studentId);
+      
+      if (!progress) {
+        return res.status(404).json({ message: 'Progress not found for student' });
+      }
+      
+      res.json(progress);
+    } catch (error) {
+      console.error('Error getting student progress:', error);
+      res.status(500).json({ message: 'Error retrieving student progress' });
+    }
+  });
+  
+  // Get student writing submissions as a parent
+  app.get('/api/parent/student/:studentId/submissions', ensureParent, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const studentId = parseInt(req.params.studentId);
+      
+      if (isNaN(studentId)) {
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+      
+      // Verify that the parent is linked to this student
+      const students = await storage.getStudentsByParentId(user.id);
+      const isParentOfStudent = students.some(student => student.id === studentId);
+      
+      if (!isParentOfStudent) {
+        return res.status(403).json({ message: 'You are not authorized to view this student\'s submissions' });
+      }
+      
+      // Get the student's writing submissions
+      const submissions = await storage.getWritingSubmissionsByUserId(studentId);
+      
+      res.json(submissions);
+    } catch (error) {
+      console.error('Error getting student submissions:', error);
+      res.status(500).json({ message: 'Error retrieving student submissions' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   
