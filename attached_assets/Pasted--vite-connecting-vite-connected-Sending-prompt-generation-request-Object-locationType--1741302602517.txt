@@ -1,0 +1,18 @@
+[vite] connecting...
+[vite] connected.
+Sending prompt generation request: 
+Object {locationType: "argumentative", locationName: "Town Hall", customFocus: null}
+Prompt generation response status: 200
+Raw response: {"prompt":"Write an argumentative piece on whether the OWL Town Hall should prioritize historical preservation over modern development in its upcoming renovation plans.","scenario":"The charming OWL Town Hall, a beacon of history and community events, is at the center of a heated debate about its renovation. As a writer, argue for or against the emphasis on preserving its historical architecture versus incorporating modern amenities to serve the current needs of OWL Town's residents.","guidingQuestions":["How does the historical significance of the OWL Town Hall contribute to the town's identity?","What modern needs does the town hall need to address to serve the community effectively?","How might blending both historical and modern elements impact the town's future development?"],"suggestedElements":["The architectural style and unique features of the OWL Town Hall","The types of events and community gatherings held at the town hall","Opinions from town residents and local historians","Potential economic impacts of renovation choices"],"challengeElement":"Include a quote from a fictional town hall meeting to support your argument."}
+Parsed prompt data: 
+Object {prompt: "Write an argumentative piece on whether the OWL Town Hall should prioritize historical preservation…", scenario: "The charming OWL Town Hall, a beacon of history and community events, is at the center of a heated…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a quote from a fictional town hall meeting to support your argument."}
+Calling onSelectPrompt with generated prompt: 
+Object {prompt: "Write an argumentative piece on whether the OWL Town Hall should prioritize historical preservation…", scenario: "The charming OWL Town Hall, a beacon of history and community events, is at the center of a heated…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a quote from a fictional town hall meeting to support your argument."}
+challengeElement: "Include a quote from a fictional town hall meeting to support your argument."
+guidingQuestions: Array(3)
+prompt: "Write an argumentative piece on whether the OWL Town Hall should prioritize historical preservation over modern development in its upcoming renovation plans."
+scenario: "The charming OWL Town Hall, a beacon of history and community events, is at the center of a heated debate about its renovation. As a writer, argue for or against the emphasis on preserving its historical architecture versus incorporating modern amenities to serve the current needs of OWL Town's residents."
+suggestedElements: Array(4)
+[[Prototype]]: Object
+SimpleLocationDetail received prompt: 
+Object {prompt: "Write an argumentative piece on whether the OWL Town Hall should prioritize historical preservation…", scenario: "The charming OWL Town Hall, a beacon of history and community events, is at the center of a heated…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a quote from a fictional town hall meeting to support your argument."}
