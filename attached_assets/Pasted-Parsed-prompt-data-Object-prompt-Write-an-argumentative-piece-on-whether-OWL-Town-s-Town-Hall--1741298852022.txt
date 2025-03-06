@@ -1,0 +1,19 @@
+Parsed prompt data: 
+Object {prompt: "Write an argumentative piece on whether OWL Town's Town Hall should allocate more resources to…", scenario: "OWL Town's Town Hall is at the heart of the community, a bustling hub where decisions dictate the…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a persuasive argument using a hypothetical scenario where a recent town event was hindered…"}
+challengeElement: "Include a persuasive argument using a hypothetical scenario where a recent town event was hindered by infrastructure issues, demonstrating one side of the argument."
+guidingQuestions: Array(3)
+prompt: "Write an argumentative piece on whether OWL Town's Town Hall should allocate more resources to community-driven initiatives or focus on infrastructure development."
+scenario: "OWL Town's Town Hall is at the heart of the community, a bustling hub where decisions dictate the future of its citizens. Recently, there's been a heated debate among town members about whether the local government should prioritize funding community programs or invest in enhancing town infrastructure."
+suggestedElements: Array(4)
+[[Prototype]]: Object
+Calling onSelectPrompt with generated prompt
+Received prompt in onSelectPrompt: 
+Object {prompt: "Write an argumentative piece on whether OWL Town's Town Hall should allocate more resources to…", scenario: "OWL Town's Town Hall is at the heart of the community, a bustling hub where decisions dictate the…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a persuasive argument using a hypothetical scenario where a recent town event was hindered…"}
+Updated promptRef.current: 
+Object {prompt: "Write an argumentative piece on whether OWL Town's Town Hall should allocate more resources to…", scenario: "OWL Town's Town Hall is at the heart of the community, a bustling hub where decisions dictate the…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a persuasive argument using a hypothetical scenario where a recent town event was hindered…"}
+PromptModal rendered with: 
+Object {open: false, promptExists: false, localPromptExists: false}
+Opening modal, promptRef.current: 
+Object {prompt: "Write an argumentative piece on whether OWL Town's Town Hall should allocate more resources to…", scenario: "OWL Town's Town Hall is at the heart of the community, a bustling hub where decisions dictate the…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a persuasive argument using a hypothetical scenario where a recent town event was hindered…"}
+PromptModal rendered with: 
+Object {open: false, promptExists: false, localPromptExists: false}
