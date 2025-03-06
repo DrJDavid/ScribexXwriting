@@ -74,40 +74,51 @@ const REDIExercise: React.FC = () => {
   const updateRediMastery = useCallback(async () => {
     if (!progress) return;
     
-    // Calculate skill increase based on correct answers in the set
-    const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
+    // Only increase mastery if the user got at least 3/5 correct answers
+    const isSuccessful = correctAnswers >= 3;
     
-    // Create a skill update object based on the exercise type
-    let updatedRediSkillMastery = { ...progress.rediSkillMastery };
-    
-    if (exercise.skillType === 'mechanics') {
-      updatedRediSkillMastery.mechanics = Math.min(updatedRediSkillMastery.mechanics + skillIncrease, 100);
-    } else if (exercise.skillType === 'sequencing') {
-      updatedRediSkillMastery.sequencing = Math.min(updatedRediSkillMastery.sequencing + skillIncrease, 100);
-    } else if (exercise.skillType === 'voice') {
-      updatedRediSkillMastery.voice = Math.min(updatedRediSkillMastery.voice + skillIncrease, 100);
+    if (isSuccessful) {
+      // Calculate skill increase based on correct answers in the set
+      const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
+      
+      // Create a skill update object based on the exercise type
+      let updatedRediSkillMastery = { ...progress.rediSkillMastery };
+      
+      if (exercise.skillType === 'mechanics') {
+        updatedRediSkillMastery.mechanics = Math.min(updatedRediSkillMastery.mechanics + skillIncrease, 100);
+      } else if (exercise.skillType === 'sequencing') {
+        updatedRediSkillMastery.sequencing = Math.min(updatedRediSkillMastery.sequencing + skillIncrease, 100);
+      } else if (exercise.skillType === 'voice') {
+        updatedRediSkillMastery.voice = Math.min(updatedRediSkillMastery.voice + skillIncrease, 100);
+      }
+      
+      // Calculate new REDI level with updated mastery
+      const exerciseCount = progress.completedExercises.length;
+      const totalMastery = updatedRediSkillMastery.mechanics + 
+                          updatedRediSkillMastery.sequencing + 
+                          updatedRediSkillMastery.voice;
+      const avgMastery = totalMastery / 3;
+      const exerciseFactor = Math.floor(exerciseCount / 3);
+      const masteryFactor = Math.floor(avgMastery / 10);
+      const rediLevel = Math.max(1, Math.min(10, 1 + exerciseFactor + masteryFactor));
+      
+      // Update progress with new mastery and level
+      await progress.updateProgress({
+        rediSkillMastery: updatedRediSkillMastery,
+        rediLevel,
+      });
+      
+      toast({
+        title: "Exercise Set Completed!",
+        description: `You got ${correctAnswers} out of ${totalExercises} correct. Your ${exercise.skillType} mastery increased by ${skillIncrease}%.`,
+      });
+    } else {
+      // No mastery increase if they didn't get enough correct
+      toast({
+        title: "Exercise Set Attempted",
+        description: `You got ${correctAnswers} out of ${totalExercises} correct. You need at least 3 correct to increase mastery.`,
+      });
     }
-    
-    // Calculate new REDI level with updated mastery
-    const exerciseCount = progress.completedExercises.length;
-    const totalMastery = updatedRediSkillMastery.mechanics + 
-                         updatedRediSkillMastery.sequencing + 
-                         updatedRediSkillMastery.voice;
-    const avgMastery = totalMastery / 3;
-    const exerciseFactor = Math.floor(exerciseCount / 3);
-    const masteryFactor = Math.floor(avgMastery / 10);
-    const rediLevel = Math.max(1, Math.min(10, 1 + exerciseFactor + masteryFactor));
-    
-    // Update progress with new mastery and level
-    await progress.updateProgress({
-      rediSkillMastery: updatedRediSkillMastery,
-      rediLevel,
-    });
-    
-    toast({
-      title: "Exercise Set Completed!",
-      description: `You got ${correctAnswers} out of ${totalExercises} correct. Your ${exercise.skillType} mastery increased by ${skillIncrease}%.`,
-    });
   }, [correctAnswers, totalExercises, exercise.skillType, progress, toast]);
 
   // Function to handle advancing to next exercise
