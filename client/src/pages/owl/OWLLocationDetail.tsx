@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WritePromptGenerator, GeneratedPrompt } from '@/components/writing/WritePromptGenerator';
-import { SimplePromptModal } from '@/components/writing/SimplePromptModal';
+import { SimplestPromptModal } from '@/components/writing/SimplestPromptModal';
 import { getLocationById, getQuestsForLocation } from '@/data/quests';
 import { useProgress } from '@/context/ProgressContext';
 import { Pencil, MapPin } from 'lucide-react';
@@ -191,12 +191,12 @@ export default function OWLLocationDetail() {
 
         <div>
           {/* Modal for prompt display */}
-          <SimplePromptModal 
-            isOpen={modalOpen}
-            promptData={generatedPrompt}
+          <SimplestPromptModal 
+            show={modalOpen}
+            data={generatedPrompt}
             onClose={handleCloseModal}
-            onNewPrompt={handleNewPrompt}
-            onStartWriting={handleStartWriting}
+            onNew={handleNewPrompt}
+            onStart={handleStartWriting}
           />
 
           <Tabs defaultValue="prompt-generator">
