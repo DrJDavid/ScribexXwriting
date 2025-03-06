@@ -201,18 +201,32 @@ export default function OWLLocationDetail() {
                     <Button variant="outline" onClick={() => setGeneratedPrompt(null)}>
                       Generate New Prompt
                     </Button>
-                    <Link href={`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&prompt=${encodeURIComponent(JSON.stringify({
-                      prompt: generatedPrompt.prompt,
-                      scenario: generatedPrompt.scenario,
-                      guidingQuestions: generatedPrompt.guidingQuestions,
-                      suggestedElements: generatedPrompt.suggestedElements,
-                      challengeElement: generatedPrompt.challengeElement
-                    }))}`}>
-                      <Button>
-                        <Pencil className="w-4 h-4 mr-2" />
-                        Start Writing
-                      </Button>
-                    </Link>
+                    <Button onClick={() => {
+                      // Create a simplified object with only the needed data
+                      const promptDataForUrl = {
+                        prompt: generatedPrompt.prompt,
+                        scenario: generatedPrompt.scenario,
+                        guidingQuestions: generatedPrompt.guidingQuestions || [],
+                        suggestedElements: generatedPrompt.suggestedElements || [],
+                        challengeElement: generatedPrompt.challengeElement || ""
+                      };
+                      
+                      // Encode the JSON string for the URL
+                      const encodedPrompt = encodeURIComponent(JSON.stringify(promptDataForUrl));
+                      
+                      // Log the data being sent (for debugging)
+                      console.log("Navigation with prompt data:", promptDataForUrl);
+                      console.log("Encoded length:", encodedPrompt.length);
+                      
+                      // Generate the URL
+                      const url = `/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&prompt=${encodedPrompt}`;
+                      
+                      // Navigate to the URL 
+                      navigate(url);
+                    }}>
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Start Writing
+                    </Button>
                   </CardFooter>
                 </Card>
               )}
