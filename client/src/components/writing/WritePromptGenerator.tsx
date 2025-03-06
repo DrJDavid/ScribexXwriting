@@ -101,10 +101,13 @@ export function WritePromptGenerator({
       // Add to the list of prompts (newest first)
       setGeneratedPrompts(prevPrompts => [validatedPrompt, ...prevPrompts].slice(0, 3));
       
+      // Call the onSelectPrompt handler to show the prompt in the parent component
+      onSelectPrompt(validatedPrompt);
+      
       // Show success toast
       toast({
         title: "Prompt Generated",
-        description: "Click on a prompt to use it for your writing.",
+        description: "Your writing prompt is ready. Click 'Start Writing' to begin.",
       });
       
     } catch (error) {
@@ -118,6 +121,9 @@ export function WritePromptGenerator({
       // Add fallback prompt if API fails
       const fallbackPrompt = generateFallbackPrompt(location);
       setGeneratedPrompts(prevPrompts => [fallbackPrompt, ...prevPrompts].slice(0, 3));
+      
+      // Call onSelectPrompt handler to show the fallback prompt in the parent component
+      onSelectPrompt(fallbackPrompt);
     } finally {
       setIsLoading(false);
     }
