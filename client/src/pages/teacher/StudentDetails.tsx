@@ -316,8 +316,8 @@ export default function StudentDetails() {
                                 {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                               </span>
                             </div>
-                            <Link href={`/teacher/submission/${submission.id}`}>
-                              <Button variant="outline" size="sm">View Full Submission</Button>
+                            <Link href={`/teacher/student/${studentId}/submissions`}>
+                              <Button variant="outline" size="sm">View All Submissions</Button>
                             </Link>
                           </div>
                         </div>

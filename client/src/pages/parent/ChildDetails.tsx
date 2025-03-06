@@ -372,8 +372,8 @@ export default function ChildDetails() {
                                 {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                               </span>
                             </div>
-                            <Link href={`/parent/submission/${submission.id}`}>
-                              <Button variant="outline" size="sm">Read Full Submission</Button>
+                            <Link href={`/parent/child/${childId}/submissions`}>
+                              <Button variant="outline" size="sm">View All Submissions</Button>
                             </Link>
                           </div>
                         </div>
