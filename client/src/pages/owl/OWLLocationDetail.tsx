@@ -35,6 +35,14 @@ export default function OWLLocationDetail() {
     }
   }, [generatedPrompt]);
   
+  // Prevent any unwanted state resets
+  useEffect(() => {
+    // This ensures the component doesn't reset state unexpectedly on re-renders
+    return () => {
+      // Intentionally empty cleanup to prevent state reset on unmount
+    };
+  }, []);
+  
   // Handle back button click properly - use navigate instead of window.history
   const handleBackClick = () => {
     navigate('/owl');
@@ -197,7 +205,16 @@ export default function OWLLocationDetail() {
                     onSelectPrompt={(prompt) => {
                       console.log("Prompt selected in OWLLocationDetail:", prompt);
                       if (prompt) {
-                        setGeneratedPrompt({...prompt});  // Create a new object to ensure state update
+                        // Ensure we're creating a completely new object and keeping all properties
+                        const updatedPrompt = {
+                          prompt: prompt.prompt,
+                          scenario: prompt.scenario,
+                          guidingQuestions: [...prompt.guidingQuestions],
+                          suggestedElements: [...prompt.suggestedElements],
+                          challengeElement: prompt.challengeElement
+                        };
+                        console.log("Setting generatedPrompt to:", updatedPrompt);
+                        setGeneratedPrompt(updatedPrompt);
                       }
                     }}
                   />

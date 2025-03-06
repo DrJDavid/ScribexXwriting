@@ -102,8 +102,21 @@ export function WritePromptGenerator({
       // Add to the list of prompts (newest first)
       setGeneratedPrompts(prevPrompts => [validatedPrompt, ...prevPrompts].slice(0, 3));
       
+      // Create a deep copy of the prompt to ensure we're not passing references that could be changed
+      const promptToSend = {
+        prompt: validatedPrompt.prompt,
+        scenario: validatedPrompt.scenario,
+        guidingQuestions: [...validatedPrompt.guidingQuestions],
+        suggestedElements: [...validatedPrompt.suggestedElements],
+        challengeElement: validatedPrompt.challengeElement
+      };
+      
       // Call the onSelectPrompt handler to show the prompt in the parent component
-      onSelectPrompt(validatedPrompt);
+      // Wrap in a setTimeout to ensure it doesn't get lost in the event loop
+      setTimeout(() => {
+        console.log("Sending validated prompt to parent:", promptToSend);
+        onSelectPrompt(promptToSend);
+      }, 0);
       
       // Show success toast
       toast({
