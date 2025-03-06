@@ -63,7 +63,11 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
       const correct = selectedOption === correctOptionIndex;
       setIsCorrect(correct);
       setHasSubmitted(true);
-      onSubmit(exerciseId, selectedOption, correct);
+      
+      // Call onSubmit but with a slight delay to avoid immediate transition
+      setTimeout(() => {
+        onSubmit(exerciseId, selectedOption, correct);
+      }, 500);
     }
   };
 

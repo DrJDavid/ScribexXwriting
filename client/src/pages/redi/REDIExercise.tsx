@@ -120,15 +120,11 @@ const REDIExercise: React.FC = () => {
         updatedRediSkillMastery.voice = Math.min(updatedRediSkillMastery.voice + skillIncrease, 100);
       }
       
-      // Calculate new REDI level with updated mastery
-      const exerciseCount = progress.progress.completedExercises.length;
-      const totalMastery = updatedRediSkillMastery.mechanics + 
-                          updatedRediSkillMastery.sequencing + 
-                          updatedRediSkillMastery.voice;
-      const avgMastery = totalMastery / 3;
-      const exerciseFactor = Math.floor(exerciseCount / 3);
-      const masteryFactor = Math.floor(avgMastery / 10);
-      const rediLevel = Math.max(1, Math.min(10, 1 + exerciseFactor + masteryFactor));
+      // Use the progress context's helper function to calculate new level
+      const rediLevel = progress.calculateRediLevel(
+        updatedRediSkillMastery, 
+        progress.progress.completedExercises
+      );
       
       // Update progress with new mastery and level
       await progress.updateProgress({
@@ -315,11 +311,11 @@ const REDIExercise: React.FC = () => {
         <div className="mt-6 flex justify-end">
           <button 
             onClick={handleContinue}
-            className={`px-6 py-3 rounded-lg text-white font-semibold transition-all
+            className={`px-6 py-3 rounded-lg text-white font-semibold transition-all text-lg
             ${answeredCorrectly 
               ? 'bg-green-600 hover:bg-green-500' 
               : 'bg-violet-600 hover:bg-violet-500'} 
-            flex items-center gap-2 shadow-lg hover:shadow-xl`}
+            flex items-center gap-2 shadow-xl hover:shadow-2xl fixed bottom-8 right-8 z-50 animate-pulse`}
           >
             Continue
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
