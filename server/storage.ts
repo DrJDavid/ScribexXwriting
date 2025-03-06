@@ -81,10 +81,13 @@ export class DatabaseStorage implements IStorage {
       // Create initial progress
       await this.createProgress({
         userId: demoUser.id,
-        skillMastery: { mechanics: 35, sequencing: 25, voice: 15 },
+        rediSkillMastery: { mechanics: 35, sequencing: 25, voice: 15 },
+        owlSkillMastery: { mechanics: 30, sequencing: 20, voice: 40 },
         completedExercises: ['mechanics-1', 'mechanics-2', 'sequencing-1'],
         completedQuests: ['town-hall-1'],
         unlockedLocations: ['townHall', 'library', 'musicHall'],
+        rediLevel: 3,
+        owlLevel: 2,
         currency: 45,
         achievements: ['first-steps', 'quest-beginner', 'mechanics-apprentice']
       });

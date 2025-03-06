@@ -115,10 +115,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!progress) {
         progress = await storage.createProgress({
           userId: user.id,
-          skillMastery: { mechanics: 10, sequencing: 10, voice: 10 },
+          rediSkillMastery: { mechanics: 10, sequencing: 10, voice: 10 },
+          owlSkillMastery: { mechanics: 10, sequencing: 10, voice: 10 },
           completedExercises: [],
           completedQuests: [],
           unlockedLocations: ['townHall'],
+          rediLevel: 1,
+          owlLevel: 1,
           currency: 0,
           achievements: []
         });
@@ -141,7 +144,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate update data
       const schema = z.object({
-        skillMastery: z.object({
+        rediSkillMastery: z.object({
+          mechanics: z.number().min(0).max(100).optional(),
+          sequencing: z.number().min(0).max(100).optional(),
+          voice: z.number().min(0).max(100).optional()
+        }).optional(),
+        owlSkillMastery: z.object({
           mechanics: z.number().min(0).max(100).optional(),
           sequencing: z.number().min(0).max(100).optional(),
           voice: z.number().min(0).max(100).optional()
@@ -149,8 +157,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedExercises: z.array(z.string()).optional(),
         completedQuests: z.array(z.string()).optional(),
         unlockedLocations: z.array(z.string()).optional(),
+        rediLevel: z.number().min(1).max(10).optional(),
+        owlLevel: z.number().min(1).max(10).optional(),
         currency: z.number().min(0).optional(),
-        achievements: z.array(z.string()).optional()
+        achievements: z.array(z.string()).optional(),
+        // Support legacy format (will be removed eventually)
+        skillMastery: z.object({
+          mechanics: z.number().min(0).max(100).optional(),
+          sequencing: z.number().min(0).max(100).optional(),
+          voice: z.number().min(0).max(100).optional()
+        }).optional()
       });
       
       const updateData = schema.parse(req.body);
@@ -165,25 +181,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedProgressObj = { 
         id: currentProgress.id,
         userId: currentProgress.userId,
-        skillMastery: currentProgress.skillMastery,
+        rediSkillMastery: updateData.rediSkillMastery || currentProgress.rediSkillMastery,
+        owlSkillMastery: updateData.owlSkillMastery || currentProgress.owlSkillMastery,
         completedExercises: updateData.completedExercises || currentProgress.completedExercises,
         completedQuests: updateData.completedQuests || currentProgress.completedQuests,
         unlockedLocations: updateData.unlockedLocations || currentProgress.unlockedLocations,
+        rediLevel: updateData.rediLevel !== undefined ? updateData.rediLevel : currentProgress.rediLevel,
+        owlLevel: updateData.owlLevel !== undefined ? updateData.owlLevel : currentProgress.owlLevel,
         currency: updateData.currency !== undefined ? updateData.currency : currentProgress.currency,
         achievements: updateData.achievements || currentProgress.achievements,
         updatedAt: currentProgress.updatedAt
       };
       
-      // Handle skillMastery separately if it exists in the update
+      // Handle legacy skillMastery field if it exists in the update
+      // This is for backward compatibility and should eventually be removed
       if (updateData.skillMastery) {
-        const currentSkillMastery = currentProgress.skillMastery as { mechanics: number; sequencing: number; voice: number };
+        // Duplicate the updated mastery to both REDI and OWL fields for now
         const updatedSkillMastery = updateData.skillMastery as { mechanics?: number; sequencing?: number; voice?: number };
         
-        updatedProgressObj.skillMastery = {
-          mechanics: updatedSkillMastery.mechanics !== undefined ? updatedSkillMastery.mechanics : currentSkillMastery.mechanics,
-          sequencing: updatedSkillMastery.sequencing !== undefined ? updatedSkillMastery.sequencing : currentSkillMastery.sequencing,
-          voice: updatedSkillMastery.voice !== undefined ? updatedSkillMastery.voice : currentSkillMastery.voice
-        };
+        // Update rediSkillMastery
+        if (updatedProgressObj.rediSkillMastery) {
+          updatedProgressObj.rediSkillMastery = {
+            mechanics: updatedSkillMastery.mechanics !== undefined ? updatedSkillMastery.mechanics : updatedProgressObj.rediSkillMastery.mechanics,
+            sequencing: updatedSkillMastery.sequencing !== undefined ? updatedSkillMastery.sequencing : updatedProgressObj.rediSkillMastery.sequencing,
+            voice: updatedSkillMastery.voice !== undefined ? updatedSkillMastery.voice : updatedProgressObj.rediSkillMastery.voice
+          };
+        }
+        
+        // Update owlSkillMastery
+        if (updatedProgressObj.owlSkillMastery) {
+          updatedProgressObj.owlSkillMastery = {
+            mechanics: updatedSkillMastery.mechanics !== undefined ? updatedSkillMastery.mechanics : updatedProgressObj.owlSkillMastery.mechanics,
+            sequencing: updatedSkillMastery.sequencing !== undefined ? updatedSkillMastery.sequencing : updatedProgressObj.owlSkillMastery.sequencing,
+            voice: updatedSkillMastery.voice !== undefined ? updatedSkillMastery.voice : updatedProgressObj.owlSkillMastery.voice
+          };
+        }
       }
       
       const updatedProgress = await storage.updateProgress(user.id, updatedProgressObj as Progress);
@@ -288,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Generate suggested exercises based on the feedback and current skill levels
           const suggestedExercises = await generateSuggestedExercises(
             feedback,
-            userProgress.skillMastery as any
+            userProgress.owlSkillMastery as any // Use OWL skills since this is for writing submissions
           );
           
           // Update the submission with AI feedback
@@ -372,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate suggested exercises based on the feedback and current skill levels
       const suggestedExercises = await generateSuggestedExercises(
         feedback,
-        userProgress.skillMastery as any
+        userProgress.owlSkillMastery as any // Use OWL skills since this is for writing submissions
       );
       
       // Update the submission with AI feedback
