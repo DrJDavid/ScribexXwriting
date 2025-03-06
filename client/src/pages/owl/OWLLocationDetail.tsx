@@ -20,16 +20,11 @@ export default function OWLLocationDetail() {
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   
-  // Debug when generatedPrompt changes and open the modal
+  // Debug logging only - no state changes in useEffect to avoid loops
   useEffect(() => {
     console.log("generatedPrompt state changed:", generatedPrompt);
     console.log("Modal open state:", promptModalOpen);
-    
-    // If a prompt was generated, open the modal
-    if (generatedPrompt) {
-      console.log("Setting modal to open because prompt is available");
-      setPromptModalOpen(true);
-    }
+    // Do not set state here to avoid loops - the modal is controlled explicitly by the parent
   }, [generatedPrompt, promptModalOpen]);
   
   // Prevent any unwanted state resets
@@ -201,19 +196,28 @@ export default function OWLLocationDetail() {
                 <CardContent>
                   <WritePromptGenerator 
                     location={location}
+                    initialPrompt={generatedPrompt}
                     onSelectPrompt={(prompt) => {
                       console.log("Prompt selected in OWLLocationDetail:", prompt);
                       if (prompt) {
-                        // Ensure we're creating a completely new object and keeping all properties
+                        // Deep clone the prompt to prevent reference issues
                         const updatedPrompt = {
                           prompt: prompt.prompt,
                           scenario: prompt.scenario,
-                          guidingQuestions: [...prompt.guidingQuestions],
-                          suggestedElements: [...prompt.suggestedElements],
-                          challengeElement: prompt.challengeElement
+                          guidingQuestions: [...(prompt.guidingQuestions || [])],
+                          suggestedElements: [...(prompt.suggestedElements || [])],
+                          challengeElement: prompt.challengeElement || ""
                         };
                         console.log("Setting generatedPrompt to:", updatedPrompt);
+                        
+                        // First set the prompt
                         setGeneratedPrompt(updatedPrompt);
+                        
+                        // Manually trigger the modal open with a slight delay to ensure state is updated
+                        setTimeout(() => {
+                          console.log("Delayed opening of modal");
+                          setPromptModalOpen(true);
+                        }, 10);
                       }
                     }}
                   />

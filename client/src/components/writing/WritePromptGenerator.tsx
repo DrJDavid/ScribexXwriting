@@ -2,18 +2,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, RefreshCw, Check, Pencil } from 'lucide-react';
+import { Loader2, RefreshCw, Check } from 'lucide-react';
 import type { TownLocation } from '@/data/quests';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
-} from '@/components/ui/dialog';
 
+// Simple data structure for the generated prompt
 export interface GeneratedPrompt {
   prompt: string;
   scenario: string;
@@ -34,11 +27,10 @@ export function WritePromptGenerator({
   onSelectPrompt,
   className = '' 
 }: WritePromptGeneratorProps) {
+  // Component state
   const [customFocus, setCustomFocus] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPrompts, setGeneratedPrompts] = useState<GeneratedPrompt[]>([]);
-  const [currentPrompt, setCurrentPrompt] = useState<GeneratedPrompt | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Generate a prompt based on the location type and custom focus
