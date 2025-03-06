@@ -335,16 +335,15 @@ function App() {
                     component={AchievementsPage} 
                     allowedRoles={['student', 'teacher', 'parent']} 
                   />
-                  <RoleBasedRoute 
-                    path="/profile" 
-                    component={TeacherParentProfile} 
-                    allowedRoles={['teacher', 'parent']} 
-                  />
-                  <RoleBasedRoute 
-                    path="/profile" 
-                    component={ProfilePage} 
-                    allowedRoles={['student']} 
-                  />
+                  <ProtectedRoute path="/profile" component={(props) => {
+                    // Conditionally render the appropriate profile component based on user role
+                    const { user } = useAuth();
+                    if (user?.role === 'teacher' || user?.role === 'parent') {
+                      return <TeacherParentProfile {...props} />;
+                    } else {
+                      return <ProfilePage {...props} />;
+                    }
+                  }} />
                   
                   {/* Home routes (redirects based on role) */}
                   <ProtectedRoute path="/" component={Home} />
