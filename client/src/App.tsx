@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
+import Home from "@/pages/Home";
 import { Button } from "@/components/ui/button";
 import { LogOut, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -160,7 +161,6 @@ const Header = () => {
 };
 
 // Import the components
-import Home from "@/pages/Home";
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
 import OWLTown from "@/pages/owl/OWLTown";
