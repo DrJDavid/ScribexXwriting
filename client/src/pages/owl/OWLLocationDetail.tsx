@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { WritePromptGenerator, GeneratedPrompt } from '@/components/writing/Writ
 import { SimplePromptModal } from '@/components/writing/SimplePromptModal';
 import { getLocationById, getQuestsForLocation } from '@/data/quests';
 import { useProgress } from '@/context/ProgressContext';
-import { Pencil, ArrowLeft, MapPin } from 'lucide-react';
+import { Pencil, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function OWLLocationDetail() {
@@ -20,13 +20,66 @@ export default function OWLLocationDetail() {
   const { progress } = useProgress();
   const { toast } = useToast();
   
-  // Use refs instead of state to avoid re-render issues
-  const promptRef = useRef<GeneratedPrompt | null>(null);
+  // Use state instead of ref for the prompt
+  const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   
   // Handle back button click 
   const handleBackClick = () => {
     navigate('/owl');
+  };
+  
+  const handleSelectPrompt = (prompt: GeneratedPrompt) => {
+    console.log("Received prompt in handleSelectPrompt:", prompt);
+    
+    // Create a deep copy of the prompt
+    const promptCopy = {
+      prompt: prompt.prompt,
+      scenario: prompt.scenario,
+      guidingQuestions: [...(prompt.guidingQuestions || [])],
+      suggestedElements: [...(prompt.suggestedElements || [])],
+      challengeElement: prompt.challengeElement || ""
+    };
+    
+    // Set state directly
+    setGeneratedPrompt(promptCopy);
+    console.log("Updated generatedPrompt:", promptCopy);
+    
+    // Open modal
+    setModalOpen(true);
+    console.log("Setting modalOpen to true", {promptData: promptCopy, isOpen: true});
+  };
+  
+  const handleCloseModal = () => {
+    console.log("Closing modal");
+    setModalOpen(false);
+  };
+  
+  const handleNewPrompt = () => {
+    console.log("Generating new prompt");
+    setGeneratedPrompt(null);
+    setModalOpen(false);
+  };
+  
+  const handleStartWriting = () => {
+    console.log("Starting writing with prompt:", generatedPrompt);
+    // Store the generated prompt in sessionStorage
+    if (generatedPrompt) {
+      const promptKey = `prompt_${new Date().getTime()}`;
+      const promptData = {
+        prompt: generatedPrompt.prompt,
+        scenario: generatedPrompt.scenario,
+        guidingQuestions: generatedPrompt.guidingQuestions || [],
+        suggestedElements: generatedPrompt.suggestedElements || [],
+        challengeElement: generatedPrompt.challengeElement || ""
+      };
+      
+      // Store the data in sessionStorage
+      sessionStorage.setItem(promptKey, JSON.stringify(promptData));
+      
+      // Navigate to the writing page
+      navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location?.type}&mode=generated&promptKey=${promptKey}`);
+    }
   };
   
   if (!location) {
@@ -140,32 +193,10 @@ export default function OWLLocationDetail() {
           {/* Modal for prompt display */}
           <SimplePromptModal 
             isOpen={modalOpen}
-            promptData={promptRef.current}
-            onClose={() => setModalOpen(false)}
-            onNewPrompt={() => {
-              // Reset everything
-              promptRef.current = null;
-              setModalOpen(false);
-            }}
-            onStartWriting={() => {
-              // Store the generated prompt in sessionStorage
-              if (promptRef.current) {
-                const promptKey = `prompt_${new Date().getTime()}`;
-                const promptData = {
-                  prompt: promptRef.current.prompt,
-                  scenario: promptRef.current.scenario,
-                  guidingQuestions: promptRef.current.guidingQuestions || [],
-                  suggestedElements: promptRef.current.suggestedElements || [],
-                  challengeElement: promptRef.current.challengeElement || ""
-                };
-                
-                // Store the data in sessionStorage
-                sessionStorage.setItem(promptKey, JSON.stringify(promptData));
-                
-                // Navigate to the writing page
-                navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`);
-              }
-            }}
+            promptData={generatedPrompt}
+            onClose={handleCloseModal}
+            onNewPrompt={handleNewPrompt}
+            onStartWriting={handleStartWriting}
           />
 
           <Tabs defaultValue="prompt-generator">
@@ -185,40 +216,7 @@ export default function OWLLocationDetail() {
                 <CardContent>
                   <WritePromptGenerator 
                     location={location}
-                    onSelectPrompt={(prompt) => {
-                      if (prompt) {
-                        try {
-                          console.log("Received prompt in onSelectPrompt:", prompt);
-                          
-                          // Create a deep copy of the prompt
-                          const promptCopy = {
-                            prompt: prompt.prompt,
-                            scenario: prompt.scenario,
-                            guidingQuestions: [...(prompt.guidingQuestions || [])],
-                            suggestedElements: [...(prompt.suggestedElements || [])],
-                            challengeElement: prompt.challengeElement || ""
-                          };
-                          
-                          // Assign to ref
-                          promptRef.current = promptCopy;
-                          
-                          console.log("Updated promptRef.current:", promptRef.current);
-                          
-                          // Set timeout to ensure the ref is updated before opening modal
-                          setTimeout(() => {
-                            console.log("Opening modal, promptRef.current:", promptRef.current);
-                            setModalOpen(true);
-                          }, 50);
-                        } catch (error) {
-                          console.error("Error handling prompt:", error);
-                          toast({
-                            title: "Error",
-                            description: "There was a problem displaying your prompt.",
-                            variant: "destructive"
-                          });
-                        }
-                      }
-                    }}
+                    onSelectPrompt={handleSelectPrompt}
                   />
                 </CardContent>
               </Card>
