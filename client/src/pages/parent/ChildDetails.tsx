@@ -85,19 +85,54 @@ export default function ChildDetails() {
     );
   }
 
-  // For demonstration - days with activity in the last month
-  const activeDays = [2, 5, 8, 9, 12, 15, 19, 22, 26, 29];
+  // Process progress history to determine active days
+  const activeDays: number[] = [];
   
-  // Mock activity data for charts
+  if (progress?.progressHistory && Array.isArray(progress.progressHistory)) {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    progress.progressHistory.forEach((entry: any) => {
+      if (entry && entry.date) {
+        const entryDate = new Date(entry.date);
+        if (entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear) {
+          activeDays.push(entryDate.getDate());
+        }
+      }
+    });
+  }
+  
+  // Generate weekly activity data based on real progress data
   const weeklyProgress = [
-    { day: 'Mon', exercises: 2, writing: 1 },
+    { day: 'Mon', exercises: 0, writing: 0 },
     { day: 'Tue', exercises: 0, writing: 0 },
-    { day: 'Wed', exercises: 3, writing: 0 },
-    { day: 'Thu', exercises: 1, writing: 1 },
+    { day: 'Wed', exercises: 0, writing: 0 },
+    { day: 'Thu', exercises: 0, writing: 0 },
     { day: 'Fri', exercises: 0, writing: 0 },
-    { day: 'Sat', exercises: 4, writing: 2 },
-    { day: 'Sun', exercises: 2, writing: 1 },
+    { day: 'Sat', exercises: 0, writing: 0 },
+    { day: 'Sun', exercises: 0, writing: 0 },
   ];
+  
+  // Fill in the weekly progress with actual data if available
+  if (progress?.progressHistory && Array.isArray(progress.progressHistory)) {
+    const today = new Date();
+    const oneWeekAgo = new Date(today);
+    oneWeekAgo.setDate(today.getDate() - 7);
+    
+    progress.progressHistory.forEach((entry: any) => {
+      if (entry && entry.date) {
+        const entryDate = new Date(entry.date);
+        if (entryDate >= oneWeekAgo && entryDate <= today) {
+          const dayOfWeek = entryDate.getDay();
+          const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday (0) to 6, Monday (1) to 0, etc.
+          
+          if (dayIndex >= 0 && dayIndex < 7 && entry.completedItems) {
+            weeklyProgress[dayIndex].exercises += entry.completedItems;
+          }
+        }
+      }
+    });
+  }
 
   // Skill distribution for pie chart
   const skillDistribution = [
