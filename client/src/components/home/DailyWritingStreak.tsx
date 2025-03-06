@@ -51,10 +51,8 @@ export function DailyWritingStreak({
   const fetchDailyChallenge = async () => {
     try {
       setLoading(true);
-      // Create correct API request using the URL as the first argument and method as the second
-      const response = await apiRequest('GET', '/api/daily-challenge');
-      // Parse the JSON response
-      const result = await response.json();
+      // Use updated apiRequest with URL first, method second
+      const result = await apiRequest('/api/daily-challenge', 'GET');
       if (result) {
         setChallenge(result as DailyChallenge);
       }
@@ -68,10 +66,8 @@ export function DailyWritingStreak({
   const generateNewChallenge = async () => {
     try {
       setGenerating(true);
-      // Create correct API request using the URL as the first argument and method as the second
-      const response = await apiRequest('POST', '/api/daily-challenge/generate');
-      // Parse the JSON response
-      const result = await response.json();
+      // Use updated apiRequest with URL first, method second
+      const result = await apiRequest('/api/daily-challenge/generate', 'POST');
       if (result) {
         setChallenge(result as DailyChallenge);
         toast({

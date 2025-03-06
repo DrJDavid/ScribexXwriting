@@ -38,8 +38,7 @@ const DailyWritingChallenge: React.FC = () => {
     const fetchChallenge = async () => {
       try {
         setIsLoading(true);
-        const response = await apiRequest('GET', `/api/daily-challenge/${params.challengeId}`);
-        const data = await response.json();
+        const data = await apiRequest(`/api/daily-challenge/${params.challengeId}`, 'GET');
         if (data) {
           setChallenge(data);
         } else {
@@ -72,16 +71,14 @@ const DailyWritingChallenge: React.FC = () => {
   // Submit writing mutation
   const submitWritingMutation = useMutation({
     mutationFn: async (data: { challengeId: string; title: string; content: string }) => {
-      const res = await apiRequest('POST', '/api/daily-challenge/submit', data);
-      return res.json();
+      return apiRequest('/api/daily-challenge/submit', 'POST', data);
     },
   });
 
   // Save draft mutation
   const saveDraftMutation = useMutation({
     mutationFn: async (data: { challengeId: string; title: string; content: string }) => {
-      const res = await apiRequest('POST', '/api/daily-challenge/draft', data);
-      return res.json();
+      return apiRequest('/api/daily-challenge/draft', 'POST', data);
     },
   });
 
