@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,44 @@ export default function OWLLocationDetail() {
   
   // Use state for the prompt
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Use a reference to track if we've already processed a prompt
+  const promptProcessedRef = useRef(false);
+  
+  // Effect to check if there's a prompt in the URL
+  useEffect(() => {
+    // Only run this once
+    if (!isInitialized) {
+      setIsInitialized(true);
+      
+      // Check if there's a promptKey in the URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const promptKey = urlParams.get('promptKey');
+      
+      if (promptKey && !promptProcessedRef.current) {
+        promptProcessedRef.current = true;
+        
+        // Try to get the prompt from sessionStorage
+        const storedPrompt = sessionStorage.getItem(promptKey);
+        if (storedPrompt) {
+          try {
+            const parsedPrompt = JSON.parse(storedPrompt) as GeneratedPrompt;
+            console.log("Loaded prompt from URL parameter:", parsedPrompt);
+            setGeneratedPrompt(parsedPrompt);
+            
+            // Show toast notification
+            toast({
+              title: "Prompt Loaded",
+              description: "Your previous writing prompt has been loaded.",
+            });
+          } catch (error) {
+            console.error("Error parsing stored prompt:", error);
+          }
+        }
+      }
+    }
+  }, [isInitialized, toast]);
   
   // Handle back button click 
   const handleBackClick = () => {
@@ -30,7 +68,8 @@ export default function OWLLocationDetail() {
   const handleSelectPrompt = (prompt: GeneratedPrompt) => {
     console.log("Received prompt in handleSelectPrompt:", prompt);
     
-    // Create a deep copy of the prompt
+    // Important: Force immediate re-render with the new prompt
+    // Create a deep copy to ensure we're setting a new object in state
     const promptCopy = {
       prompt: prompt.prompt,
       scenario: prompt.scenario,
@@ -39,18 +78,27 @@ export default function OWLLocationDetail() {
       challengeElement: prompt.challengeElement || ""
     };
     
-    // Set state directly - this will display the prompt below
+    // Set the state with the new prompt
     setGeneratedPrompt(promptCopy);
-    console.log("Updated generatedPrompt:", promptCopy);
     
-    // Scroll to the generated prompt
+    // Log for debugging
+    console.log("Updated generatedPrompt state:", promptCopy);
+    
+    // Show success toast
+    toast({
+      title: "Prompt Ready!",
+      description: "Your writing prompt has been generated. See it below.",
+    });
+    
+    // Scroll to the generated prompt after a short delay to ensure rendering
     setTimeout(() => {
-      // Find the element and scroll to it
       const element = document.getElementById('generated-prompt');
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        console.error("Could not find element with ID 'generated-prompt'");
       }
-    }, 100);
+    }, 200);
   };
   
   const handleNewPrompt = () => {
@@ -210,9 +258,12 @@ export default function OWLLocationDetail() {
               </Card>
               
               {generatedPrompt && (
-                <Card id="generated-prompt" className="mt-4 border-primary">
+                <Card id="generated-prompt" className="mt-6 border-primary border-2 shadow-lg animate-in fade-in duration-300">
                   <CardHeader className="bg-primary/10">
-                    <CardTitle>Generated Prompt</CardTitle>
+                    <CardTitle className="flex items-center text-primary">
+                      <Pencil className="w-5 h-5 mr-2" />
+                      Generated Prompt Ready!
+                    </CardTitle>
                     <CardDescription>
                       Your custom writing prompt is ready to use
                     </CardDescription>
