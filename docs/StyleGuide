@@ -1,0 +1,220 @@
+# ScribexX Style Guide
+
+This style guide outlines the visual design language for the two distinct environments within ScribexX: the REDI (Reflective Exercise on Direct Instruction) section with its Synthwave/Cyberpunk aesthetic and the OWL (Open World Learning) section with its Botanical Futurism aesthetic.
+
+## 1. REDI: Synthwave/Cyberpunk Aesthetic
+
+### Color Palette
+
+**Primary Colors:**
+- **Neon Purple** `#6320ee` - Primary interactive elements
+- **Deep Blue** `#1c77c3` - Secondary elements
+- **Electric Green** `#39ff14` - Accents, highlights, borders
+- **Deep Black** `#121212` - Backgrounds
+- **Dark Gray** `#1e1e1e` - Surface elements
+- **Bright Pink** `#ff3864` - Errors, warnings
+
+**Gradients:**
+- Background gradient: `linear-gradient(135deg, #121212 0%, #1e1e1e 100%)`
+- Accent gradient: `linear-gradient(90deg, #39ff14 0%, #00ffdd 100%)`
+- Header gradient: `linear-gradient(90deg, #6320ee 0%, #1c77c3 100%)`
+
+### Typography
+
+- **Headings:** "Orbitron" or "Rajdhani" - Geometric, futuristic, tech-inspired fonts
+- **Body:** "Inter" or "Roboto" - Clean, high-legibility sans-serif
+- **Accents:** "Share Tech Mono" - Monospace for code-like elements
+
+**Text Guidelines:**
+- Headings: 24-32px, bold, uppercase for main headings
+- Subheadings: 18-20px, medium weight
+- Body text: 16px, regular weight
+- Small text: 14px, light weight
+- Use contrasting text colors against backgrounds
+- Main text color: `#ffffff`
+- Secondary text color: `#cccccc`
+
+### UI Elements
+
+**Buttons:**
+- Primary buttons: Neon purple background, white text, subtle glow effect
+- Secondary buttons: Transparent with electric green border
+- Hover/active states with increased glow effect
+- Rounded corners (8px radius)
+
+**Cards/Panels:**
+- Dark backgrounds (`#1e1e1e`)
+- Thin electric green borders (1-2px)
+- Subtle shadow or glow effects
+- Slightly rounded corners (8px radius)
+
+**Level Map Nodes:**
+- Locked: Grayscale, dimmed appearance
+- Available: Glowing purple with neon accents
+- Completed: Electric green checkmark or indicator
+- Current: Pulsing highlight effect
+
+**Icons:**
+- Outlined style when inactive
+- Filled style when active
+- Consistent stroke width
+- Neon glow effects for important indicators
+
+### Animations & Effects
+
+- **Glow Effects:** Subtle neon glow on interactive elements
+- **Grid Patterns:** Subtle grid backgrounds reminiscent of 80s digital landscapes
+- **Scan Lines:** Very subtle scan line effect in background elements
+- **Transitions:** Quick, electronic transitions between screens
+- **Hover Effects:** Elements "light up" on hover
+- **Progress Indicators:** Digital, pixelated or glowing progress bars
+
+### REDI Layout Guidelines
+
+- **Grid-Based:** Use consistent grid layouts for structure
+- **Negative Space:** Use dark negative space to create contrast
+- **Hierarchy:** Create clear visual hierarchy through size, color, and positioning
+- **Consistency:** Maintain consistent spacing between elements
+- **Alignment:** Use strong alignment principles (left-aligned text, centered important elements)
+
+## 2. OWL: Botanical Futurism Aesthetic
+
+### Color Palette
+
+**Primary Colors:**
+- **Forest Green** `#3cb371` - Primary interactive elements
+- **Earth Brown** `#8b4513` - Secondary elements, grounding colors
+- **Gold** `#ffd700` - Accents, highlights
+- **Dark Forest** `#1a2f23` - Backgrounds
+- **Medium Forest** `#2d4438` - Surface elements
+- **Vibrant Coral** `#ff5a5f` - Errors, warnings
+
+**Gradients:**
+- Background gradient: `linear-gradient(135deg, #1a2f23 0%, #2d4438 100%)`
+- Accent gradient: `linear-gradient(90deg, #72efdd 0%, #64dfdf 100%)`
+- Header gradient: `linear-gradient(90deg, #3cb371 0%, #588157 100%)`
+
+### Typography
+
+- **Headings:** "Azonix" or "Cardo" - Organic yet futuristic
+- **Body:** "Montserrat" or "Open Sans" - Clean, natural feel
+- **Accents:** "Quicksand" - Rounded, organic feel for special elements
+
+**Text Guidelines:**
+- Headings: 24-28px, semi-bold, sentence case
+- Subheadings: 18-20px, medium weight
+- Body text: 16px, regular weight
+- Small text: 14px, light weight
+- Main text color: `#ffffff`
+- Secondary text color: `#cccccc`
+
+### UI Elements
+
+**Buttons:**
+- Primary buttons: Forest green background, white text, subtle plant-inspired borders
+- Secondary buttons: Transparent with gold or teal accents
+- Hover/active states with subtle growth/bloom effects
+- Rounded corners (12-16px radius)
+
+**Cards/Panels:**
+- Rich green backgrounds (`#2d4438`)
+- Organic, subtle borders or edge treatments
+- Soft shadows
+- Well-rounded corners (16px radius)
+
+**Town Map Elements:**
+- Buildings: Blend of architectural and organic forms
+- Paths: Flowing, curved rather than grid-like
+- Vegetation: Digital interpretations of plants and trees
+- Water elements: Flowing, animated where possible
+
+**Icons:**
+- Organic, slightly rounded style
+- Plant-inspired where appropriate
+- Consistent with botanical theme
+- Subtle glow or "living" effects
+
+### Animations & Effects
+
+- **Growth Animations:** Elements that "grow" into place
+- **Fluid Movements:** Smooth, flowing transitions between states
+- **Particle Effects:** Subtle pollen/spore-like particles in backgrounds
+- **Transitions:** Organic, growth-based transitions between screens
+- **Hover Effects:** Elements "bloom" or expand slightly on hover
+- **Progress Indicators:** Vine-like or growing plant progress indicators
+
+### OWL Layout Guidelines
+
+- **Flowing Layout:** Less rigid than REDI, more organic placement
+- **Natural Curves:** Use curved elements rather than strict angles
+- **Asymmetry:** Balanced asymmetry rather than perfect alignment
+- **Breathing Room:** Generous spacing between elements
+- **Natural Hierarchy:** Create visual hierarchy through organic positioning
+
+## 3. Shared UI Components
+
+### Loading States
+
+- **REDI Loading:** Digital scanning animation, loading bar
+- **OWL Loading:** Growing plant or unfurling leaf animation
+
+### Notifications
+
+- **REDI Notifications:** Digital pop-up with electric glow
+- **OWL Notifications:** Unfurling scroll or leaf with message
+
+### Navigation
+
+- **Bottom Tab Bar:** Consistent across environments but themed appropriately
+- **REDI Icons:** Tech-inspired, angular
+- **OWL Icons:** Nature-inspired, organic
+- **Transitions:** Smooth theme transition when switching between environments
+
+### Writing Interface
+
+Keep the writing interface clean and distraction-free in both environments, but with subtle themed elements:
+
+- **REDI Writing:** Digital paper, cyberpunk frame elements
+- **OWL Writing:** Natural parchment texture, botanical frame elements
+- **Focus Mode:** Ability to minimize all UI elements while writing
+
+## 4. Asset Requirements
+
+### REDI Assets
+
+- Grid backgrounds
+- Digital interface elements
+- Neon button templates
+- Level node designs (locked, available, completed)
+- Cyberpunk frame elements
+- Tech-inspired icons
+
+### OWL Assets
+
+- Botanical patterns
+- Tree and plant illustrations
+- Town map buildings
+- NPC character portraits
+- Organic UI frames
+- Nature-inspired icons
+
+## 5. Accessibility Considerations
+
+- Maintain 4.5:1 contrast ratio for text elements
+- Ensure interactive elements have distinct focus states
+- Provide sufficient color contrast between interactive and non-interactive elements
+- Use patterns in addition to color to distinguish states
+- Ensure text sizes are adjustable
+- Test interfaces with color blindness simulators
+
+## 6. Implementation Notes
+
+- Use Expo LinearGradient for gradient effects
+- Consider React Native Reanimated for smooth animations
+- Use consistent shadow implementations
+- Create reusable styled components for each theme
+- Implement theme switching through context
+- Use vector assets where possible for scaling
+- Consider adding subtle sound effects for interactions
+
+This style guide provides the foundation for creating a cohesive yet distinct visual experience across the two learning environments while maintaining usability and accessibility.

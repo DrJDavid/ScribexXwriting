@@ -1,0 +1,145 @@
+# OWL Town Concept Design
+
+## Town Overview
+
+The OWL (Open World Learning) Town serves as a creative sandbox environment where students apply the writing skills learned in REDI exercises. The town features a Botanical Futurism aesthetic—a blend of digital technology with organic, plant-like elements. This environment lets students explore different writing genres through interactions with NPCs who offer quests.
+
+## Visual Theme
+
+**Botanical Futurism**
+- Buildings resembling organic-technological hybrids
+- Glowing plant-like structures interwoven with digital elements
+- Flowing animations mimicking plant growth
+- Rich color palette with deep greens, earthy browns, and bright accent colors
+- Subtle particle effects suggesting pollen or spores
+- Glass/transparent surfaces containing living plants
+
+## Town Map Layout
+
+The town consists of interconnected areas, each representing different writing genres and applications:
+
+1. **Town Square (Central Hub)**
+   - Central meeting point with the town bulletin board
+   - Main quest giver: Mayor Logophile
+   - Unlocked by default
+
+2. **The Library**
+   - Focus: Research and informational writing
+   - NPC: Archivist Syntax
+   - Quests involve creating encyclopedia entries, book reports, etc.
+   - Unlocked after basic Mechanics REDI exercises
+
+3. **The Gazette (Newspaper)**
+   - Focus: Journalism and reporting
+   - NPC: Editor Byline
+   - Quests involve writing news articles, interviews, reviews
+   - Unlocked after intermediate Mechanics REDI exercises
+
+4. **The Amphitheater**
+   - Focus: Creative and narrative writing
+   - NPC: Director Metaphor
+   - Quests involve writing short stories, dialogues, poems
+   - Unlocked after basic Sequencing REDI exercises
+
+5. **Town Hall**
+   - Focus: Persuasive and argumentative writing
+   - NPC: Councilor Rhetoric
+   - Quests involve writing speeches, debates, proposals
+   - Unlocked after intermediate Sequencing REDI exercises
+
+6. **The Academy**
+   - Focus: Academic writing
+   - NPC: Professor Thesis
+   - Quests involve writing essays, analyses, explanations
+   - Unlocked after basic Voice REDI exercises
+
+## NPC Interactions
+
+Each NPC has:
+- A distinct personality tied to their writing specialty
+- A progression of quests that increase in complexity
+- Specific feedback styles that reinforce writing concepts
+- Unique rewards for completed quests
+
+### Example NPC: Editor Byline
+- **Personality**: Fast-talking, deadline-focused, passionate about truth
+- **First Interaction**: "Welcome to The Gazette, rookie! We need someone to cover what's happening at the Town Square festival. Give me the who, what, when, where, and why—and make it snappy! We've got a deadline!"
+- **Quest Structure**:
+  1. Basic News Report (5Ws)
+  2. Feature Article (add descriptions and background)
+  3. Interview (incorporate quotes and perspectives)
+  4. Editorial (add opinion while maintaining journalistic integrity)
+- **Feedback Style**: Direct, focused on clarity and accuracy
+- **Rewards**: Press credentials, office upgrades, special assignments
+
+## Quest System
+
+Quests follow a structured progression:
+
+1. **Introduction**: NPC presents a writing scenario and requirements
+2. **Guidance**: Optional tips and examples available for reference
+3. **Writing Space**: Student completes the writing assignment
+4. **Submission**: Work is saved to portfolio and "published" in the town
+5. **Feedback**: NPC provides character-appropriate feedback
+6. **Reward**: Student earns currency and unlocks new opportunities
+
+### Example Quest
+- **Title**: "Festival Headline News"
+- **NPC**: Editor Byline
+- **Description**: "The annual Digital Bloom Festival is happening in Town Square. Cover the event with a news article that includes all 5Ws. Your article should be 150-200 words and include a catchy headline."
+- **Requirements**:
+  - Include Who, What, When, Where, Why
+  - Create an attention-grabbing headline
+  - Maintain objective reporting tone
+  - Word count: 150-200 words
+- **Reward**: 50 Lexicoins, Press Badge (cosmetic item)
+
+## Economy System
+
+- **Currency**: Lexicoins earned through completed quests
+- **Purchasable Items**:
+  - Customization options for student profile
+  - Decorative items for a personal writing space
+  - Special writing tools that provide bonuses
+  - Town beautification projects
+
+## Progression Mechanics
+
+- **Town Development**: Areas visually improve as students complete quests
+- **NPC Relationships**: Dialogue options expand with completed quests
+- **Quest Complexity**: Writing challenges become more sophisticated
+- **Unlockable Areas**: New town locations become available as REDI skills advance
+
+## MVP Implementation (2-Week Scope)
+
+For the initial 2-week MVP, focus on:
+
+1. **Simplified Town Map** with 3 locations:
+   - Town Square (Central Hub)
+   - The Gazette (Journalism)
+   - The Library (Research)
+
+2. **2-3 NPCs** with basic dialogue:
+   - Mayor Logophile (introduction)
+   - Editor Byline (journalism quests)
+   - Archivist Syntax (optional if time permits)
+
+3. **5-6 Basic Quests**:
+   - 1 tutorial quest from Mayor
+   - 3-4 journalism quests from Editor Byline
+   - 1 research quest from Archivist (if implemented)
+
+4. **Core Functionality**:
+   - Town navigation
+   - NPC dialogue system
+   - Basic writing interface
+   - Quest tracking
+   - Simple feedback system
+
+## Future Expansion Ideas
+
+- **Seasonal Events**: Special writing challenges tied to real-world events
+- **Collaborative Projects**: Group writing assignments requiring multiple students
+- **Town Council**: Student-written proposals affecting town development
+- **Publishing House**: Compile best writings into shareable "books"
+- **Writing Competitions**: Themed contests with special rewards

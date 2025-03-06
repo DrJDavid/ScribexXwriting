@@ -1,0 +1,626 @@
+# ScribexX Accessibility Standards
+
+This document outlines comprehensive accessibility guidelines and implementation standards for the ScribexX application to ensure it's usable by all students, including those with disabilities. As an educational application, accessibility is not just a legal requirement but a fundamental principle to provide equal learning opportunities for all students.
+
+## Accessibility Goals
+
+ScribexX aims to:
+
+1. Meet WCAG 2.1 AA standards at minimum
+2. Provide an equivalent learning experience for all users
+3. Support diverse learning needs and preferences
+4. Ensure compatibility with assistive technologies
+5. Implement accessibility as a core feature, not an afterthought
+6. Go beyond basic compliance to create truly inclusive experiences
+
+## Universal Design Principles
+
+The application follows these universal design principles:
+
+1. **Equitable Use**: The design is useful and marketable to people with diverse abilities
+2. **Flexibility in Use**: The design accommodates a wide range of individual preferences and abilities
+3. **Simple and Intuitive**: The design is easy to understand, regardless of experience, knowledge, language skills, or current concentration level
+4. **Perceptible Information**: The design communicates necessary information effectively regardless of ambient conditions or the user's sensory abilities
+5. **Tolerance for Error**: The design minimizes hazards and adverse consequences of accidental or unintended actions
+6. **Low Physical Effort**: The design can be used efficiently, comfortably, and with minimum fatigue
+7. **Size and Space for Approach and Use**: Appropriate size and space is provided for approach, reach, manipulation, and use regardless of user's body size, posture, or mobility
+
+## Visual Accessibility Standards
+
+### Color and Contrast
+
+1. **Text Contrast**: All text must maintain minimum contrast ratios:
+   - 4.5:1 for normal text (less than 18pt or 14pt bold)
+   - 3:1 for large text (at least 18pt or 14pt bold)
+   - 3:1 for UI components (buttons, form controls, focus indicators)
+
+2. **Color Independence**:
+   - Color must never be the only means to convey information
+   - All color-based indicators must have a secondary non-color indicator (icons, patterns, text)
+   - Interactive elements have clear visual affordances beyond color
+
+3. **Color Schemes**:
+   - Both Synthwave/Cyberpunk and Botanical Futurism themes must meet contrast requirements
+   - High contrast mode option available to enhance visibility
+   - Color blindness considerations in all design choices
+
+### Text and Typography
+
+1. **Text Sizing**:
+   - Text must be resizable up to 200% without loss of content or functionality
+   - No fixed font sizes in CSS (use relative units like rem)
+   - Minimum font size of 16px (or equivalent) for body text
+
+2. **Font Selection**:
+   - Use dyslexia-friendly font options
+   - Include sans-serif fonts for better readability
+   - Maintain adequate letter spacing and line height
+   - Avoid all-caps text except for very short labels
+
+3. **Text Spacing**:
+   - Support text spacing adjustments:
+     - Line height: at least 1.5 times font size
+     - Paragraph spacing: at least 2 times font size
+     - Letter spacing: at least 0.12 times font size
+     - Word spacing: at least 0.16 times font size
+
+### Layout and Visibility
+
+1. **Responsive Design**:
+   - Content is readable and functional when zoomed to 200%
+   - Interfaces adapt gracefully to different screen sizes
+   - No horizontal scrolling required at standard zoom levels
+
+2. **Content Separation**:
+   - Clear visual separation between different content sections
+   - Adequate spacing between interactive elements
+   - Visual grouping of related information
+
+3. **Focus Visibility**:
+   - Clearly visible focus indicators for all interactive elements
+   - Focus indicator must have 3:1 contrast against background
+   - Focus states should be visually distinct from hover states
+
+## Interactive Accessibility Standards
+
+### Keyboard Accessibility
+
+1. **Keyboard Navigation**:
+   - All functionality must be accessible using keyboard alone
+   - Custom keyboard shortcuts for frequently used actions
+   - No keyboard traps or focus dead-ends
+   - Logical tab order matching visual layout
+
+2. **Focus Management**:
+   - Focus automatically moves to newly revealed content
+   - Focus returns to logical location when dialogs close
+   - Focus indicators always visible when using keyboard
+
+3. **Gesture Alternatives**:
+   - All gesture-based interactions have keyboard alternatives
+   - Complex gestures (pinch, zoom) have simpler alternatives
+   - Touch targets minimum size of 44×44 CSS pixels
+
+### Time Constraints
+
+1. **Timing Adjustments**:
+   - Any timed activities must have options to:
+     - Turn off time limits
+     - Adjust time limits to at least 10× default
+     - Receive warnings before time expires with extension option
+
+2. **Auto-advancing Content**:
+   - Controls to pause, stop, or hide auto-advancing content
+   - No content that automatically starts moving, blinking, or scrolling
+   - Option to disable auto-progression in learning paths
+
+3. **Session Management**:
+   - Authentication sessions extended when requested
+   - Warning provided before session timeout
+   - No data loss when re-authenticating after timeout
+
+### Input Assistance
+
+1. **Error Prevention**:
+   - Confirmation for actions with significant consequences
+   - Reversible actions where possible
+   - Clear error messages with solution guidance
+
+2. **Input Assistance**:
+   - Clear labels for all form fields
+   - Input format requirements provided in advance
+   - Error suggestions for recognized input errors
+
+3. **Alternative Input Methods**:
+   - Support for various input methods (touch, mouse, keyboard, stylus)
+   - Voice input compatibility where relevant
+   - Switch control compatibility
+
+## Screen Reader and Assistive Technology Support
+
+### Semantic Structure
+
+1. **Semantic HTML**:
+   - Proper heading hierarchy (h1-h6)
+   - Appropriate HTML elements for content type
+   - ARIA roles when HTML semantics are insufficient
+   - Meaningful page titles and section headings
+
+2. **Landmarks and Regions**:
+   - ARIA landmarks for major page sections
+   - Proper identification of regions
+   - Skip links to bypass repeated content
+
+3. **Reading Order**:
+   - DOM order matches visual presentation order
+   - Logical reading flow for screen readers
+   - Related content grouped together
+
+### Text Alternatives
+
+1. **Image Alternatives**:
+   - All images have appropriate alt text
+   - Decorative images have null alt text (alt="")
+   - Complex images have extended descriptions
+   - Alt text guidelines based on image purpose:
+     - Functional images: describe function
+     - Informational images: describe content
+     - Decorative images: null alt text
+
+2. **Non-text Content**:
+   - Text alternatives for all non-text content
+   - Transcripts for audio content
+   - Audio descriptions for video content
+   - Text alternatives for icons and graphical buttons
+
+3. **Interactive Element Labels**:
+   - All buttons have descriptive labels
+   - Form controls have associated labels
+   - Custom components have appropriate ARIA attributes
+   - Icon buttons have accessible names
+
+### Dynamic Content
+
+1. **Status Updates**:
+   - ARIA live regions for important updates
+   - Appropriate politeness settings (polite, assertive)
+   - Status messages announced without focus change
+
+2. **Modal Dialogs**:
+   - Proper focus management for modals
+   - aria-modal and role="dialog" attributes
+   - Focus trap within modal while open
+
+3. **Custom Widgets**:
+   - Follow WAI-ARIA Authoring Practices
+   - Implement appropriate keyboard interaction patterns
+   - Test thoroughly with screen readers
+
+## Cognitive Accessibility Standards
+
+### Content Simplification
+
+1. **Clear Language**:
+   - Use simple, clear language appropriate for reading level
+   - Define complex terms and abbreviations
+   - Break complex tasks into manageable steps
+   - Use consistent terminology throughout
+
+2. **Predictable Operation**:
+   - Consistent navigation mechanisms
+   - Components with same functionality have consistent appearance
+   - No unexpected changes on focus or input
+
+3. **Distraction Reduction**:
+   - Option to reduce background animation/movement
+   - Minimal use of auto-playing media
+   - Content separated from distracting animations
+
+### Memory Assistance
+
+1. **Persistent Information**:
+   - Important context information remains visible during tasks
+   - Multi-step processes show current step and total steps
+   - Users can pause and resume activities
+
+2. **Clear Navigation**:
+   - Clearly identifiable navigation patterns
+   - Current location indicator in app
+   - Breadcrumb navigation where appropriate
+
+3. **Progress Saving**:
+   - Automatic saving of progress
+   - Option to return to incomplete tasks
+   - No unnecessary time constraints
+
+### Learning Support
+
+1. **Multiple Representation**:
+   - Present information through multiple modalities
+   - Offer text, visual, and audio alternatives
+   - Support different learning preferences
+
+2. **Feedback Mechanisms**:
+   - Clear, constructive feedback
+   - Multiple feedback styles (visual, textual, audio)
+   - Positive reinforcement
+
+3. **Scaffolded Learning**:
+   - Progressive disclosure of complex concepts
+   - Multiple difficulty levels
+   - Option to revisit previously learned content
+
+## Educational Accessibility Considerations
+
+### Diverse Learning Needs
+
+1. **Learning Disabilities Support**:
+   - Dyslexia-friendly text presentation options
+   - Structured, consistent learning paths
+   - Clear, concrete examples and instructions
+   - Multi-modal content presentation
+
+2. **ADHD Considerations**:
+   - Focused learning environments with minimal distractions
+   - Clear goals and immediate feedback
+   - Chunked content in manageable segments
+   - Visual progress tracking
+
+3. **Autism Spectrum Support**:
+   - Predictable patterns and clear expectations
+   - Literal language with minimal idioms
+   - Options to reduce sensory stimulation
+   - Explicit social context in scenarios
+
+### Multimodal Learning
+
+1. **Visual Learning Support**:
+   - Clear diagrams and visual aids
+   - Visual organization of concepts
+   - Color-coding of related items
+   - Visual progress tracking
+
+2. **Auditory Learning Support**:
+   - Text-to-speech for all written content
+   - Audio versions of instructions
+   - Verbal feedback options
+   - Screen reader optimization
+
+3. **Kinesthetic Learning Support**:
+   - Interactive exercises
+   - Drag-and-drop alternatives
+   - Progress through active engagement
+   - Alternative input methods
+
+### Assessment Accessibility
+
+1. **Multiple Expression Methods**:
+   - Various ways to demonstrate knowledge
+   - Options beyond text-based responses
+   - Multiple-choice alternatives to writing
+
+2. **Extended Time Options**:
+   - Adjustable time limits for assessments
+   - Pause functionality during timed activities
+   - Untimed practice modes
+
+3. **Feedback Accessibility**:
+   - Clear, specific feedback
+   - Multiple feedback formats
+   - Constructive guidance for improvement
+
+## Implementation Guidelines for Key App Components
+
+### REDI Map and Navigation
+
+```jsx
+// Accessible REDI Map Node Component
+const AccessibleMapNode = ({ id, title, status, onSelect }) => {
+  // Generate appropriate aria labels based on status
+  const getAriaLabel = () => {
+    switch (status) {
+      case 'locked':
+        return `${title} exercise, locked`;
+      case 'available':
+        return `${title} exercise, available to start`;
+      case 'completed':
+        return `${title} exercise, completed`;
+      default:
+        return title;
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      accessible={true}
+      accessibilityLabel={getAriaLabel()}
+      accessibilityRole="button"
+      accessibilityState={{
+        disabled: status === 'locked',
+        selected: status === 'completed',
+      }}
+      accessibilityHint={status === 'available' ? "Double tap to begin exercise" : ""}
+      onPress={status !== 'locked' ? onSelect : undefined}
+      style={[
+        styles.node,
+        status === 'locked' && styles.lockedNode,
+        status === 'completed' && styles.completedNode,
+      ]}
+    >
+      <Text style={styles.nodeTitle}>{title}</Text>
+      {status === 'locked' && (
+        <Text style={styles.lockIcon}>🔒</Text>
+      )}
+      {status === 'completed' && (
+        <Text style={styles.checkIcon}>✓</Text>
+      )}
+    </TouchableOpacity>
+  );
+};
+```
+
+### Exercise Interaction
+
+```jsx
+// Accessible Multiple Choice Exercise
+const AccessibleMultipleChoice = ({ question, options, onSelect, selectedOption }) => {
+  return (
+    <View>
+      <Text style={styles.question} accessibilityRole="header">
+        {question}
+      </Text>
+      
+      {options.map((option, index) => (
+        <TouchableOpacity
+          key={index}
+          accessible={true}
+          accessibilityRole="radio"
+          accessibilityState={{ 
+            checked: selectedOption === index,
+          }}
+          accessibilityLabel={`Option ${index + 1}: ${option}`}
+          onPress={() => onSelect(index)}
+          style={[
+            styles.option,
+            selectedOption === index && styles.selectedOption,
+          ]}
+        >
+          <View style={styles.radioOuter}>
+            {selectedOption === index && (
+              <View style={styles.radioInner} />
+            )}
+          </View>
+          <Text style={styles.optionText}>{option}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+```
+
+### Writing Interface
+
+```jsx
+// Accessible Writing Interface
+const AccessibleWritingInterface = ({ title, content, onChangeTitle, onChangeContent }) => {
+  return (
+    <View style={styles.container}>
+      <TextInput
+        style={styles.titleInput}
+        value={title}
+        onChangeText={onChangeTitle}
+        placeholder="Enter title here"
+        accessibilityLabel="Title"
+        accessibilityHint="Enter the title for your writing"
+        returnKeyType="next"
+      />
+      
+      <View style={styles.wordCountContainer}>
+        <Text accessibilityLiveRegion="polite">
+          Word count: {content.split(/\s+/).filter(Boolean).length}
+        </Text>
+      </View>
+      
+      <TextInput
+        style={styles.contentInput}
+        multiline
+        textAlignVertical="top"
+        value={content}
+        onChangeText={onChangeContent}
+        placeholder="Start writing here..."
+        accessibilityLabel="Content"
+        accessibilityHint="Enter the main content of your writing"
+      />
+    </View>
+  );
+};
+```
+
+### NPC Dialog
+
+```jsx
+// Accessible NPC Dialog
+const AccessibleNPCDialog = ({ npc, dialog, options, onSelectOption }) => {
+  return (
+    <View style={styles.container}>
+      <View accessibilityRole="header">
+        <Text style={styles.npcName}>{npc.name}</Text>
+      </View>
+      
+      <View 
+        style={styles.dialogContainer}
+        accessibilityRole="text"
+        accessibilityLiveRegion="polite"
+      >
+        <Text style={styles.dialogText}>{dialog.text}</Text>
+      </View>
+      
+      <View 
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Response options"
+      >
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={option.text}
+            accessibilityHint="Select this response"
+            onPress={() => onSelectOption(index)}
+            style={styles.optionButton}
+          >
+            <Text style={styles.optionText}>{option.text}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
+```
+
+## Testing and Validation
+
+### Automated Testing
+
+1. **Linting**:
+   - Implement ESLint with jsx-a11y plugin
+   - Enforce accessibility rules in CI/CD pipeline
+   - Automatically check for common accessibility issues
+
+2. **Unit Testing**:
+   - Test keyboard navigation
+   - Verify screen reader announcements
+   - Check focus management
+
+3. **Snapshot Testing**:
+   - Test rendering in high contrast mode
+   - Verify layout at different text sizes
+   - Test with different color schemes
+
+### Manual Testing
+
+1. **Screen Reader Testing**:
+   - Test with VoiceOver on iOS
+   - Test with TalkBack on Android
+   - Verify all content is announced correctly
+   - Check for appropriate context and feedback
+
+2. **Keyboard Navigation Testing**:
+   - Verify all functionality with keyboard only
+   - Check focus order matches visual order
+   - Ensure focus indicators are always visible
+   - Test keyboard shortcuts
+
+3. **Cognitive Testing**:
+   - Evaluate content simplicity and clarity
+   - Check for consistent patterns and navigation
+   - Verify feedback mechanisms are clear and helpful
+   - Test learning paths for logical progression
+
+### User Testing
+
+1. **Expert Review**:
+   - Conduct review with accessibility specialists
+   - Involve special education teachers
+   - Get feedback from assistive technology experts
+
+2. **Testing with Users with Disabilities**:
+   - Include diverse users with different abilities
+   - Test with actual assistive technology users
+   - Gather qualitative feedback on usability
+
+3. **Educational Effectiveness Testing**:
+   - Evaluate learning outcomes for diverse users
+   - Compare performance across different ability groups
+   - Identify and address gaps in accessibility
+
+## Accessibility Compliance Checklist
+
+### Design Phase
+
+- [ ] Color schemes meet contrast requirements
+- [ ] Text sizes and fonts support readability
+- [ ] Interface elements have sufficient spacing
+- [ ] Interactive elements have clear visual affordances
+- [ ] Layout works at different zoom levels and orientations
+
+### Development Phase
+
+- [ ] Semantic HTML/native components used appropriately
+- [ ] ARIA attributes used correctly when HTML insufficient
+- [ ] Keyboard navigation fully implemented
+- [ ] Focus management properly handled
+- [ ] Text alternatives provided for all non-text content
+
+### Testing Phase
+
+- [ ] Automated accessibility tests pass
+- [ ] Screen reader testing completed
+- [ ] Keyboard-only testing completed
+- [ ] Testing at different text sizes completed
+- [ ] Testing with different display settings completed
+
+### Release Phase
+
+- [ ] Accessibility statement included
+- [ ] Known issues documented with workarounds
+- [ ] Support information for accessibility questions provided
+- [ ] Feedback mechanism for accessibility issues established
+
+## Technology-Specific Implementation Notes
+
+### React Native Accessibility
+
+1. **Core Properties**:
+   - `accessible`: Mark elements as accessible
+   - `accessibilityLabel`: Provide text alternative
+   - `accessibilityHint`: Additional usage information
+   - `accessibilityRole`: Define component purpose
+   - `accessibilityState`: Define component state
+
+2. **Focus Management**:
+   - `accessibilityViewIsModal`: Trap focus in modals
+   - Use `AccessibilityInfo` API for adaptive features
+   - Implement focus management for dynamic content
+
+3. **Interaction Handling**:
+   - Ensure minimum touch target size (44×44pts)
+   - Provide keyboard alternative for gestures
+   - Test with assistive touch and switch control
+
+### Expo Specific Features
+
+1. **Accessibility Services**:
+   - Use `Expo.AccessibilityInfo` to detect screen reader
+   - Adapt UI based on accessibility settings
+   - Test with Expo's development tools
+
+2. **Cross-Platform Consistency**:
+   - Test accessibility on both iOS and Android
+   - Handle platform-specific accessibility differences
+   - Provide equivalent experience across platforms
+
+## Resources and References
+
+### Standards and Guidelines
+
+- [Web Content Accessibility Guidelines (WCAG) 2.1](https://www.w3.org/TR/WCAG21/)
+- [Mobile Accessibility: How WCAG 2.0 and Other W3C/WAI Guidelines Apply to Mobile](https://www.w3.org/TR/mobile-accessibility-mapping/)
+- [React Native Accessibility](https://reactnative.dev/docs/accessibility)
+- [Expo Accessibility](https://docs.expo.dev/guides/accessibility/)
+
+### Testing Tools
+
+- [Deque Axe](https://www.deque.com/axe/)
+- [Google Accessibility Scanner](https://play.google.com/store/apps/details?id=com.google.android.apps.accessibility.auditor)
+- [VoiceOver Accessibility Inspector](https://developer.apple.com/library/archive/documentation/Accessibility/Conceptual/AccessibilityMacOSX/OSXAXTestingApps.html)
+
+### Educational Resources
+
+- [A11Y Project](https://www.a11yproject.com/)
+- [Inclusive Design Principles](https://inclusivedesignprinciples.org/)
+- [WebAIM Articles and Resources](https://webaim.org/articles/)
+
+## Conclusion
+
+By implementing these accessibility standards, ScribexX will not only comply with legal requirements but also create a truly inclusive learning experience that benefits all students, regardless of their abilities or learning styles. Accessibility is integrated as a core feature of the application, ensuring that educational content is available to everyone and that the learning experience is equitable and engaging for all users.

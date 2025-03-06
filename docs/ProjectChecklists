@@ -1,0 +1,113 @@
+# ScribexX Project Checklists for 2-Week MVP
+
+## Week 1: Foundation Building
+
+### Day 1: Project Setup
+- [ ] Set up React Native with Expo development environment
+- [ ] Initialize GitHub repository with README and project structure
+- [ ] Install essential libraries:
+  - [ ] React Navigation
+  - [ ] Vector Icons
+  - [ ] AsyncStorage
+  - [ ] Expo LinearGradient
+- [ ] Create basic app configuration (app.json)
+- [ ] Set up initial file/folder structure
+
+### Day 2: Navigation & Core Structure
+- [ ] Implement bottom tab navigation
+- [ ] Create placeholder screens for:
+  - [ ] Home (REDI Map)
+  - [ ] OWL Town
+  - [ ] Profile
+  - [ ] Teacher View
+- [ ] Set up theme variables for both aesthetic styles
+- [ ] Implement context provider for app state
+
+### Day 3-4: REDI Map Interface
+- [ ] Design and implement the level map UI
+- [ ] Create visual nodes for different exercise types
+- [ ] Implement progress tracking indicators
+- [ ] Design level information modals
+- [ ] Create sample data structure for exercises
+- [ ] Implement node unlocking logic
+
+### Day 5-6: Exercise System
+- [ ] Create multiple-choice exercise component
+- [ ] Implement exercise scoring system
+- [ ] Create exercise feedback visualizations
+- [ ] Build exercise navigation (next/previous/exit)
+- [ ] Implement progress persistence
+- [ ] Add 5-10 sample exercises across different skill levels
+
+### Day 7: Review & Debug Week 1
+- [ ] Test all components on iOS and Android
+- [ ] Fix any critical bugs found during testing
+- [ ] Optimize any performance issues
+- [ ] Document completed work
+- [ ] Plan adjustments for Week 2 based on progress
+
+## Week 2: Game Elements & Polish
+
+### Day 8-9: OWL Town Environment
+- [ ] Design and implement the town map interface
+- [ ] Create 2-3 NPC characters with basic information
+- [ ] Implement location navigation within the town
+- [ ] Design quest list and tracking UI
+- [ ] Create sample quest data structure
+- [ ] Implement basic town-REDI unlocking relationship
+
+### Day 10-11: Writing Interface & Quests
+- [ ] Build distraction-free writing interface
+- [ ] Implement basic text formatting options
+- [ ] Create writing prompt/quest display
+- [ ] Build simple submission and feedback flow
+- [ ] Implement autosave functionality
+- [ ] Create sample quests for each NPC
+
+### Day 12: Profile & Achievement System
+- [ ] Design and implement profile screen
+- [ ] Create skill mastery visualization
+- [ ] Implement basic achievement system
+- [ ] Build writing portfolio/history view
+- [ ] Create stats dashboard for student progress
+
+### Day 13: Teacher View
+- [ ] Design basic teacher dashboard
+- [ ] Implement student progress overview
+- [ ] Create individual student detail view
+- [ ] Build simple feedback mechanism
+- [ ] Implement basic assignment creation
+
+### Day 14: Final Polish & Launch Prep
+- [ ] Comprehensive testing on multiple devices
+- [ ] Fix critical bugs and UI inconsistencies
+- [ ] Optimize app performance
+- [ ] Create app icon and splash screen
+- [ ] Prepare demo script and screenshots
+- [ ] Document future development roadmap
+
+## Implementation Focus Areas
+
+### Core Educational Components
+- [ ] Clear progression of writing skills
+- [ ] Meaningful feedback mechanisms
+- [ ] Balanced structured exercises and creative writing
+- [ ] Content appropriate for target age group
+
+### Game Elements
+- [ ] Coherent town environment design
+- [ ] NPC character development
+- [ ] Quest reward system
+- [ ] Visual progress indicators
+
+### Visual Design
+- [ ] Consistent application of Synthwave/Cyberpunk in REDI
+- [ ] Consistent application of Botanical Futurism in OWL
+- [ ] Clean transitions between aesthetic zones
+- [ ] Accessible text and UI elements
+
+### Technical Foundation
+- [ ] Reliable data persistence
+- [ ] Efficient state management
+- [ ] Responsive UI across device sizes
+- [ ] Groundwork for future expansion
