@@ -113,25 +113,15 @@ export function WritePromptGenerator({
         challengeElement: validatedPrompt.challengeElement
       };
       
-      // Use the modal approach - this is what worked before
-      console.log("Setting current prompt and showing modal");
-      
-      // STEP 1: Set current prompt state
-      setCurrentPrompt(promptToSend);
-      
-      // STEP 2: Call onSelectPrompt callback to inform parent component
+      // Call onSelectPrompt callback to inform parent component about the new prompt
+      console.log("Calling onSelectPrompt with generated prompt");
       onSelectPrompt(promptToSend);
       
-      // STEP 3: Show success toast
+      // Show success toast
       toast({
         title: "Prompt Generated Successfully!",
         description: "Your custom writing prompt is ready. Review it now!",
       });
-      
-      // STEP 4: Set the modal to open
-      // IMPORTANT: This needs to be the last step to make sure the state is updated
-      console.log("Opening prompt modal");
-      setModalOpen(true);
       
     } catch (error) {
       console.error('Error generating prompt:', error);
@@ -145,24 +135,15 @@ export function WritePromptGenerator({
       const fallbackPrompt = generateFallbackPrompt(location);
       setGeneratedPrompts(prevPrompts => [fallbackPrompt, ...prevPrompts].slice(0, 3));
       
-      // Use the modal approach for the fallback prompt too
-      console.log("Setting fallback prompt and showing modal");
-      
-      // STEP 1: Set current prompt with fallback
-      setCurrentPrompt(fallbackPrompt);
-      
-      // STEP 2: Call onSelectPrompt to maintain backward compatibility
+      // Call onSelectPrompt with the fallback prompt
+      console.log("Calling onSelectPrompt with fallback prompt");
       onSelectPrompt(fallbackPrompt);
       
-      // STEP 3: Show toast
+      // Show toast
       toast({
         title: "Fallback Prompt Generated",
         description: "We're using a basic prompt since the custom one failed to generate.",
       });
-      
-      // STEP 4: Open the modal to display the fallback prompt
-      console.log("Opening modal with fallback prompt");
-      setModalOpen(true);
     } finally {
       setIsLoading(false);
     }
@@ -210,215 +191,76 @@ export function WritePromptGenerator({
     return basePrompts[location.type as keyof typeof basePrompts];
   }
 
-  // Function to handle starting writing with current prompt
-  const handleStartWriting = () => {
-    console.log("handleStartWriting called with currentPrompt:", currentPrompt);
-    if (currentPrompt) {
-      // Store the generated prompt in sessionStorage to access it from the writing page
-      const promptKey = `prompt_${new Date().getTime()}`;
-      const promptData = {
-        prompt: currentPrompt.prompt,
-        scenario: currentPrompt.scenario,
-        guidingQuestions: currentPrompt.guidingQuestions || [],
-        suggestedElements: currentPrompt.suggestedElements || [],
-        challengeElement: currentPrompt.challengeElement || ""
-      };
-      
-      // Store the data in sessionStorage
-      sessionStorage.setItem(promptKey, JSON.stringify(promptData));
-      console.log("Stored prompt data in sessionStorage with key:", promptKey);
-      
-      // Force modal to close before navigation to prevent state issues
-      setModalOpen(false);
-      
-      const destinationUrl = `/owl/quest/free-write?locationId=${encodeURIComponent(location.id)}&promptType=${encodeURIComponent(location.type)}&mode=generated&promptKey=${encodeURIComponent(promptKey)}`;
-      console.log("Will navigate to:", destinationUrl);
-      
-      // Show a toast to confirm navigation
-      toast({
-        title: "Starting Writing Session",
-        description: "Taking you to the writing page...",
-      });
-      
-      // Add a small delay before navigation to ensure the modal closes smoothly
-      setTimeout(() => {
-        console.log(`Navigating to writing page with location ${location.id}`);
-        // Navigate to the writing page
-        window.location.href = destinationUrl;
-      }, 100);
-    } else {
-      console.error("Cannot start writing: currentPrompt is null");
-      toast({
-        title: "Error",
-        description: "Could not load the prompt. Please try generating a new one.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Function to handle generating a new prompt
-  const handleNewPrompt = () => {
-    setCurrentPrompt(null);
-    setModalOpen(false);
-    setCustomFocus('');
+  // Function to handle selecting a previously generated prompt
+  const handleSelectPrompt = (prompt: GeneratedPrompt) => {
+    console.log("Selected previously generated prompt:", prompt);
+    
+    // Call onSelectPrompt callback
+    onSelectPrompt(prompt);
+    
+    // Show toast notification
+    toast({
+      title: "Prompt Selected",
+      description: "Review your selected prompt and start writing when ready.",
+    });
   };
 
   return (
-    <>
-      {/* Prompt display dialog */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-primary">Your Custom Prompt is Ready!</DialogTitle>
-            <DialogDescription>
-              Review your custom prompt below. When you're ready, click "Start Writing" to begin composing.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 my-4">
-            {currentPrompt ? (
-              <>
-                <div className="bg-muted p-4 rounded-md">
-                  <h3 className="font-semibold mb-2">Prompt</h3>
-                  <p>{currentPrompt.prompt}</p>
-                </div>
-                
-                <div className="bg-muted p-4 rounded-md">
-                  <h3 className="font-semibold mb-2">Scenario</h3>
-                  <p>{currentPrompt.scenario}</p>
-                </div>
-                
-                <div className="bg-muted p-4 rounded-md">
-                  <h3 className="font-semibold mb-2">Guiding Questions</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {currentPrompt.guidingQuestions.map((q, i) => (
-                      <li key={i}>{q}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="bg-muted p-4 rounded-md">
-                  <h3 className="font-semibold mb-2">Suggested Elements</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {currentPrompt.suggestedElements.map((e, i) => (
-                      <li key={i}>{e}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="bg-muted p-4 rounded-md">
-                  <h3 className="font-semibold mb-2">Challenge Element</h3>
-                  <p>{currentPrompt.challengeElement}</p>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center p-8">
-                <p className="text-muted-foreground">Prompt is being generated...</p>
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter className="flex justify-between">
-            {currentPrompt ? (
-              <>
-                <Button variant="outline" onClick={handleNewPrompt}>
-                  Generate New Prompt
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="lg" 
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground animate-pulse" 
-                  onClick={handleStartWriting}
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Start Writing
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" onClick={() => setModalOpen(false)}>
-                Close
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* The main prompt generator UI */}
-      <div className={className}>
-        <div className="mb-4">
-          <label htmlFor="customFocus" className="block text-sm font-medium mb-1">
-            Custom Focus (Optional)
-          </label>
-          <Textarea
-            id="customFocus"
-            placeholder={`Add a specific theme, element, or focus for your ${location.type} writing prompt...`}
-            value={customFocus}
-            onChange={(e) => setCustomFocus(e.target.value)}
-            className="resize-none"
-            rows={3}
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Leave blank to generate a general prompt or specify what you'd like to focus on
-          </p>
-        </div>
-
-        <Button 
-          onClick={generatePrompt}
-          disabled={isLoading}
-          className="w-full mb-6"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Generate Prompt
-            </>
-          )}
-        </Button>
-
-        {generatedPrompts.length > 0 && (
-          <div className="space-y-4">
-            {generatedPrompts.map((prompt, index) => (
-              <Card 
-                key={index} 
-                className="p-4 hover:border-primary/50 cursor-pointer transition-colors"
-                onClick={() => {
-                  // Show modal instead of direct navigation
-                  console.log("Selected previously generated prompt:", prompt);
-                  
-                  // STEP 1: Set current prompt
-                  setCurrentPrompt(prompt);
-                  
-                  // STEP 2: Call onSelectPrompt callback
-                  onSelectPrompt(prompt);
-                  
-                  // STEP 3: Open the modal
-                  console.log("Opening modal for selected prompt");
-                  setModalOpen(true);
-                  
-                  // STEP 4: Show toast notification
-                  toast({
-                    title: "Prompt Selected",
-                    description: "Review your selected prompt and start writing when ready.",
-                  });
-                }}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium">{prompt.prompt}</h3>
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                    <Check className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-2">{prompt.scenario}</p>
-              </Card>
-            ))}
-          </div>
-        )}
+    <div className={className}>
+      <div className="mb-4">
+        <label htmlFor="customFocus" className="block text-sm font-medium mb-1">
+          Custom Focus (Optional)
+        </label>
+        <Textarea
+          id="customFocus"
+          placeholder={`Add a specific theme, element, or focus for your ${location.type} writing prompt...`}
+          value={customFocus}
+          onChange={(e) => setCustomFocus(e.target.value)}
+          className="resize-none"
+          rows={3}
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Leave blank to generate a general prompt or specify what you'd like to focus on
+        </p>
       </div>
-    </>
+
+      <Button 
+        onClick={generatePrompt}
+        disabled={isLoading}
+        className="w-full mb-6"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          <>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Generate Prompt
+          </>
+        )}
+      </Button>
+
+      {generatedPrompts.length > 0 && (
+        <div className="space-y-4">
+          {generatedPrompts.map((prompt, index) => (
+            <Card 
+              key={index} 
+              className="p-4 hover:border-primary/50 cursor-pointer transition-colors"
+              onClick={() => handleSelectPrompt(prompt)}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-medium">{prompt.prompt}</h3>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                  <Check className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{prompt.scenario}</p>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
