@@ -210,7 +210,7 @@ const Header = () => {
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
 import OWLTown from "@/pages/owl/OWLTown";
-import OWLLocationDetail from "@/pages/owl/OWLLocationDetail";
+import DirectPromptDisplay from "@/pages/owl/DirectPromptDisplay";
 import OWLWritingQuest from "@/pages/owl/OWLWritingQuest";
 import REDIMap from "@/pages/redi/REDIMap";
 import REDIExercise from "@/pages/redi/REDIExercise";
@@ -227,7 +227,7 @@ import ChildDetails from "@/pages/parent/ChildDetails";
 import ParentSubmissionDetails from "@/pages/parent/SubmissionDetails";
 import ParentSubmissionsList from "@/pages/parent/SubmissionsList";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth"; // useAuth is already imported at the top
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 
@@ -307,7 +307,7 @@ function App() {
                   />
                   <RoleBasedRoute 
                     path="/owl/location/:locationId" 
-                    component={OWLLocationDetail} 
+                    component={DirectPromptDisplay} 
                     allowedRoles={['student', 'teacher', 'parent']} 
                   />
                   <RoleBasedRoute 
