@@ -1,0 +1,26 @@
+[vite] connecting...
+[vite] connected.
+LocationDetailPage component is rendering
+Current state values: 
+Object {generatedPrompt: "null", showPrompt: false, locationId: "townHall"}
+Sending prompt generation request: 
+Object {locationType: "argumentative", locationName: "Town Hall", customFocus: null}
+Prompt generation response status: 200
+Raw response: {"prompt":"Write an argumentative piece discussing whether the historical architecture of OWL Town Hall should be preserved as is or modernized to meet current needs.","scenario":"OWL Town Hall, a cornerstone of the community with its century-old structure, is at the center of a heated debate. As the town grows, some argue for modern upgrades to accommodate new functionalities, while others insist on preserving its historical charm.","guidingQuestions":["What are the potential benefits and drawbacks of preserving the historical architecture of the Town Hall?","How might modernizing the Town Hall impact the cultural identity of OWL Town?","What compromises could be made to satisfy both preservationists and those advocating for modernization?"],"suggestedElements":["Detailed descriptions of the Town Hall's architectural features","Quotes or opinions from local residents","Historical significance and past events held at the Town Hall","Potential future uses of the Town Hall and their requirements"],"challengeElement":"Include a counterargument addressing the financial implications of each option."}
+Parsed prompt data: 
+Object {prompt: "Write an argumentative piece discussing whether the historical architecture of OWL Town Hall should…", scenario: "OWL Town Hall, a cornerstone of the community with its century-old structure, is at the center of a…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a counterargument addressing the financial implications of each option."}
+Calling onSelectPrompt with generated prompt: 
+Object {prompt: "Write an argumentative piece discussing whether the historical architecture of OWL Town Hall should…", scenario: "OWL Town Hall, a cornerstone of the community with its century-old structure, is at the center of a…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a counterargument addressing the financial implications of each option."}
+LocationDetailPage component is rendering
+Current state values: 
+Object {generatedPrompt: "null", showPrompt: false, locationId: "townHall"}
+Received prompt in LocationDetailPage: 
+Object {prompt: "Write an argumentative piece discussing whether the historical architecture of OWL Town Hall should…", scenario: "OWL Town Hall, a cornerstone of the community with its century-old structure, is at the center of a…", guidingQuestions: Array(3), suggestedElements: Array(4), challengeElement: "Include a counterargument addressing the financial implications of each option."}
+Updated state: 
+Object {generatedPrompt: {…}, showPrompt: true}
+LocationDetailPage component is rendering
+Current state values: 
+Object {generatedPrompt: "null", showPrompt: false, locationId: "townHall"}
+LocationDetailPage component is rendering
+Current state values: 
+Object {generatedPrompt: "null", showPrompt: false, locationId: "townHall"}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -10,108 +10,7 @@ import { useProgress } from '@/context/ProgressContext';
 import { Pencil, MapPin, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Create a class-based implementation to maintain state persistence between renders
-class LocationDetailComponent extends React.Component<
-  { locationId: string; navigate: (path: string) => void },
-  { generatedPrompt: GeneratedPrompt | null; showPrompt: boolean }
-> {
-  location = getLocationById(this.props.locationId);
-  quests = getQuestsForLocation(this.props.locationId);
-  progress = null;
-  toast: any = null;
-  
-  constructor(props) {
-    super(props);
-    this.state = {
-      generatedPrompt: null,
-      showPrompt: false
-    };
-    
-    // Bind methods
-    this.handleSelectPrompt = this.handleSelectPrompt.bind(this);
-    this.handleNewPrompt = this.handleNewPrompt.bind(this);
-    this.handleStartWriting = this.handleStartWriting.bind(this);
-  }
-  
-  setProgress(progress) {
-    this.progress = progress;
-  }
-  
-  setToast(toast) {
-    this.toast = toast;
-  }
-  
-  // Handle prompt selection
-  handleSelectPrompt(prompt: GeneratedPrompt) {
-    console.log("Received prompt in LocationDetailPage:", prompt);
-    
-    const promptCopy = {
-      prompt: prompt.prompt,
-      scenario: prompt.scenario,
-      guidingQuestions: [...(prompt.guidingQuestions || [])],
-      suggestedElements: [...(prompt.suggestedElements || [])],
-      challengeElement: prompt.challengeElement || ""
-    };
-    
-    // Update state
-    this.setState({
-      generatedPrompt: promptCopy,
-      showPrompt: true
-    }, () => {
-      // After state update, show toast and scroll
-      if (this.toast) {
-        this.toast({
-          title: "Prompt Generated!",
-          description: "Your writing prompt is now visible below.",
-        });
-      }
-      
-      console.log("Updated state:", {
-        generatedPrompt: promptCopy,
-        showPrompt: true
-      });
-      
-      // Scroll to the prompt after a short delay to ensure rendering
-      setTimeout(() => {
-        const promptSection = document.getElementById('generated-prompt-section');
-        if (promptSection) {
-          promptSection.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 300);
-    });
-  }
-  
-  // Handle generating a new prompt
-  handleNewPrompt() {
-    console.log("Clearing prompt state");
-    this.setState({ 
-      generatedPrompt: null,
-      showPrompt: false 
-    });
-  }
-  
-  // Handle starting the writing process
-  handleStartWriting() {
-    if (this.state.generatedPrompt && this.location) {
-      // Store prompt in session storage
-      const promptKey = `prompt_${Date.now()}`;
-      sessionStorage.setItem(promptKey, JSON.stringify(this.state.generatedPrompt));
-      
-      // Navigate to writing page
-      this.props.navigate(`/owl/quest/free-write?locationId=${this.props.locationId}&promptType=${this.location.type}&mode=generated&promptKey=${promptKey}`);
-    }
-  }
-  
-  componentDidUpdate(prevProps, prevState) {
-    // If we have a prompt but it's not showing, make sure to show it
-    if (this.state.generatedPrompt && !this.state.showPrompt) {
-      this.setState({ showPrompt: true });
-    }
-  }
-}
-
-// Functional component wrapper that uses hooks
-export default function LocationDetailPage() {
+export default function SimpleLocationDetail() {
   // Route params and navigation
   const [, params] = useRoute('/owl/location/:locationId');
   const [, navigate] = useLocation();
@@ -121,36 +20,20 @@ export default function LocationDetailPage() {
   const { progress } = useProgress();
   const { toast } = useToast();
   
-  // State management using useState
+  // State for prompt generator
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   
   // Handle prompt selection
   const handleSelectPrompt = (prompt: GeneratedPrompt) => {
-    console.log("Received prompt in LocationDetailPage:", prompt);
+    console.log("SimpleLocationDetail received prompt:", prompt);
     
-    const promptCopy = {
-      prompt: prompt.prompt,
-      scenario: prompt.scenario,
-      guidingQuestions: [...(prompt.guidingQuestions || [])],
-      suggestedElements: [...(prompt.suggestedElements || [])],
-      challengeElement: prompt.challengeElement || ""
-    };
-    
-    // Set the generated prompt and show it
-    setGeneratedPrompt(promptCopy);
+    setGeneratedPrompt(prompt);
     setShowPrompt(true);
     
-    // Show a toast notification
     toast({
       title: "Prompt Generated!",
       description: "Your writing prompt is now visible below.",
-    });
-    
-    // Log the state updates to verify
-    console.log("Updated state:", {
-      generatedPrompt: promptCopy,
-      showPrompt: true
     });
     
     // Scroll to the prompt after a short delay to ensure rendering
@@ -164,7 +47,6 @@ export default function LocationDetailPage() {
   
   // Handle generating a new prompt
   const handleNewPrompt = () => {
-    console.log("Clearing prompt state");
     setGeneratedPrompt(null);
     setShowPrompt(false);
   };
