@@ -389,10 +389,6 @@ const Home = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Welcome, {user?.displayName || 'User'}</h1>
-        <Button variant="outline" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-2" />
-          Logout
-        </Button>
       </div>
       
       <div className="bg-primary/10 p-6 rounded-lg mb-8">
@@ -479,8 +475,8 @@ const Header = () => {
                 });
               }}
             >
-              <LogOut className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
+              <LogOut className="h-4 w-4 mr-2" />
+              <span>Logout</span>
             </Button>
           </div>
         )}
