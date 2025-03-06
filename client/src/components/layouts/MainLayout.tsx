@@ -58,9 +58,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             <div className="flex items-center">
               <div className="mr-3 text-right">
                 <p className="text-white text-sm">{user?.displayName || 'User'}</p>
-                <p className="text-gray-200 text-xs">
-                  {isREDI ? 'Level 8' : 'Writer Level 5'}
-                </p>
+                {user?.role === 'student' && (
+                  <p className="text-gray-200 text-xs">
+                    {isREDI ? 'Level 8' : 'Writer Level 5'}
+                  </p>
+                )}
               </div>
               <UserAvatar theme={theme} />
             </div>
