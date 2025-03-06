@@ -211,7 +211,7 @@ import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
 import OWLTown from "@/pages/owl/OWLTown";
 import DirectPromptDisplay from "@/pages/owl/DirectPromptDisplay";
-import OWLLocationDetail from "@/pages/owl/OWLLocationDetail";
+import FixedLocationDetail from "@/pages/owl/FixedLocationDetail";
 import OWLWritingQuest from "@/pages/owl/OWLWritingQuest";
 import REDIMap from "@/pages/redi/REDIMap";
 import REDIExercise from "@/pages/redi/REDIExercise";
@@ -308,7 +308,7 @@ function App() {
                   />
                   <RoleBasedRoute 
                     path="/owl/location/:locationId" 
-                    component={OWLLocationDetail} 
+                    component={FixedLocationDetail} 
                     allowedRoles={['student', 'teacher', 'parent']} 
                   />
                   <RoleBasedRoute 
