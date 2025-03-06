@@ -476,7 +476,7 @@ const Header = () => {
               }}
             >
               <LogOut className="h-4 w-4 mr-2" />
-              <span>Logout</span>
+              <span className="text-black">Logout</span>
             </Button>
           </div>
         )}
