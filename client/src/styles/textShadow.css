@@ -1,0 +1,50 @@
+/* Text shadow utility classes for Synthwave/Botanical themes */
+
+.text-shadow-neon-green {
+  text-shadow: 0 0 5px #39ff14, 0 0 10px #39ff14, 0 0 15px #39ff14;
+}
+
+.text-shadow-neon-pink {
+  text-shadow: 0 0 5px #ff3864, 0 0 10px #ff3864, 0 0 15px #ff3864;
+}
+
+.text-shadow-neon-blue {
+  text-shadow: 0 0 5px #00fff5, 0 0 10px #00fff5, 0 0 15px #00fff5;
+}
+
+.text-shadow-neon-purple {
+  text-shadow: 0 0 5px #9d00ff, 0 0 10px #9d00ff, 0 0 15px #9d00ff;
+}
+
+.text-shadow-neon-yellow {
+  text-shadow: 0 0 5px #ffdf00, 0 0 10px #ffdf00, 0 0 15px #ffdf00;
+}
+
+.text-shadow-neon-sm {
+  text-shadow: 0 0 2px currentColor, 0 0 4px currentColor;
+}
+
+.text-shadow-neon-md {
+  text-shadow: 0 0 4px currentColor, 0 0 8px currentColor;
+}
+
+.text-shadow-neon-lg {
+  text-shadow: 0 0 6px currentColor, 0 0 12px currentColor, 0 0 18px currentColor;
+}
+
+.text-shadow-neon-xl {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+}
+
+/* Botanical theme text shadows */
+.text-shadow-leaf {
+  text-shadow: 0 0 10px rgba(60, 179, 113, 0.5);
+}
+
+.text-shadow-water {
+  text-shadow: 0 0 10px rgba(100, 223, 223, 0.5);
+}
+
+.text-shadow-gold {
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
