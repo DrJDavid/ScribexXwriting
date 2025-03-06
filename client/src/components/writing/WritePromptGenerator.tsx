@@ -123,8 +123,11 @@ export function WritePromptGenerator({
       
       // Show our own modal with the prompt instead of relying on parent component
       console.log("Setting current prompt and opening modal");
-      setCurrentPrompt(promptToSend);
-      setModalOpen(true);
+      // Force a delay to ensure state updates are processed correctly
+      setTimeout(() => {
+        setCurrentPrompt(promptToSend);
+        setModalOpen(true);
+      }, 100);
       
       // Also call the onSelectPrompt handler to maintain backward compatibility
       setTimeout(() => {
@@ -135,7 +138,7 @@ export function WritePromptGenerator({
       // Show success toast
       toast({
         title: "Prompt Generated Successfully!",
-        description: "Your custom writing prompt is now ready. You can see it below and click 'Start Writing' to begin.",
+        description: "Your custom writing prompt is ready! Review it in the popup dialog and click 'Start Writing' when ready.",
       });
       
     } catch (error) {
@@ -152,8 +155,11 @@ export function WritePromptGenerator({
       
       // Show our own modal with the fallback prompt
       console.log("Setting fallback prompt and opening modal");
-      setCurrentPrompt(fallbackPrompt);
-      setModalOpen(true);
+      // Force a delay to ensure state updates are processed correctly
+      setTimeout(() => {
+        setCurrentPrompt(fallbackPrompt);
+        setModalOpen(true);
+      }, 100);
       
       // Also call onSelectPrompt handler to maintain backward compatibility
       onSelectPrompt(fallbackPrompt);
@@ -206,6 +212,7 @@ export function WritePromptGenerator({
 
   // Function to handle starting writing with current prompt
   const handleStartWriting = () => {
+    console.log("handleStartWriting called with currentPrompt:", currentPrompt);
     if (currentPrompt) {
       // Store the generated prompt in sessionStorage to access it from the writing page
       const promptKey = `prompt_${new Date().getTime()}`;
@@ -221,8 +228,31 @@ export function WritePromptGenerator({
       sessionStorage.setItem(promptKey, JSON.stringify(promptData));
       console.log("Stored prompt data in sessionStorage with key:", promptKey);
       
-      // Navigate to the writing page
-      window.location.href = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+      // Force modal to close before navigation to prevent state issues
+      setModalOpen(false);
+      
+      const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+      console.log("Will navigate to:", destinationUrl);
+      
+      // Show a toast to confirm navigation
+      toast({
+        title: "Starting Writing Session",
+        description: "Taking you to the writing page...",
+      });
+      
+      // Add a small delay before navigation to ensure the modal closes smoothly
+      setTimeout(() => {
+        console.log(`Navigating to writing page with location ${location.id}`);
+        // Navigate to the writing page
+        window.location.href = destinationUrl;
+      }, 100);
+    } else {
+      console.error("Cannot start writing: currentPrompt is null");
+      toast({
+        title: "Error",
+        description: "Could not load the prompt. Please try generating a new one.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -241,7 +271,7 @@ export function WritePromptGenerator({
           <DialogHeader>
             <DialogTitle className="text-xl text-primary">Your Custom Prompt is Ready!</DialogTitle>
             <DialogDescription>
-              Review your custom prompt and start writing when ready
+              Review your custom prompt below. When you're ready, click "Start Writing" to begin composing.
             </DialogDescription>
           </DialogHeader>
           
@@ -294,7 +324,12 @@ export function WritePromptGenerator({
                 <Button variant="outline" onClick={handleNewPrompt}>
                   Generate New Prompt
                 </Button>
-                <Button variant="default" size="lg" className="animate-pulse" onClick={handleStartWriting}>
+                <Button 
+                  variant="default" 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground animate-pulse" 
+                  onClick={handleStartWriting}
+                >
                   <Pencil className="w-4 h-4 mr-2" />
                   Start Writing
                 </Button>
