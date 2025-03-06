@@ -219,8 +219,10 @@ import AchievementsPage from "@/pages/AchievementsPage";
 import DailyWritingChallenge from "@/pages/challenges/DailyChallenge";
 import TeacherDashboard from "@/pages/teacher/TeacherDashboard";
 import StudentDetails from "@/pages/teacher/StudentDetails";
+import TeacherSubmissionDetails from "@/pages/teacher/SubmissionDetails";
 import ParentDashboard from "@/pages/parent/ParentDashboard";
 import ChildDetails from "@/pages/parent/ChildDetails";
+import ParentSubmissionDetails from "@/pages/parent/SubmissionDetails";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/hooks/use-auth";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -245,6 +247,11 @@ function App() {
                   
                   {/* Teacher routes */}
                   <RoleBasedRoute 
+                    path="/teacher/submission/:submissionId" 
+                    component={TeacherSubmissionDetails} 
+                    allowedRoles={['teacher']} 
+                  />
+                  <RoleBasedRoute 
                     path="/teacher/student/:studentId" 
                     component={StudentDetails} 
                     allowedRoles={['teacher']} 
@@ -256,6 +263,11 @@ function App() {
                   />
                   
                   {/* Parent routes */}
+                  <RoleBasedRoute 
+                    path="/parent/submission/:submissionId" 
+                    component={ParentSubmissionDetails} 
+                    allowedRoles={['parent']} 
+                  />
                   <RoleBasedRoute 
                     path="/parent/child/:childId" 
                     component={ChildDetails} 
