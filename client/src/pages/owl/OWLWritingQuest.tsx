@@ -41,7 +41,7 @@ const OWLWritingQuest: React.FC = () => {
       locationId: urlParams.get('locationId'),
       promptType: urlParams.get('promptType'),
       mode: urlParams.get('mode'),
-      promptData: urlParams.get('prompt')
+      promptKey: urlParams.get('promptKey')
     });
     return urlParams;
   }, []);
