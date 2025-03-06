@@ -92,7 +92,7 @@ export function DailyWritingStreak({
   
   const startChallenge = () => {
     if (challenge) {
-      navigate(`/owl/writing/challenge/${challenge.id}`);
+      navigate(`/challenges/daily/${challenge.id}`);
     }
   };
   

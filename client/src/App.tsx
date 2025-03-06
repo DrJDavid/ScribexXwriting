@@ -176,6 +176,7 @@ import REDIMap from "@/pages/redi/REDIMap";
 import REDIExercise from "@/pages/redi/REDIExercise";
 import ProfilePage from "@/pages/Profile";
 import AchievementsPage from "@/pages/AchievementsPage";
+import DailyWritingChallenge from "@/pages/challenges/DailyChallenge";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/hooks/use-auth";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -204,6 +205,7 @@ function App() {
                   <ProtectedRoute path="/owl" component={OWLTown} />
                   <ProtectedRoute path="/redi/exercise/:exerciseId" component={REDIExercise} />
                   <ProtectedRoute path="/redi" component={REDIMap} />
+                  <ProtectedRoute path="/challenges/daily/:challengeId" component={DailyWritingChallenge} />
                   <ProtectedRoute path="/achievements" component={AchievementsPage} />
                   <ProtectedRoute path="/profile" component={ProfilePage} />
                   <ProtectedRoute path="/" component={Home} />

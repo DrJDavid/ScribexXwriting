@@ -62,6 +62,31 @@ const useProgress = () => {
     return getREDILevel();
   };
   
+  // Update streak function
+  const updateStreak = async (completed: boolean) => {
+    try {
+      // Use apiRequest directly to update the streak
+      const response = await fetch('/api/streak/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ completed }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update streak');
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error updating streak:", error);
+      return { currentStreak: 0, longestStreak: 0 };
+    }
+  };
+
   return {
     ...progress,
     rediMastery: calculateREDIMastery(),
@@ -76,6 +101,8 @@ const useProgress = () => {
     isQuestCompleted,
     isLocationUnlocked,
     isAchievementUnlocked,
+    // Streak management
+    updateStreak
   };
 };
 
