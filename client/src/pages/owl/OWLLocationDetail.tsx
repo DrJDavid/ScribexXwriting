@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WritePromptGenerator, GeneratedPrompt } from '@/components/writing/WritePromptGenerator';
-import { PromptDisplay } from '@/components/writing/PromptDisplay';
+import { PromptModal } from '@/components/writing/PromptModal';
 import { getLocationById, getQuestsForLocation } from '@/data/quests';
 import { useProgress } from '@/context/ProgressContext';
 import { Pencil, ArrowLeft, MapPin } from 'lucide-react';
@@ -18,20 +18,15 @@ export default function OWLLocationDetail() {
   const quests = getQuestsForLocation(locationId);
   const { progress } = useProgress();
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
+  const [promptModalOpen, setPromptModalOpen] = useState(false);
   
-  // Reference for auto-scrolling to prompt
-  const promptSectionRef = useRef<HTMLDivElement>(null);
-  
-  // Debug when generatedPrompt changes and scroll to it
+  // Debug when generatedPrompt changes and open the modal
   useEffect(() => {
     console.log("generatedPrompt state changed:", generatedPrompt);
     
-    // If a prompt was generated, scroll to the section
-    if (generatedPrompt && promptSectionRef.current) {
-      // Add a slight delay to ensure the component has rendered
-      setTimeout(() => {
-        promptSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+    // If a prompt was generated, open the modal
+    if (generatedPrompt) {
+      setPromptModalOpen(true);
     }
   }, [generatedPrompt]);
   
@@ -156,34 +151,36 @@ export default function OWLLocationDetail() {
         </div>
 
         <div>
-          <div className="mb-6" ref={promptSectionRef}>
-            {generatedPrompt && (
-              <div className="mb-6">
-                <PromptDisplay 
-                  prompt={generatedPrompt}
-                  onNewPrompt={() => setGeneratedPrompt(null)}
-                  onStartWriting={() => {
-                    // Store the generated prompt in sessionStorage
-                    const promptKey = `prompt_${new Date().getTime()}`;
-                    const promptData = {
-                      prompt: generatedPrompt.prompt,
-                      scenario: generatedPrompt.scenario,
-                      guidingQuestions: generatedPrompt.guidingQuestions || [],
-                      suggestedElements: generatedPrompt.suggestedElements || [],
-                      challengeElement: generatedPrompt.challengeElement || ""
-                    };
-                    
-                    // Store the data in sessionStorage
-                    sessionStorage.setItem(promptKey, JSON.stringify(promptData));
-                    console.log("Stored prompt data in sessionStorage with key:", promptKey);
-                    
-                    // Navigate to the writing page
-                    navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`);
-                  }}
-                />
-              </div>
-            )}
-          </div>
+          {/* Modal for prompt display */}
+          <PromptModal 
+            open={promptModalOpen}
+            onOpenChange={setPromptModalOpen}
+            prompt={generatedPrompt}
+            onNewPrompt={() => {
+              setGeneratedPrompt(null);
+              setPromptModalOpen(false);
+            }}
+            onStartWriting={() => {
+              // Store the generated prompt in sessionStorage
+              if (generatedPrompt) {
+                const promptKey = `prompt_${new Date().getTime()}`;
+                const promptData = {
+                  prompt: generatedPrompt.prompt,
+                  scenario: generatedPrompt.scenario,
+                  guidingQuestions: generatedPrompt.guidingQuestions || [],
+                  suggestedElements: generatedPrompt.suggestedElements || [],
+                  challengeElement: generatedPrompt.challengeElement || ""
+                };
+                
+                // Store the data in sessionStorage
+                sessionStorage.setItem(promptKey, JSON.stringify(promptData));
+                console.log("Stored prompt data in sessionStorage with key:", promptKey);
+                
+                // Navigate to the writing page
+                navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`);
+              }
+            }}
+          />
 
           <Tabs defaultValue="prompt-generator">
             <TabsList className="w-full">
