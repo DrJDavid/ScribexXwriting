@@ -100,7 +100,7 @@ const REDIExercise: React.FC = () => {
   
   // Function to update REDI skill mastery after completing a set
   const updateRediMastery = useCallback(async () => {
-    if (!progress) return;
+    if (!progress || !progress.progress) return;
     
     // Only increase mastery if the user got at least 3/5 correct answers
     const isSuccessful = correctAnswers >= 3;
@@ -110,7 +110,7 @@ const REDIExercise: React.FC = () => {
       const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
       
       // Create a skill update object based on the exercise type
-      let updatedRediSkillMastery = { ...progress.rediSkillMastery };
+      let updatedRediSkillMastery = { ...progress.progress.rediSkillMastery };
       
       if (exercise.skillType === 'mechanics') {
         updatedRediSkillMastery.mechanics = Math.min(updatedRediSkillMastery.mechanics + skillIncrease, 100);
@@ -121,7 +121,7 @@ const REDIExercise: React.FC = () => {
       }
       
       // Calculate new REDI level with updated mastery
-      const exerciseCount = progress.completedExercises.length;
+      const exerciseCount = progress.progress.completedExercises.length;
       const totalMastery = updatedRediSkillMastery.mechanics + 
                           updatedRediSkillMastery.sequencing + 
                           updatedRediSkillMastery.voice;
