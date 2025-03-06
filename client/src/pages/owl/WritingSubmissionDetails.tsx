@@ -28,7 +28,15 @@ const WritingSubmissionDetails: React.FC = () => {
   const { data: submission, isLoading, error } = useQuery<WritingSubmission>({
     queryKey: ['/api/writing/submissions', numId],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/writing/submissions/${numId}`);
+      const res = await fetch(`/api/writing/submissions/${numId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) {
+        throw new Error('Failed to fetch submission details');
+      }
       return await res.json() as WritingSubmission;
     },
     enabled: !isNaN(numId),
@@ -42,7 +50,16 @@ const WritingSubmissionDetails: React.FC = () => {
     content: string;
   }>({
     mutationFn: async (data) => {
-      const res = await apiRequest('POST', '/api/writing/analyze', data);
+      const res = await fetch('/api/writing/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        throw new Error('Failed to analyze submission');
+      }
       return await res.json();
     },
     onSuccess: (data) => {

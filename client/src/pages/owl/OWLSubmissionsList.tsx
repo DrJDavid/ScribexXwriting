@@ -67,7 +67,15 @@ const OWLSubmissionsList: React.FC = () => {
   const { data: submissions, isLoading, error } = useQuery<WritingSubmission[]>({
     queryKey: ['/api/writing/submissions'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/writing/submissions');
+      const res = await fetch('/api/writing/submissions', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) {
+        throw new Error('Failed to fetch submissions');
+      }
       return await res.json() as WritingSubmission[];
     }
   });
