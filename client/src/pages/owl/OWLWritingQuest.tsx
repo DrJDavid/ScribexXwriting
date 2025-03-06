@@ -72,7 +72,7 @@ const OWLWritingQuest: React.FC = () => {
   const freeWriteQuest = useMemo(() => {
     if (!isFreeWrite) return null;
     
-    console.log("Creating free-write quest with:", { locationId, promptType });
+    console.log("Creating free-write quest with:", { locationId, promptType, mode });
     
     // Safety checks for required parameters
     if (!locationId || !promptType) {
@@ -85,13 +85,25 @@ const OWLWritingQuest: React.FC = () => {
       ? `${promptType.charAt(0).toUpperCase()}${promptType.slice(1)}`
       : 'Creative';
       
+    // Different title and description based on mode
+    let title = `Free ${capitalizedType} Writing`;
+    let description = `Express yourself freely in ${promptType} writing format.`;
+    let questTags = ['free-writing', promptType];
+    
+    // If this is a generated prompt mode, adjust the title and description
+    if (mode === 'generated') {
+      title = `Generated ${capitalizedType} Prompt`;
+      description = `Write based on the custom prompt generated for this ${promptType} writing task.`;
+      questTags = [...questTags, 'generated-prompt'];
+    }
+      
     const virtualQuest: WritingQuest = {
       id: 'free-write',
       locationId: locationId,
-      title: `Free ${capitalizedType} Writing`,
-      description: `Express yourself freely in ${promptType} writing format.`,
-      tags: ['free-writing', promptType],
-      minWordCount: 100,
+      title: title,
+      description: description,
+      tags: questTags,
+      minWordCount: 150, // Slightly higher for structured prompts
       skillFocus: 'voice' as const,
       level: 1,
       unlockRequirements: {
@@ -101,7 +113,7 @@ const OWLWritingQuest: React.FC = () => {
     
     console.log("Created virtual quest:", virtualQuest);
     return virtualQuest;
-  }, [isFreeWrite, locationId, promptType]);
+  }, [isFreeWrite, locationId, promptType, mode]);
   
   // Add redirection effect when parameters are invalid
   useEffect(() => {

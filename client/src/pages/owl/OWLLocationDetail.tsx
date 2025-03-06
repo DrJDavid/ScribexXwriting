@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRoute } from 'wouter';
+import { useRoute, useLocation, Link } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,16 +7,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WritePromptGenerator, GeneratedPrompt } from '@/components/writing/WritePromptGenerator';
 import { getLocationById, getQuestsForLocation } from '@/data/quests';
 import { useProgress } from '@/context/ProgressContext';
-import { Link } from 'wouter';
 import { Pencil, ArrowLeft, MapPin } from 'lucide-react';
 
 export default function OWLLocationDetail() {
   const [, params] = useRoute('/owl/location/:locationId');
+  const [, navigate] = useLocation();
   const locationId = params?.locationId || '';
   const location = getLocationById(locationId);
   const quests = getQuestsForLocation(locationId);
   const { progress } = useProgress();
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
+  
+  // Handle back button click properly - use navigate instead of window.history
+  const handleBackClick = () => {
+    navigate('/owl');
+  };
   
   if (!location) {
     return (
@@ -24,7 +29,7 @@ export default function OWLLocationDetail() {
         title="Location Not Found" 
         subtitle="The requested location doesn't exist"
         showBackButton
-        onBackClick={() => window.history.back()}
+        onBackClick={handleBackClick}
       >
         <div className="flex flex-col items-center justify-center h-64">
           <p className="text-xl mb-4">This location doesn't seem to exist in OWL Town.</p>
@@ -41,7 +46,7 @@ export default function OWLLocationDetail() {
       title={location.name}
       subtitle={`${location.type.charAt(0).toUpperCase() + location.type.slice(1)} Writing Venue`}
       showBackButton
-      onBackClick={() => window.history.back()}
+      onBackClick={handleBackClick}
     >
       <div className="grid md:grid-cols-2 gap-6">
         <div>
