@@ -337,27 +337,35 @@ const Home = () => {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch user data on mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch('/api/user');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        } else {
-          // Not authenticated, redirect to login
-          navigate("/auth");
-        }
-      } catch (error) {
-        console.error("Failed to fetch user data:", error);
+  // Fetch user data on mount and when auth state might change
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch('/api/user');
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      } else {
+        // Not authenticated, redirect to login
         navigate("/auth");
-      } finally {
-        setIsLoading(false);
       }
-    };
-    
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      navigate("/auth");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Initial fetch on mount
+  useEffect(() => {
     fetchUserData();
+    
+    // Set up event listener for auth state changes
+    window.addEventListener('auth-state-changed', fetchUserData);
+    
+    return () => {
+      window.removeEventListener('auth-state-changed', fetchUserData);
+    };
   }, [navigate]);
   
   const handleLogout = async () => {
@@ -371,6 +379,8 @@ const Home = () => {
       
       if (response.ok) {
         setUser(null); // Clear user data first
+        // Dispatch event to notify about auth state change
+        window.dispatchEvent(new Event('auth-state-changed'));
         navigate("/auth");
       } else {
         console.error("Logout failed:", await response.text());
