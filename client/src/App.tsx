@@ -107,6 +107,62 @@ const Header = () => {
   // Force component to recognize auth state
   const isAuthenticated = user !== null;
 
+  // Show different navigation based on user role
+  const renderNavigation = () => {
+    if (!isAuthenticated || !user) return null;
+
+    if (user.role === 'teacher') {
+      return (
+        <nav className="hidden md:flex items-center space-x-4">
+          <Link href="/teacher" className={`hover:text-white/80 transition-colors ${location === '/teacher' ? 'underline' : ''}`}>
+            Dashboard
+          </Link>
+          <Link href="/profile" className={`hover:text-white/80 transition-colors ${location === '/profile' ? 'underline' : ''}`}>
+            Profile
+          </Link>
+        </nav>
+      );
+    } else if (user.role === 'parent') {
+      return (
+        <nav className="hidden md:flex items-center space-x-4">
+          <Link href="/parent" className={`hover:text-white/80 transition-colors ${location === '/parent' ? 'underline' : ''}`}>
+            Dashboard
+          </Link>
+          <Link href="/profile" className={`hover:text-white/80 transition-colors ${location === '/profile' ? 'underline' : ''}`}>
+            Profile
+          </Link>
+        </nav>
+      );
+    } else {
+      // Default student navigation
+      return (
+        <nav className="hidden md:flex items-center space-x-4">
+          <Link href="/" className={`hover:text-white/80 transition-colors ${location === '/' ? 'underline' : ''}`}>
+            Home
+          </Link>
+          <Link href="/redi" className={`hover:text-white/80 transition-colors ${location === '/redi' ? 'underline' : ''}`}>
+            REDI
+          </Link>
+          <Link href="/owl" className={`hover:text-white/80 transition-colors ${location === '/owl' ? 'underline' : ''}`}>
+            OWL
+          </Link>
+          <Link href="/writing/submissions" className={`hover:text-white/80 transition-colors ${location.startsWith('/writing') ? 'underline' : ''}`}>
+            Submissions
+          </Link>
+          <Link href="/achievements" className={`hover:text-white/80 transition-colors ${location === '/achievements' ? 'underline' : ''}`}>
+            <div className="flex items-center gap-1">
+              <Award className="h-4 w-4" />
+              Achievements
+            </div>
+          </Link>
+          <Link href="/profile" className={`hover:text-white/80 transition-colors ${location === '/profile' ? 'underline' : ''}`}>
+            Profile
+          </Link>
+        </nav>
+      );
+    }
+  };
+
   return (
     <header className="bg-primary text-white py-4 px-6">
       <div className="flex justify-between items-center">
@@ -115,36 +171,19 @@ const Header = () => {
             ScribexX
           </Link>
 
-          {isAuthenticated && (
-            <nav className="hidden md:flex items-center space-x-4">
-              <Link href="/" className={`hover:text-white/80 transition-colors ${location === '/' ? 'underline' : ''}`}>
-                Home
-              </Link>
-              <Link href="/redi" className={`hover:text-white/80 transition-colors ${location === '/redi' ? 'underline' : ''}`}>
-                REDI
-              </Link>
-              <Link href="/owl" className={`hover:text-white/80 transition-colors ${location === '/owl' ? 'underline' : ''}`}>
-                OWL
-              </Link>
-              <Link href="/writing/submissions" className={`hover:text-white/80 transition-colors ${location.startsWith('/writing') ? 'underline' : ''}`}>
-                Submissions
-              </Link>
-              <Link href="/achievements" className={`hover:text-white/80 transition-colors ${location === '/achievements' ? 'underline' : ''}`}>
-                <div className="flex items-center gap-1">
-                  <Award className="h-4 w-4" />
-                  Achievements
-                </div>
-              </Link>
-              <Link href="/profile" className={`hover:text-white/80 transition-colors ${location === '/profile' ? 'underline' : ''}`}>
-                Profile
-              </Link>
-            </nav>
-          )}
+          {isAuthenticated && renderNavigation()}
         </div>
 
         {isAuthenticated && (
           <div className="flex items-center gap-4">
-            <span className="hidden md:inline">Welcome, {user.displayName || user.username}</span>
+            <span className="hidden md:inline">
+              Welcome, {user.displayName || user.username}
+              {user.role !== 'student' && (
+                <span className="ml-2 px-2 py-1 text-xs bg-primary-foreground text-primary rounded-full">
+                  {user.role === 'teacher' ? 'Teacher' : 'Parent'}
+                </span>
+              )}
+            </span>
             <Button
               variant="outline"
               size="sm"
@@ -177,6 +216,10 @@ import REDIExercise from "@/pages/redi/REDIExercise";
 import ProfilePage from "@/pages/Profile";
 import AchievementsPage from "@/pages/AchievementsPage";
 import DailyWritingChallenge from "@/pages/challenges/DailyChallenge";
+import TeacherDashboard from "@/pages/teacher/TeacherDashboard";
+import StudentDetails from "@/pages/teacher/StudentDetails";
+import ParentDashboard from "@/pages/parent/ParentDashboard";
+import ChildDetails from "@/pages/parent/ChildDetails";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/hooks/use-auth";
 import { QueryClientProvider } from "@tanstack/react-query";
