@@ -13,7 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { CheckCircle } from "lucide-react";
 
-// Login schema
+// Using proper auth forms from components/auth folder
+// Import schemas for type definitions only
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -21,99 +22,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-// Simplified Login Form that doesn't use Auth context directly
-const LoginFormSimple = () => {
-  const [, navigate] = useLocation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
-
-  const onSubmit = async (values: LoginFormValues) => {
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const userData = await response.json();
-      console.log("Login successful, user data:", userData);
-
-      // Dispatch auth state change event
-      window.dispatchEvent(new Event('auth-state-changed'));
-
-      // Navigate to home after a small delay to ensure event is processed
-      setTimeout(() => {
-        navigate("/");
-      }, 200);
-    } catch (error) {
-      console.error("Login error:", error);
-      // Show error message
-      form.setError("root", {
-        message: "Invalid username or password",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="johndoe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {form.formState.errors.root && (
-          <div className="text-red-500 text-sm">{form.formState.errors.root.message}</div>
-        )}
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Logging in..." : "Login"}
-        </Button>
-      </form>
-    </Form>
-  );
-};
-
-// Register component
+// Register schema for type definitions
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -124,174 +33,25 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-// Simplified Register Form that doesn't use Auth context directly
-const RegisterFormSimple = () => {
-  const [, navigate] = useLocation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+// Import proper auth components
+import LoginForm from "@/components/auth/LoginForm";
+import RegisterForm from "@/components/auth/RegisterForm";
 
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      displayName: "",
-      age: 10,
-      grade: 5,
-    },
-  });
-
-  const onSubmit = async (values: RegisterFormValues) => {
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
-
-      // Successfully registered, redirect to home
-      navigate("/");
-    } catch (error) {
-      console.error("Registration error:", error);
-      // Show error message
-      form.setError("root", {
-        message: "Registration failed. Username may already be taken.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="johndoe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Display Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="age"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Age</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="10" 
-                  {...field} 
-                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="grade"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Grade</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="5" 
-                  {...field} 
-                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {form.formState.errors.root && (
-          <div className="text-red-500 text-sm">{form.formState.errors.root.message}</div>
-        )}
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Creating account..." : "Register"}
-        </Button>
-      </form>
-    </Form>
-  );
-};
-
-// Auth page component - simplified version that doesn't depend on useAuth
+// Auth page component that uses proper auth components
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  // We'll check for authentication status using fetch instead of useAuth
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  // Check if user is already logged in
+  // Redirect if already logged in
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await fetch('/api/user');
-        if (response.ok) {
-          // User is logged in, redirect to home
-          navigate("/");
-        }
-      } catch (error) {
-        console.error("Auth check error:", error);
-      } finally {
-        setIsCheckingAuth(false);
-      }
-    };
-
-    checkAuthStatus();
-  }, [navigate]);
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   // Show loading while checking auth
-  if (isCheckingAuth) {
+  if (user === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -320,7 +80,7 @@ const AuthPage = () => {
             </button>
           </div>
 
-          {activeTab === 'login' ? <LoginFormSimple /> : <RegisterFormSimple />}
+          {activeTab === 'login' ? <LoginForm /> : <RegisterForm />}
         </div>
       </div>
       <div className="hidden md:block md:w-1/2 bg-primary/10">
@@ -336,65 +96,12 @@ const AuthPage = () => {
   );
 };
 
-// Home component - simplified version that doesn't depend on useAuth
+// Home component using proper auth context
 const Home = () => {
   const [, navigate] = useLocation();
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useAuth();
 
-  // Fetch user data on mount and when auth state might change
-  const fetchUserData = async () => {
-    try {
-      const response = await fetch('/api/user');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        // Not authenticated, redirect to login
-        navigate("/auth");
-      }
-    } catch (error) {
-      console.error("Failed to fetch user data:", error);
-      navigate("/auth");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Initial fetch on mount
-  useEffect(() => {
-    fetchUserData();
-
-    // Set up event listener for auth state changes
-    window.addEventListener('auth-state-changed', fetchUserData);
-
-    return () => {
-      window.removeEventListener('auth-state-changed', fetchUserData);
-    };
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        setUser(null); // Clear user data first
-        // Dispatch event to notify about auth state change
-        window.dispatchEvent(new Event('auth-state-changed'));
-        navigate("/auth");
-      } else {
-        console.error("Logout failed:", await response.text());
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-
+  // Show loading while fetching user data
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -406,7 +113,7 @@ const Home = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Welcome, {user?.displayName || 'User'}</h1>
+        <h1 className="text-2xl font-bold">Welcome, {user?.displayName || user?.username || 'User'}</h1>
       </div>
 
       <div className="bg-primary/10 p-6 rounded-lg mb-8">
