@@ -92,7 +92,8 @@ const OWLWritingQuest: React.FC = () => {
           setGeneratedPromptData(validatedPrompt);
           
           // Clean up - remove from sessionStorage after loading
-          // sessionStorage.removeItem(promptKey);
+          // This helps prevent storage clutter with one-time prompt data
+          sessionStorage.removeItem(promptKey);
         } else {
           console.error("Parsed prompt does not have required fields:", parsedPrompt);
         }
