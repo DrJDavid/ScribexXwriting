@@ -96,64 +96,7 @@ const AuthPage = () => {
   );
 };
 
-// Home component using proper auth context
-const Home = () => {
-  const [, navigate] = useLocation();
-  const { user, isLoading } = useAuth();
-
-  // Show loading while fetching user data
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Welcome, {user?.displayName || user?.username || 'User'}</h1>
-      </div>
-
-      <div className="bg-primary/10 p-6 rounded-lg mb-8">
-        <h2 className="text-xl font-semibold mb-2">Your Writing Journey</h2>
-        <p className="mb-4">Explore the ScribexX platform to improve your writing skills through interactive exercises and creative writing quests.</p>
-
-        <div className="flex flex-col sm:flex-row gap-4 mt-6">
-          <Button 
-            className="bg-[#6320ee] hover:bg-[#6320ee]/80 text-white flex-1 h-16 flex flex-col items-center justify-center"
-            onClick={() => navigate('/redi')}
-          >
-            <span className="text-lg font-bold">REDI System</span>
-            <span className="text-xs">Structured Writing Exercises</span>
-          </Button>
-
-          <Button 
-            className="bg-[#3cb371] hover:bg-[#3cb371]/80 text-white flex-1 h-16 flex flex-col items-center justify-center"
-            onClick={() => navigate('/owl')}
-          >
-            <span className="text-lg font-bold">OWL Town</span>
-            <span className="text-xs">Creative Writing Quests</span>
-          </Button>
-        </div>
-      </div>
-
-      <div className="bg-primary/10 p-6 rounded-lg mb-6">
-        <h2 className="text-xl font-semibold mb-2">Your Portfolio</h2>
-        <p className="mb-4">View your writing submissions and AI feedback.</p>
-
-        <Button 
-          className="bg-primary hover:bg-primary/80 w-full sm:w-auto"
-          onClick={() => navigate('/writing/submissions')}
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          View Writing Portfolio
-        </Button>
-      </div>
-    </div>
-  );
-};
+// Home component has been moved to its own file in pages/Home.tsx
 
 // Header component with navigation
 const Header = () => {
@@ -217,6 +160,7 @@ const Header = () => {
 };
 
 // Import the components
+import Home from "@/pages/Home";
 import WritingSubmissionDetails from "@/pages/owl/WritingSubmissionDetails";
 import OWLSubmissionsList from "@/pages/owl/OWLSubmissionsList";
 import OWLTown from "@/pages/owl/OWLTown";
