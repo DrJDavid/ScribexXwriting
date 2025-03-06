@@ -40,7 +40,7 @@ const LoginForm: React.FC = () => {
           // Wait a small delay to ensure React Query updates are processed
           setTimeout(() => {
             // Navigate to the dashboard
-            setLocation('/redi');
+            setLocation('/');
           }, 50);
         },
         onError: (error) => {

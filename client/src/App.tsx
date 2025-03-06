@@ -185,6 +185,9 @@ const Header = () => {
               <Link href="/writing/submissions" className={`hover:text-white/80 transition-colors ${location.startsWith('/writing') ? 'underline' : ''}`}>
                 Submissions
               </Link>
+              <Link href="/profile" className={`hover:text-white/80 transition-colors ${location === '/profile' ? 'underline' : ''}`}>
+                Profile
+              </Link>
             </nav>
           )}
         </div>
@@ -221,6 +224,7 @@ import OWLLocationDetail from "@/pages/owl/OWLLocationDetail";
 import OWLWritingQuest from "@/pages/owl/OWLWritingQuest";
 import REDIMap from "@/pages/redi/REDIMap";
 import REDIExercise from "@/pages/redi/REDIExercise";
+import ProfilePage from "@/pages/Profile";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/hooks/use-auth";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -249,6 +253,7 @@ function App() {
                   <ProtectedRoute path="/owl" component={OWLTown} />
                   <ProtectedRoute path="/redi/exercise/:exerciseId" component={REDIExercise} />
                   <ProtectedRoute path="/redi" component={REDIMap} />
+                  <ProtectedRoute path="/profile" component={ProfilePage} />
                   <ProtectedRoute path="/" component={Home} />
                   <Route component={NotFound} />
                 </Switch>
