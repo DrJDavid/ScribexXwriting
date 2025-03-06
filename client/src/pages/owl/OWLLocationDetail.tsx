@@ -24,7 +24,7 @@ export default function OWLLocationDetail() {
   
   // This function is called by WritePromptGenerator when a prompt is selected
   const handleSelectPrompt = (prompt: GeneratedPrompt) => {
-    console.log("Received prompt:", prompt);
+    console.log("OWLLocationDetail: Received prompt:", prompt);
     
     // Create a deep copy of the prompt to avoid reference issues
     const promptCopy = {
@@ -35,22 +35,26 @@ export default function OWLLocationDetail() {
       challengeElement: prompt.challengeElement || ""
     };
     
-    // Update state with the new prompt
+    // Update state with the new prompt - use this EXACT object so it's definitely changed
     setGeneratedPrompt(promptCopy);
     
     // Show toast notification
     toast({
       title: "Prompt Generated!",
       description: "Your writing prompt is ready. Scroll down to view it.",
+      variant: "default"
     });
     
     // Scroll to the prompt after a short delay to ensure rendering
     setTimeout(() => {
       const promptElement = document.getElementById('generated-prompt-card');
       if (promptElement) {
+        console.log("Scrolling to prompt section");
         promptElement.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        console.log("Could not find prompt card element to scroll to");
       }
-    }, 100);
+    }, 300);
   };
   
   // Generate a new prompt (clear the current one)
