@@ -1,7 +1,7 @@
 import React from 'react';
 import UserAvatar from '../common/UserAvatar';
 import { useTheme } from '@/context/ThemeContext';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   rightButton
 }) => {
   const { theme } = useTheme();
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   
   const isREDI = theme === 'redi';
 
@@ -57,7 +57,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           ) : (
             <div className="flex items-center">
               <div className="mr-3 text-right">
-                <p className="text-white text-sm">{currentUser?.displayName || 'User'}</p>
+                <p className="text-white text-sm">{user?.displayName || 'User'}</p>
                 <p className="text-gray-200 text-xs">
                   {isREDI ? 'Level 8' : 'Writer Level 5'}
                 </p>

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 
@@ -17,7 +17,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginForm: React.FC = () => {
-  const { login } = useAuth();
+  const { loginMutation } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -30,20 +30,16 @@ const LoginForm: React.FC = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    try {
-      await login(values.username, values.password);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to ScribexX!",
-      });
-      setLocation('/redi');
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials and try again",
-        variant: "destructive",
-      });
-    }
+    loginMutation.mutate(values, {
+      onSuccess: () => {
+        // The toast is handled by the mutation success handler
+        setLocation('/redi');
+      },
+      onError: (error) => {
+        // The toast is handled by the mutation error handler
+        console.error("Login error:", error);
+      }
+    });
   };
 
   return (
