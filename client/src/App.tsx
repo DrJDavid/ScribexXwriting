@@ -514,7 +514,7 @@ function App() {
           <ProgressProvider>
             <div className="min-h-screen flex flex-col">
               <Header />
-              <main className="flex-1">
+              <main className="flex-1 pb-4">
                 <Switch>
                   <Route path="/auth" component={AuthPage} />
                   <ProtectedRoute path="/writing/submissions/:id" component={WritingSubmissionDetails} />
