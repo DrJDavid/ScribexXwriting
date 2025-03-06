@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import ExerciseMultipleChoice from '@/components/exercises/ExerciseMultipleChoice';
 import ExerciseWriting from '@/components/exercises/ExerciseWriting';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
-import { getExerciseById } from '@/data/exercises';
+import { getExerciseById, getExerciseNodes } from '@/data/exercises';
+import { useToast } from '@/hooks/use-toast';
 
 const REDIExercise: React.FC = () => {
   const { setTheme } = useTheme();
+  const { toast } = useToast();
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
-  const { completeExercise } = useProgress();
+  const { progress, completeExercise } = useProgress();
   const [exerciseIndex, setExerciseIndex] = useState(1);
   const [totalExercises, setTotalExercises] = useState(5);
+  const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [exerciseSet, setExerciseSet] = useState<string[]>([]);
+  const [correctAnswers, setCorrectAnswers] = useState<number>(0);
   
   // Make sure REDI theme is active
   useEffect(() => {
@@ -22,6 +28,33 @@ const REDIExercise: React.FC = () => {
   
   // Get the exercise data
   const exercise = getExerciseById(params.exerciseId);
+  
+  // Generate a set of exercises for the current skill type
+  useEffect(() => {
+    if (exercise) {
+      // Get all available exercises of the same skill type
+      const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
+      const sameTypeExercises = nodes
+        .filter(node => node.skillType === exercise.skillType && node.status !== 'locked')
+        .map(node => node.id);
+      
+      // If we don't have enough exercises of this type, include some from other types
+      let exerciseSelection = [...sameTypeExercises];
+      if (exerciseSelection.length < 5) {
+        const otherExercises = nodes
+          .filter(node => node.skillType !== exercise.skillType && node.status !== 'locked')
+          .map(node => node.id);
+        exerciseSelection = [...exerciseSelection, ...otherExercises].slice(0, 5);
+      }
+      
+      // Make sure the current exercise is included and is first
+      exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
+      exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
+      
+      setExerciseSet(exerciseSelection);
+      setTotalExercises(exerciseSelection.length);
+    }
+  }, [exercise, progress]);
   
   // If exercise not found, go back to map
   useEffect(() => {
@@ -34,16 +67,132 @@ const REDIExercise: React.FC = () => {
     return null;
   }
   
+  // Function to handle advancing to next exercise
+  const advanceToNextExercise = useCallback(() => {
+    // If we've completed all exercises in the set
+    if (exerciseIndex >= totalExercises) {
+      // Update mastery only after completing the full set
+      const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
+      
+      // Create a skill update object based on the exercise type
+      let skillUpdate: Partial<{ mechanics: number; sequencing: number; voice: number }> = {};
+      
+      if (exercise.skillType === 'mechanics') {
+        skillUpdate = { 
+          mechanics: Math.min((progress?.rediSkillMastery?.mechanics || 0) + skillIncrease, 100) 
+        };
+      } else if (exercise.skillType === 'sequencing') {
+        skillUpdate = { 
+          sequencing: Math.min((progress?.rediSkillMastery?.sequencing || 0) + skillIncrease, 100) 
+        };
+      } else if (exercise.skillType === 'voice') {
+        skillUpdate = { 
+          voice: Math.min((progress?.rediSkillMastery?.voice || 0) + skillIncrease, 100) 
+        };
+      }
+      
+      // Defer updating of mastery to progress context (handled in ProgressContext.tsx)
+      toast({
+        title: "Exercise Set Completed!",
+        description: `You got ${correctAnswers} out of ${totalExercises} correct. Your mastery increased by ${skillIncrease}%.`,
+      });
+      
+      // Navigate back to the REDI map
+      navigate('/redi');
+      return;
+    }
+    
+    // Otherwise, go to the next exercise in the set
+    const nextExerciseId = exerciseSet[exerciseIndex]; // 0-indexed array, 1-indexed display
+    if (nextExerciseId) {
+      // Reset submission state
+      setHasSubmitted(false);
+      setAnsweredCorrectly(false);
+      
+      // Increment exercise index
+      setExerciseIndex(exerciseIndex + 1);
+      
+      // Navigate to next exercise with slight delay for effect
+      setTimeout(() => {
+        navigate(`/redi/exercise/${nextExerciseId}`);
+      }, 100);
+    } else {
+      // Fallback if we don't have a next exercise
+      navigate('/redi');
+    }
+  }, [exerciseIndex, totalExercises, exerciseSet, navigate, correctAnswers, progress, exercise, toast]);
+  
   // Handle multiple choice submission
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
-    // Record the exercise completion in the progress context
-    completeExercise(exerciseId, isCorrect);
+    if (hasSubmitted) {
+      // If already submitted, advance to next exercise
+      advanceToNextExercise();
+      return;
+    }
+    
+    // Track if answered correctly
+    setAnsweredCorrectly(isCorrect);
+    setHasSubmitted(true);
+    
+    // Record total correct answers for the exercise set
+    if (isCorrect) {
+      setCorrectAnswers(prev => prev + 1);
+      
+      toast({
+        title: "Correct!",
+        description: "Great job! Click Continue to proceed.",
+      });
+    } else {
+      toast({
+        title: "Not quite right",
+        description: "That's okay! Click Continue to proceed.",
+      });
+    }
+    
+    // Only mark exercise as completed after finishing the full set
+    if (exerciseIndex >= totalExercises) {
+      // Will update progress context in advanceToNextExercise
+      completeExercise(exerciseId, isCorrect);
+    }
   };
   
   // Handle writing submission
   const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
-    // For writing exercises, we consider them correct if they meet the minimum requirements
-    completeExercise(exerciseId, isComplete);
+    if (hasSubmitted) {
+      // If already submitted, advance to next exercise
+      advanceToNextExercise();
+      return;
+    }
+    
+    // Track if answered correctly (meets requirements)
+    setAnsweredCorrectly(isComplete);
+    setHasSubmitted(true);
+    
+    // Record total correct answers for the exercise set
+    if (isComplete) {
+      setCorrectAnswers(prev => prev + 1);
+      
+      toast({
+        title: "Exercise Complete!",
+        description: "Your submission meets the requirements. Click Continue to proceed.",
+      });
+    } else {
+      toast({
+        title: "Requirements Not Met",
+        description: "Your submission doesn't meet all requirements yet. Click Continue to proceed anyway.",
+      });
+    }
+    
+    // Only mark exercise as completed after finishing the full set
+    if (exerciseIndex >= totalExercises) {
+      // Will update progress context in advanceToNextExercise
+      completeExercise(exerciseId, isComplete);
+    }
+  };
+  
+  // Handle continue button
+  const handleContinue = () => {
+    advanceToNextExercise();
   };
   
   // Handle back button
@@ -88,6 +237,39 @@ const REDIExercise: React.FC = () => {
           onSubmit={handleMultipleChoiceSubmit}
         />
       )}
+      
+      {/* Continue button - only shown after answering */}
+      {hasSubmitted && (
+        <div className="mt-6 flex justify-end">
+          <button 
+            onClick={handleContinue}
+            className={`px-6 py-3 rounded-lg text-white font-semibold transition-all
+            ${answeredCorrectly 
+              ? 'bg-green-600 hover:bg-green-500' 
+              : 'bg-violet-600 hover:bg-violet-500'} 
+            flex items-center gap-2 shadow-lg hover:shadow-xl`}
+          >
+            Continue
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+      )}
+      
+      {/* Exercise progress */}
+      <div className="mt-8">
+        <div className="flex justify-between mb-2 text-gray-300 text-sm">
+          <span>Progress</span>
+          <span>{exerciseIndex} of {totalExercises}</span>
+        </div>
+        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
+            style={{ width: `${(exerciseIndex / totalExercises) * 100}%` }}
+          ></div>
+        </div>
+      </div>
     </MainLayout>
   );
 };

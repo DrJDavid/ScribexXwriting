@@ -119,40 +119,21 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   // Complete exercise - now updates REDI-specific skills
+  // This function now only adds the exercise to completed and earns currency
+  // Mastery calculation happens when completing sets of exercises in REDIExercise.tsx
   const completeExercise = async (exerciseId: string, isCorrect: boolean) => {
     // Don't update if progress is still loading or not available
     if (!progress) return;
-
-    // Calculate skill increase (more for correct answers)
-    const skillIncrease = isCorrect ? 10 : 2;
-    
-    // Update based on exercise ID prefix
-    let skillUpdate: Partial<SkillMastery> = {};
-    
-    if (exerciseId.startsWith('mechanics')) {
-      skillUpdate = { mechanics: Math.min(progress.rediSkillMastery.mechanics + skillIncrease, 100) };
-    } else if (exerciseId.startsWith('sequencing')) {
-      skillUpdate = { sequencing: Math.min(progress.rediSkillMastery.sequencing + skillIncrease, 100) };
-    } else if (exerciseId.startsWith('voice')) {
-      skillUpdate = { voice: Math.min(progress.rediSkillMastery.voice + skillIncrease, 100) };
-    }
     
     // Only add to completed if correct
     const completed = isCorrect 
       ? [...progress.completedExercises, exerciseId].filter((x, i, a) => a.indexOf(x) === i)
       : progress.completedExercises;
     
-    // Create updated REDI skill mastery
-    const updatedRediSkillMastery = { ...progress.rediSkillMastery, ...skillUpdate };
-    
-    // Calculate new REDI level
-    const rediLevel = calculateRediLevel(updatedRediSkillMastery, completed);
-    
-    // Update progress
+    // Update progress - just adding to completed exercises and currency
+    // Mastery calculation is done in the exercise component when full sets are completed
     await updateProgress({
-      rediSkillMastery: updatedRediSkillMastery,
       completedExercises: completed,
-      rediLevel,
       currency: progress.currency + (isCorrect ? 5 : 1),
     });
     
