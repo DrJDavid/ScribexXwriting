@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { User } from '../../../shared/schema';
+import { User } from '@/types';
 
 type StudentWithoutPassword = Omit<User, 'password'>;
 

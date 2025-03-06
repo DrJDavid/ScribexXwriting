@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Link, useParams, useLocation } from 'wouter';
-import { Progress as StudentProgress, SkillMastery, User, WritingSubmission } from '../../../shared/schema';
+import { Progress as StudentProgress, SkillMastery, User, WritingSubmission } from '@/types';
 import { Separator } from '@/components/ui/separator';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Calendar } from '@/components/ui/calendar';
