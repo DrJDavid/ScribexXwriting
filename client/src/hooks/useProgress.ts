@@ -4,18 +4,32 @@ import { useProgress as useProgressContext } from '@/context/ProgressContext';
 const useProgress = () => {
   const progress = useProgressContext();
   
-  // Calculate total skill mastery percentage
-  const calculateTotalMastery = () => {
+  // Calculate total REDI skill mastery percentage
+  const calculateREDIMastery = () => {
     if (!progress.progress) return 0;
     
-    const { mechanics, sequencing, voice } = progress.progress.skillMastery;
+    const { mechanics, sequencing, voice } = progress.progress.rediSkillMastery;
     return Math.round((mechanics + sequencing + voice) / 3);
   };
   
-  // Calculate level based on total mastery
-  const calculateLevel = () => {
-    const totalMastery = calculateTotalMastery();
-    return Math.floor(totalMastery / 10) + 1;
+  // Calculate total OWL skill mastery percentage
+  const calculateOWLMastery = () => {
+    if (!progress.progress) return 0;
+    
+    const { mechanics, sequencing, voice } = progress.progress.owlSkillMastery;
+    return Math.round((mechanics + sequencing + voice) / 3);
+  };
+  
+  // Get REDI level
+  const getREDILevel = () => {
+    if (!progress.progress) return 1;
+    return progress.progress.rediLevel;
+  };
+  
+  // Get OWL level
+  const getOWLLevel = () => {
+    if (!progress.progress) return 1;
+    return progress.progress.owlLevel;
   };
   
   // Check if an exercise is completed
@@ -38,10 +52,26 @@ const useProgress = () => {
     return progress.progress?.achievements.includes(achievementId) || false;
   };
   
+  // For backward compatibility
+  const calculateTotalMastery = () => {
+    return calculateREDIMastery();
+  };
+  
+  // For backward compatibility
+  const calculateLevel = () => {
+    return getREDILevel();
+  };
+  
   return {
     ...progress,
+    rediMastery: calculateREDIMastery(),
+    owlMastery: calculateOWLMastery(),
+    rediLevel: getREDILevel(),
+    owlLevel: getOWLLevel(),
+    // Keep these for backward compatibility
     totalMastery: calculateTotalMastery(),
     level: calculateLevel(),
+    // Utility functions
     isExerciseCompleted,
     isQuestCompleted,
     isLocationUnlocked,

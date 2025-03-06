@@ -21,8 +21,8 @@ import { TOWN_LOCATIONS, WRITING_QUESTS, getQuestById, getLocationById } from ".
 
 // Functions to handle location unlocking
 async function determineLocationsToUnlock(progress: Progress): Promise<string[]> {
-  // Ensure skill mastery is properly typed
-  const currentSkillMastery = progress.skillMastery as SkillMastery;
+  // Use OWL skill mastery for location unlocking
+  const currentSkillMastery = progress.owlSkillMastery as SkillMastery;
   
   // Ensure unlockedLocations is an array (use empty array as fallback)
   const currentlyUnlocked: string[] = Array.isArray(progress.unlockedLocations) 

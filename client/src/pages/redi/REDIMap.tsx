@@ -46,8 +46,8 @@ const REDIMap: React.FC = () => {
   const [activeSkillFilter, setActiveSkillFilter] = useState<SkillType | 'all'>('all');
   const [activeTypeFilter, setActiveTypeFilter] = useState<ExerciseType | 'all'>('all');
   
-  // Get nodes with proper status based on progress
-  const nodes = getExerciseNodes(progress?.skillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
+  // Get nodes with proper status based on progress (use REDI skill mastery)
+  const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
   
   // Create decorative particles
   const [particles] = useState(() => createParticles(15));
@@ -193,17 +193,17 @@ const REDIMap: React.FC = () => {
           >
             <SkillMasteryIndicator 
               skill="mechanics" 
-              percentage={progress?.skillMastery.mechanics || 0} 
+              percentage={progress?.rediSkillMastery.mechanics || 0} 
               isActive={activeSkillFilter === 'mechanics' || activeSkillFilter === 'all'}
             />
             <SkillMasteryIndicator 
               skill="sequencing" 
-              percentage={progress?.skillMastery.sequencing || 0} 
+              percentage={progress?.rediSkillMastery.sequencing || 0} 
               isActive={activeSkillFilter === 'sequencing' || activeSkillFilter === 'all'}
             />
             <SkillMasteryIndicator 
               skill="voice" 
-              percentage={progress?.skillMastery.voice || 0} 
+              percentage={progress?.rediSkillMastery.voice || 0} 
               isActive={activeSkillFilter === 'voice' || activeSkillFilter === 'all'}
             />
           </motion.div>
