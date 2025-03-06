@@ -214,7 +214,8 @@ const REDIMap: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative overflow-hidden bg-synthwave-background rounded-xl p-6 min-h-[500px] border border-synthwave-accent/50 shadow-neon-green"
+            className="relative overflow-hidden bg-synthwave-background rounded-xl p-6 min-h-[600px] w-full overflow-x-auto border border-synthwave-accent/50 shadow-neon-green"
+            style={{ minWidth: '800px' }}
           >
             {/* VHS static effect overlay */}
             <div className="redi-vhs-static"></div>

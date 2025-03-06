@@ -341,30 +341,30 @@ export const EXERCISES: Exercise[] = [
 
 // Define node positions on the map
 const POSITIONS = {
-  // Mechanics exercises row
-  'mechanics-1': { x: 30, y: 50 },
-  'mechanics-2': { x: 120, y: 50 },
-  'mechanics-3': { x: 210, y: 50 },
-  'mechanics-4': { x: 300, y: 50 },
-  'mechanics-5': { x: 390, y: 50 },
+  // Mechanics exercises row - More horizontal spacing and slight vertical variation
+  'mechanics-1': { x: 40, y: 60 },
+  'mechanics-2': { x: 160, y: 50 },
+  'mechanics-3': { x: 280, y: 65 },
+  'mechanics-4': { x: 400, y: 45 },
+  'mechanics-5': { x: 520, y: 60 },
   
-  // Writing exercises row - placed between main skill rows
-  'mechanics-writing-1': { x: 480, y: 50 }, // Writing exercise for mechanics - moved to the right
+  // Writing exercises row - placed to create a visual branch
+  'mechanics-writing-1': { x: 640, y: 55 }, // Writing exercise for mechanics
   
-  // Sequencing exercises row
-  'sequencing-1': { x: 60, y: 150 },
-  'sequencing-2': { x: 150, y: 150 },
-  'sequencing-3': { x: 240, y: 150 },
-  'sequencing-4': { x: 330, y: 150 },
-  'sequencing-5': { x: 420, y: 150 },
+  // Sequencing exercises row - with more spacing and staggered positioning
+  'sequencing-1': { x: 80, y: 200 },
+  'sequencing-2': { x: 200, y: 185 },
+  'sequencing-3': { x: 320, y: 210 },
+  'sequencing-4': { x: 440, y: 190 },
+  'sequencing-5': { x: 560, y: 205 },
   
-  // Voice exercises row
-  'voice-1': { x: 90, y: 250 },
-  'voice-2': { x: 180, y: 250 },
-  'voice-3': { x: 270, y: 250 },
-  'voice-4': { x: 360, y: 250 },
-  'voice-5': { x: 450, y: 250 },
-  'voice-writing-1': { x: 540, y: 250 }, // Writing exercise for voice - moved to the right
+  // Voice exercises row - with more spacing and staggered positioning
+  'voice-1': { x: 120, y: 340 },
+  'voice-2': { x: 240, y: 325 },
+  'voice-3': { x: 360, y: 350 },
+  'voice-4': { x: 480, y: 330 },
+  'voice-5': { x: 600, y: 345 },
+  'voice-writing-1': { x: 720, y: 335 }, // Writing exercise for voice
 };
 
 // Create map nodes with positions and default status
