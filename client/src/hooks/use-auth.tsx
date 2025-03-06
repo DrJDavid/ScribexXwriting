@@ -95,7 +95,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Update the query cache to reflect logged out state
       queryClient.setQueryData(["/api/user"], null);
+      
+      // Force a refresh of queries that depend on authentication state
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Notify the application about auth state change
+      window.dispatchEvent(new Event('auth-state-changed'));
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",

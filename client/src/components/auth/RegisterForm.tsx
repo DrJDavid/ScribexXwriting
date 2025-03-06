@@ -49,8 +49,11 @@ const RegisterForm: React.FC = () => {
       },
       {
         onSuccess: () => {
-          // Toast is already handled by the mutation success handler in useAuth
-          setLocation('/redi');
+          // Wait a small delay to ensure React Query updates are processed
+          setTimeout(() => {
+            // Navigate to the dashboard
+            setLocation('/redi');
+          }, 50);
         },
         onError: (error) => {
           // Toast is already handled by the mutation error handler in useAuth
