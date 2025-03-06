@@ -26,8 +26,11 @@ const REDIExercise: React.FC = () => {
     setTheme('redi');
   }, [setTheme]);
   
-  // Get the exercise data
-  const exercise = getExerciseById(params.exerciseId);
+  // State to track the current exercise ID in the set
+  const [currentSetExerciseId, setCurrentSetExerciseId] = useState(params.exerciseId);
+  
+  // Get the exercise data using the current exercise ID in the set
+  const exercise = getExerciseById(currentSetExerciseId || params.exerciseId);
   
   // Generate a set of exercises for the current skill type
   useEffect(() => {
@@ -113,6 +116,20 @@ const REDIExercise: React.FC = () => {
     if (exerciseIndex >= totalExercises) {
       // Update mastery only after completing the full set
       updateRediMastery().then(() => {
+        // Mark original exercise ID as completed
+        if (params.exerciseId && completeExercise) {
+          // Consider set completed successfully if at least 3 out of 5 correct
+          const isSuccessful = correctAnswers >= 3;
+          completeExercise(params.exerciseId, isSuccessful);
+          
+          toast({
+            title: isSuccessful ? "Node Completed!" : "Node Attempted",
+            description: isSuccessful 
+              ? `You got ${correctAnswers} out of ${totalExercises} correct! Node mastery unlocked.` 
+              : `You got ${correctAnswers} out of ${totalExercises} correct. Try again for better mastery.`,
+          });
+        }
+        
         // Navigate back to the REDI map after updating mastery
         navigate('/redi');
       });
@@ -129,15 +146,20 @@ const REDIExercise: React.FC = () => {
       // Increment exercise index
       setExerciseIndex(exerciseIndex + 1);
       
-      // Navigate to next exercise with slight delay for effect
-      setTimeout(() => {
-        navigate(`/redi/exercise/${nextExerciseId}`);
-      }, 100);
+      // We don't navigate - just update the current exercise ID in the set
+      // This keeps us on the same page but with new exercise content
+      const exercise = getExerciseById(nextExerciseId);
+      if (exercise) {
+        setCurrentSetExerciseId(nextExerciseId);
+      } else {
+        // Fallback if exercise not found
+        navigate('/redi');
+      }
     } else {
       // Fallback if we don't have a next exercise
       navigate('/redi');
     }
-  }, [exerciseIndex, totalExercises, exerciseSet, navigate, updateRediMastery]);
+  }, [exerciseIndex, totalExercises, exerciseSet, navigate, updateRediMastery, params.exerciseId, completeExercise, correctAnswers, toast]);
   
   // Handle multiple choice submission
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
