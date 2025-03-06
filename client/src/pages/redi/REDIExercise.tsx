@@ -166,11 +166,8 @@ const REDIExercise: React.FC = () => {
       });
     }
     
-    // Only mark exercise as completed after finishing the full set
-    if (exerciseIndex >= totalExercises) {
-      // Will update progress context in advanceToNextExercise
-      completeExercise(exerciseId, isCorrect);
-    }
+    // We'll only mark the original exercise as completed after finishing the full set
+    // This is handled in updateRediMastery
   };
   
   // Handle writing submission
@@ -200,11 +197,8 @@ const REDIExercise: React.FC = () => {
       });
     }
     
-    // Only mark exercise as completed after finishing the full set
-    if (exerciseIndex >= totalExercises) {
-      // Will update progress context in advanceToNextExercise
-      completeExercise(exerciseId, isComplete);
-    }
+    // We'll only mark the original exercise as completed after finishing the full set
+    // This is handled in updateRediMastery
   };
   
   // Handle continue button

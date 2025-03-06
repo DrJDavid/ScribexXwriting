@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/context/ThemeContext';
 import { motion } from 'framer-motion';
@@ -26,6 +26,14 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  
+  // Effect to reset state when exerciseId changes (new question)
+  useEffect(() => {
+    // Reset state for new exercise
+    setSelectedOption(null);
+    setHasSubmitted(false);
+    setIsCorrect(false);
+  }, [exerciseId]);
   
   const isREDI = theme === 'redi';
   
