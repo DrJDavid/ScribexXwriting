@@ -1283,6 +1283,38 @@ Format the response as JSON with these fields:
     }
   });
   
+  // Get specific submission details as a teacher
+  app.get('/api/teacher/submissions/:submissionId', ensureTeacher, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const submissionId = parseInt(req.params.submissionId);
+      
+      if (isNaN(submissionId)) {
+        return res.status(400).json({ message: 'Invalid submission ID' });
+      }
+      
+      // Get the submission
+      const submission = await storage.getWritingSubmissionById(submissionId);
+      
+      if (!submission) {
+        return res.status(404).json({ message: 'Submission not found' });
+      }
+      
+      // Verify that the teacher is linked to the student who owns this submission
+      const students = await storage.getStudentsByTeacherId(user.id);
+      const isTeacherOfStudent = students.some(student => student.id === submission.userId);
+      
+      if (!isTeacherOfStudent) {
+        return res.status(403).json({ message: 'You are not authorized to view this submission' });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      console.error('Error getting submission details:', error);
+      res.status(500).json({ message: 'Error retrieving submission details' });
+    }
+  });
+  
   // Parent account routes
   
   // Get all students for a parent
@@ -1418,6 +1450,38 @@ Format the response as JSON with these fields:
     } catch (error) {
       console.error('Error getting student submissions:', error);
       res.status(500).json({ message: 'Error retrieving student submissions' });
+    }
+  });
+  
+  // Get specific submission details as a parent
+  app.get('/api/parent/submissions/:submissionId', ensureParent, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const submissionId = parseInt(req.params.submissionId);
+      
+      if (isNaN(submissionId)) {
+        return res.status(400).json({ message: 'Invalid submission ID' });
+      }
+      
+      // Get the submission
+      const submission = await storage.getWritingSubmissionById(submissionId);
+      
+      if (!submission) {
+        return res.status(404).json({ message: 'Submission not found' });
+      }
+      
+      // Verify that the parent is linked to the student who owns this submission
+      const students = await storage.getStudentsByParentId(user.id);
+      const isParentOfStudent = students.some(student => student.id === submission.userId);
+      
+      if (!isParentOfStudent) {
+        return res.status(403).json({ message: 'You are not authorized to view this submission' });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      console.error('Error getting submission details:', error);
+      res.status(500).json({ message: 'Error retrieving submission details' });
     }
   });
 

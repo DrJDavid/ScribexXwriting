@@ -12,8 +12,9 @@ import WritingFeedback from '@/components/writing/WritingFeedback';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SubmissionDetails() {
-  const [submissionId] = useParams();
-  const navigate = useNavigate();
+  const params = useParams();
+  const submissionId = params?.submissionId;
+  const [, navigate] = useLocation();
 
   // Fetch the submission details
   const { data: submission, isLoading: isLoadingSubmission } = useQuery<WritingSubmission>({
