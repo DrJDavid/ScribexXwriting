@@ -11,6 +11,7 @@ import { Pencil, MapPin, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function DirectPromptDisplay() {
+  console.log("DirectPromptDisplay component is being rendered!");
   const [, params] = useRoute('/owl/location/:locationId');
   const [, navigate] = useLocation();
   const locationId = params?.locationId || '';

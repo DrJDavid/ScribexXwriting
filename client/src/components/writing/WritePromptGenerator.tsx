@@ -195,8 +195,17 @@ export function WritePromptGenerator({
   const handleSelectPrompt = (prompt: GeneratedPrompt) => {
     console.log("Selected previously generated prompt:", prompt);
     
-    // Call onSelectPrompt callback
-    onSelectPrompt(prompt);
+    // Create a deep copy to ensure no reference issues
+    const promptToSend = {
+      prompt: prompt.prompt,
+      scenario: prompt.scenario,
+      guidingQuestions: [...prompt.guidingQuestions],
+      suggestedElements: [...prompt.suggestedElements],
+      challengeElement: prompt.challengeElement
+    };
+    
+    // Call onSelectPrompt callback with the copied prompt
+    onSelectPrompt(promptToSend);
     
     // Show toast notification
     toast({
