@@ -39,6 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Notify the application about auth state change
+      window.dispatchEvent(new Event('auth-state-changed'));
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.displayName}!`,

@@ -25,7 +25,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const LoginFormSimple = () => {
   const [, navigate] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -44,16 +44,21 @@ const LoginFormSimple = () => {
         },
         body: JSON.stringify(values),
       });
-      
+
       if (!response.ok) {
         throw new Error('Login failed');
       }
-      
-      // Successfully logged in, refresh user data and redirect to home
-      // Small timeout to ensure state updates before navigation
+
+      const userData = await response.json();
+      console.log("Login successful, user data:", userData);
+
+      // Dispatch auth state change event
+      window.dispatchEvent(new Event('auth-state-changed'));
+
+      // Navigate to home after a small delay to ensure event is processed
       setTimeout(() => {
         navigate("/");
-      }, 100);
+      }, 200);
     } catch (error) {
       console.error("Login error:", error);
       // Show error message
@@ -81,7 +86,7 @@ const LoginFormSimple = () => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="password"
@@ -95,11 +100,11 @@ const LoginFormSimple = () => {
             </FormItem>
           )}
         />
-        
+
         {form.formState.errors.root && (
           <div className="text-red-500 text-sm">{form.formState.errors.root.message}</div>
         )}
-        
+
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Logging in..." : "Login"}
         </Button>
@@ -123,7 +128,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const RegisterFormSimple = () => {
   const [, navigate] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -145,11 +150,11 @@ const RegisterFormSimple = () => {
         },
         body: JSON.stringify(values),
       });
-      
+
       if (!response.ok) {
         throw new Error('Registration failed');
       }
-      
+
       // Successfully registered, redirect to home
       navigate("/");
     } catch (error) {
@@ -179,7 +184,7 @@ const RegisterFormSimple = () => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="password"
@@ -193,7 +198,7 @@ const RegisterFormSimple = () => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="displayName"
@@ -207,7 +212,7 @@ const RegisterFormSimple = () => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="age"
@@ -226,7 +231,7 @@ const RegisterFormSimple = () => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="grade"
@@ -245,11 +250,11 @@ const RegisterFormSimple = () => {
             </FormItem>
           )}
         />
-        
+
         {form.formState.errors.root && (
           <div className="text-red-500 text-sm">{form.formState.errors.root.message}</div>
         )}
-        
+
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Creating account..." : "Register"}
         </Button>
@@ -262,10 +267,10 @@ const RegisterFormSimple = () => {
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [, navigate] = useLocation();
-  
+
   // We'll check for authentication status using fetch instead of useAuth
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  
+
   // Check if user is already logged in
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -281,10 +286,10 @@ const AuthPage = () => {
         setIsCheckingAuth(false);
       }
     };
-    
+
     checkAuthStatus();
   }, [navigate]);
-  
+
   // Show loading while checking auth
   if (isCheckingAuth) {
     return (
@@ -293,13 +298,13 @@ const AuthPage = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen flex">
       <div className="w-full md:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <h1 className="text-2xl font-bold mb-6">ScribexX Writing Platform</h1>
-          
+
           <div className="flex border-b mb-6">
             <button
               className={`px-4 py-2 ${activeTab === 'login' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500'}`}
@@ -314,7 +319,7 @@ const AuthPage = () => {
               Register
             </button>
           </div>
-          
+
           {activeTab === 'login' ? <LoginFormSimple /> : <RegisterFormSimple />}
         </div>
       </div>
@@ -336,7 +341,7 @@ const Home = () => {
   const [, navigate] = useLocation();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Fetch user data on mount and when auth state might change
   const fetchUserData = async () => {
     try {
@@ -355,19 +360,19 @@ const Home = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Initial fetch on mount
   useEffect(() => {
     fetchUserData();
-    
+
     // Set up event listener for auth state changes
     window.addEventListener('auth-state-changed', fetchUserData);
-    
+
     return () => {
       window.removeEventListener('auth-state-changed', fetchUserData);
     };
   }, [navigate]);
-  
+
   const handleLogout = async () => {
     try {
       const response = await fetch('/api/logout', {
@@ -376,7 +381,7 @@ const Home = () => {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.ok) {
         setUser(null); // Clear user data first
         // Dispatch event to notify about auth state change
@@ -389,7 +394,7 @@ const Home = () => {
       console.error("Logout error:", error);
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -397,17 +402,17 @@ const Home = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Welcome, {user?.displayName || 'User'}</h1>
       </div>
-      
+
       <div className="bg-primary/10 p-6 rounded-lg mb-8">
         <h2 className="text-xl font-semibold mb-2">Your Writing Journey</h2>
         <p className="mb-4">Explore the ScribexX platform to improve your writing skills through interactive exercises and creative writing quests.</p>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 mt-6">
           <Button 
             className="bg-[#6320ee] hover:bg-[#6320ee]/80 text-white flex-1 h-16 flex flex-col items-center justify-center"
@@ -416,7 +421,7 @@ const Home = () => {
             <span className="text-lg font-bold">REDI System</span>
             <span className="text-xs">Structured Writing Exercises</span>
           </Button>
-          
+
           <Button 
             className="bg-[#3cb371] hover:bg-[#3cb371]/80 text-white flex-1 h-16 flex flex-col items-center justify-center"
             onClick={() => navigate('/owl')}
@@ -426,11 +431,11 @@ const Home = () => {
           </Button>
         </div>
       </div>
-      
+
       <div className="bg-primary/10 p-6 rounded-lg mb-6">
         <h2 className="text-xl font-semibold mb-2">Your Portfolio</h2>
         <p className="mb-4">View your writing submissions and AI feedback.</p>
-        
+
         <Button 
           className="bg-primary hover:bg-primary/80 w-full sm:w-auto"
           onClick={() => navigate('/writing/submissions')}
@@ -455,7 +460,7 @@ const Header = () => {
           <Link href="/" className="text-xl font-bold">
             ScribexX
           </Link>
-          
+
           {user !== null && (
             <nav className="hidden md:flex items-center space-x-4">
               <Link href="/" className={`hover:text-white/80 transition-colors ${location === '/' ? 'underline' : ''}`}>
@@ -473,7 +478,7 @@ const Header = () => {
             </nav>
           )}
         </div>
-        
+
         {user && (
           <div className="flex items-center gap-4">
             <span className="hidden md:inline">Welcome, {user.displayName || user.username}</span>

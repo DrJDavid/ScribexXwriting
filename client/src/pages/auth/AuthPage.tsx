@@ -62,9 +62,15 @@ export default function AuthPage() {
     const onSubmit = async (values: LoginFormValues) => {
       loginMutation.mutate(values, {
         onSuccess: (userData) => {
+          console.log("Login successful in AuthPage", userData);
+          
           // Dispatch custom event to notify about auth state change
           window.dispatchEvent(new Event('auth-state-changed'));
-          navigate('/');
+          
+          // Navigate after a small delay to ensure event is processed
+          setTimeout(() => {
+            navigate('/');
+          }, 200);
         }
       });
     };
