@@ -1,5 +1,4 @@
 import React from 'react';
-import BottomNavigation from '../common/BottomNavigation';
 import UserAvatar from '../common/UserAvatar';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -77,12 +76,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       </header>
       
       {/* Main Content */}
-      <div className="p-4 flex flex-col flex-grow pb-20">
+      <div className="p-4 flex flex-col flex-grow">
         {children}
       </div>
-      
-      {/* Bottom Navigation */}
-      <BottomNavigation />
     </div>
   );
 };
