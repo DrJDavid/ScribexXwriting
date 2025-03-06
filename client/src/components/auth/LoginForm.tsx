@@ -30,16 +30,22 @@ const LoginForm: React.FC = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    loginMutation.mutate(values, {
-      onSuccess: () => {
-        // The toast is handled by the mutation success handler
-        setLocation('/redi');
+    loginMutation.mutate(
+      { 
+        username: values.username, 
+        password: values.password 
       },
-      onError: (error) => {
-        // The toast is handled by the mutation error handler
-        console.error("Login error:", error);
+      {
+        onSuccess: () => {
+          // Toast is already handled by the mutation success handler in useAuth
+          setLocation('/redi');
+        },
+        onError: (error) => {
+          // Toast is already handled by the mutation error handler in useAuth
+          console.error("Login error:", error);
+        }
       }
-    });
+    );
   };
 
   return (
@@ -85,9 +91,9 @@ const LoginForm: React.FC = () => {
         <Button 
           type="submit"
           className="w-full py-2 px-4 font-medium text-white bg-gradient-to-r from-[#6320ee] to-[#3cb371] rounded-md shadow hover:opacity-90 transition"
-          disabled={form.formState.isSubmitting}
+          disabled={loginMutation.isPending || form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
+          {loginMutation.isPending ? 'Signing in...' : 'Sign In'}
         </Button>
         
         <div className="mt-2 text-center text-sm text-gray-500">

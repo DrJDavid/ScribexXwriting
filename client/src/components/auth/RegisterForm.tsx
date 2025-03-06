@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,7 +23,7 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const RegisterForm: React.FC = () => {
-  const { register } = useAuth();
+  const { registerMutation } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -39,28 +39,25 @@ const RegisterForm: React.FC = () => {
   });
 
   const onSubmit = async (values: RegisterFormValues) => {
-    try {
-      await register({
+    registerMutation.mutate(
+      {
         username: values.username,
         password: values.password,
         displayName: values.displayName,
         age: Number(values.age),
         grade: Number(values.grade),
-      });
-      
-      toast({
-        title: "Account created",
-        description: "Welcome to ScribexX!",
-      });
-      
-      setLocation('/redi');
-    } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "Please check your information and try again",
-        variant: "destructive",
-      });
-    }
+      },
+      {
+        onSuccess: () => {
+          // Toast is already handled by the mutation success handler in useAuth
+          setLocation('/redi');
+        },
+        onError: (error) => {
+          // Toast is already handled by the mutation error handler in useAuth
+          console.error("Registration error:", error);
+        }
+      }
+    );
   };
 
   return (
@@ -172,9 +169,9 @@ const RegisterForm: React.FC = () => {
         <Button 
           type="submit"
           className="w-full py-2 px-4 font-medium text-white bg-gradient-to-r from-[#6320ee] to-[#3cb371] rounded-md shadow hover:opacity-90 transition"
-          disabled={form.formState.isSubmitting}
+          disabled={registerMutation.isPending || form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting ? 'Creating Account...' : 'Create Account'}
+          {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
         </Button>
       </form>
     </Form>
