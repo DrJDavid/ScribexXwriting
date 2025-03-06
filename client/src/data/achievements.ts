@@ -35,6 +35,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'First Steps',
     description: 'Complete your first exercise in REDI',
     icon: '🏆',
+    category: 'redi',
     requirements: {
       completedExercises: 1
     }
@@ -44,6 +45,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Novice Writer',
     description: 'Complete your first writing quest in OWL',
     icon: '✍️',
+    category: 'owl',
     requirements: {
       completedQuests: 1
     }
@@ -51,10 +53,23 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'mechanics-apprentice',
     title: 'Mechanics Apprentice',
-    description: 'Reach 25% mastery in Mechanics skills',
+    description: 'Reach 25% mastery in Mechanics skills in REDI',
     icon: '🔧',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
+        mechanics: 25
+      }
+    }
+  },
+  {
+    id: 'owl-mechanics-apprentice',
+    title: 'OWL Mechanics Apprentice',
+    description: 'Reach 25% mastery in Mechanics skills in OWL',
+    icon: '🔧',
+    category: 'owl',
+    requirements: {
+      owlSkillMastery: {
         mechanics: 25
       }
     }
@@ -62,10 +77,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sequencing-apprentice',
     title: 'Sequencing Apprentice',
-    description: 'Reach 25% mastery in Sequencing skills',
+    description: 'Reach 25% mastery in Sequencing skills in REDI',
     icon: '📋',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
         sequencing: 25
       }
     }
@@ -73,10 +89,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'voice-apprentice',
     title: 'Voice Apprentice',
-    description: 'Reach 25% mastery in Voice skills',
+    description: 'Reach 25% mastery in Voice skills in REDI',
     icon: '🔊',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
         voice: 25
       }
     }
@@ -88,6 +105,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Exercise Enthusiast',
     description: 'Complete 10 REDI exercises',
     icon: '🎯',
+    category: 'redi',
     requirements: {
       completedExercises: 10
     }
@@ -97,6 +115,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Adept Writer',
     description: 'Complete 5 writing quests in OWL',
     icon: '📝',
+    category: 'owl',
     requirements: {
       completedQuests: 5
     }
@@ -104,10 +123,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'mechanics-master',
     title: 'Mechanics Master',
-    description: 'Reach 75% mastery in Mechanics skills',
+    description: 'Reach 75% mastery in Mechanics skills in REDI',
     icon: '⚙️',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
         mechanics: 75
       }
     }
@@ -115,10 +135,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sequencing-master',
     title: 'Sequencing Master',
-    description: 'Reach 75% mastery in Sequencing skills',
+    description: 'Reach 75% mastery in Sequencing skills in REDI',
     icon: '🔗',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
         sequencing: 75
       }
     }
@@ -126,10 +147,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'voice-master',
     title: 'Voice Master',
-    description: 'Reach 75% mastery in Voice skills',
+    description: 'Reach 75% mastery in Voice skills in REDI',
     icon: '🎭',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
         voice: 75
       }
     }
@@ -137,12 +159,27 @@ export const ACHIEVEMENTS: Achievement[] = [
   
   // Advanced achievements
   {
-    id: 'all-around-writer',
-    title: 'All-Around Writer',
-    description: 'Reach at least 50% mastery in all three skill areas',
+    id: 'redi-all-around',
+    title: 'REDI All-Around',
+    description: 'Reach at least 50% mastery in all three REDI skill areas',
     icon: '🌟',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
+        mechanics: 50,
+        sequencing: 50,
+        voice: 50
+      }
+    }
+  },
+  {
+    id: 'owl-all-around',
+    title: 'OWL All-Around',
+    description: 'Reach at least 50% mastery in all three OWL skill areas',
+    icon: '🌟',
+    category: 'owl',
+    requirements: {
+      owlSkillMastery: {
         mechanics: 50,
         sequencing: 50,
         voice: 50
@@ -154,6 +191,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Exercise Master',
     description: 'Complete all REDI exercises in at least one skill path',
     icon: '🔥',
+    category: 'redi',
     requirements: {
       specificExercises: ['mechanics-1', 'mechanics-2', 'mechanics-3', 'mechanics-4', 'mechanics-5']
     }
@@ -163,17 +201,33 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Town Explorer',
     description: 'Complete at least one quest from each unlocked location',
     icon: '🧭',
+    category: 'owl',
     requirements: {
       specificQuests: ['town-hall-1', 'library-1', 'music-hall-1']
     }
   },
   {
-    id: 'writing-virtuoso',
-    title: 'Writing Virtuoso',
-    description: 'Reach 90% mastery in all three skill areas',
+    id: 'redi-virtuoso',
+    title: 'REDI Virtuoso',
+    description: 'Reach 90% mastery in all three REDI skill areas',
     icon: '👑',
+    category: 'redi',
     requirements: {
-      skillMastery: {
+      rediSkillMastery: {
+        mechanics: 90,
+        sequencing: 90,
+        voice: 90
+      }
+    }
+  },
+  {
+    id: 'owl-virtuoso',
+    title: 'OWL Virtuoso',
+    description: 'Reach 90% mastery in all three OWL skill areas',
+    icon: '👑',
+    category: 'owl',
+    requirements: {
+      owlSkillMastery: {
         mechanics: 90,
         sequencing: 90,
         voice: 90
@@ -185,12 +239,12 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Master Wordsmith',
     description: 'Complete at least 20 exercises and 10 quests with high mastery',
     icon: '📚',
+    category: 'general',
     requirements: {
       completedExercises: 20,
       completedQuests: 10,
-      skillMastery: {
-        total: 80
-      }
+      rediLevel: 5,
+      owlLevel: 5
     }
   }
 ];
