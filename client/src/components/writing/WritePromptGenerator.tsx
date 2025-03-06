@@ -18,6 +18,7 @@ interface WritePromptGeneratorProps {
   location: TownLocation;
   onSelectPrompt: (promptData: GeneratedPrompt) => void;
   className?: string;
+  initialPrompt?: GeneratedPrompt | null;
 }
 
 export function WritePromptGenerator({ 

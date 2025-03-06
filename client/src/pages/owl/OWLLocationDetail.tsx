@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WritePromptGenerator, GeneratedPrompt } from '@/components/writing/WritePromptGenerator';
+import { PromptDisplay } from '@/components/writing/PromptDisplay';
 import { getLocationById, getQuestsForLocation } from '@/data/quests';
 import { useProgress } from '@/context/ProgressContext';
 import { Pencil, ArrowLeft, MapPin } from 'lucide-react';
@@ -147,6 +148,35 @@ export default function OWLLocationDetail() {
         </div>
 
         <div>
+          <div className="mb-6" ref={promptSectionRef}>
+            {generatedPrompt && (
+              <div className="mb-6">
+                <PromptDisplay 
+                  prompt={generatedPrompt}
+                  onNewPrompt={() => setGeneratedPrompt(null)}
+                  onStartWriting={() => {
+                    // Store the generated prompt in sessionStorage
+                    const promptKey = `prompt_${new Date().getTime()}`;
+                    const promptData = {
+                      prompt: generatedPrompt.prompt,
+                      scenario: generatedPrompt.scenario,
+                      guidingQuestions: generatedPrompt.guidingQuestions || [],
+                      suggestedElements: generatedPrompt.suggestedElements || [],
+                      challengeElement: generatedPrompt.challengeElement || ""
+                    };
+                    
+                    // Store the data in sessionStorage
+                    sessionStorage.setItem(promptKey, JSON.stringify(promptData));
+                    console.log("Stored prompt data in sessionStorage with key:", promptKey);
+                    
+                    // Navigate to the writing page
+                    navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
           <Tabs defaultValue="prompt-generator">
             <TabsList className="w-full">
               <TabsTrigger value="prompt-generator" className="flex-1">Prompt Generator</TabsTrigger>
@@ -154,97 +184,25 @@ export default function OWLLocationDetail() {
             </TabsList>
             
             <TabsContent value="prompt-generator" className="mt-4">
-              {!generatedPrompt ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Generate a Writing Prompt</CardTitle>
-                    <CardDescription>
-                      Create a custom {location.type} writing prompt based on this location
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <WritePromptGenerator 
-                      location={location}
-                      onSelectPrompt={(prompt) => {
-                        console.log("Prompt selected in OWLLocationDetail:", prompt);
-                        setGeneratedPrompt(prompt);
-                      }}
-                    />
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="border-primary border-2 shadow-lg" ref={promptSectionRef}>
-                  <CardHeader className="bg-primary/10">
-                    <CardTitle>Your Custom Prompt is Ready!</CardTitle>
-                    <CardDescription>
-                      Review your custom prompt and start writing when ready
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="bg-muted p-4 rounded-md">
-                        <h3 className="font-semibold mb-2">Prompt</h3>
-                        <p>{generatedPrompt.prompt}</p>
-                      </div>
-                      
-                      <div className="bg-muted p-4 rounded-md">
-                        <h3 className="font-semibold mb-2">Scenario</h3>
-                        <p>{generatedPrompt.scenario}</p>
-                      </div>
-                      
-                      <div className="bg-muted p-4 rounded-md">
-                        <h3 className="font-semibold mb-2">Guiding Questions</h3>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {generatedPrompt.guidingQuestions.map((q, i) => (
-                            <li key={i}>{q}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div className="bg-muted p-4 rounded-md">
-                        <h3 className="font-semibold mb-2">Suggested Elements</h3>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {generatedPrompt.suggestedElements.map((e, i) => (
-                            <li key={i}>{e}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div className="bg-muted p-4 rounded-md">
-                        <h3 className="font-semibold mb-2">Challenge Element</h3>
-                        <p>{generatedPrompt.challengeElement}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between bg-primary/5">
-                    <Button variant="outline" onClick={() => setGeneratedPrompt(null)}>
-                      Generate New Prompt
-                    </Button>
-                    <Button variant="default" size="lg" className="animate-pulse" onClick={() => {
-                      // Store the generated prompt in sessionStorage instead of trying to encode it in URL
-                      const promptKey = `prompt_${new Date().getTime()}`;
-                      const promptData = {
-                        prompt: generatedPrompt.prompt,
-                        scenario: generatedPrompt.scenario,
-                        guidingQuestions: generatedPrompt.guidingQuestions || [],
-                        suggestedElements: generatedPrompt.suggestedElements || [],
-                        challengeElement: generatedPrompt.challengeElement || ""
-                      };
-                      
-                      // Store the data in sessionStorage (this avoids URL encoding issues)
-                      sessionStorage.setItem(promptKey, JSON.stringify(promptData));
-                      
-                      console.log("Stored prompt data in sessionStorage with key:", promptKey);
-                      
-                      // Navigate to the page with just the key reference
-                      navigate(`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`);
-                    }}>
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Start Writing
-                    </Button>
-                  </CardFooter>
-                </Card>
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generate a Writing Prompt</CardTitle>
+                  <CardDescription>
+                    Create a custom {location.type} writing prompt based on this location
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <WritePromptGenerator 
+                    location={location}
+                    onSelectPrompt={(prompt) => {
+                      console.log("Prompt selected in OWLLocationDetail:", prompt);
+                      if (prompt) {
+                        setGeneratedPrompt({...prompt});  // Create a new object to ensure state update
+                      }
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
             
             <TabsContent value="free-write" className="mt-4">
