@@ -14,7 +14,12 @@ export default function Home() {
   const { theme, setTheme } = useTheme();
   
   // Fetch user progress for streak data
-  const { data: progressData } = useQuery({
+  const { data: progressData } = useQuery<{
+    currentStreak?: number;
+    longestStreak?: number;
+    dailyChallengeCompleted?: boolean;
+    lastWritingDate?: string;
+  }>({
     queryKey: ['/api/progress'],
     enabled: !!user
   });
