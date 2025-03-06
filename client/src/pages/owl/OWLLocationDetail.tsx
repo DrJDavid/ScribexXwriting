@@ -231,7 +231,7 @@ export default function OWLLocationDetail() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <Link href={`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}`}>
+                  <Link href={`/owl/quest/free-write?locationId=${locationId}&promptType=${location.type}&mode=free`}>
                     <Button className="w-full">
                       <Pencil className="w-4 h-4 mr-2" />
                       Start Free Writing

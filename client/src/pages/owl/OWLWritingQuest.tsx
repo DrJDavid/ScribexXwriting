@@ -44,8 +44,8 @@ const OWLWritingQuest: React.FC = () => {
     return urlParams;
   }, []);
   
-  // Check if this is a free-write or a regular quest
-  const isFreeWrite = params.questId === 'free-write';
+  // Check if this is a free-write or a regular quest - check both the params and the URL path
+  const isFreeWrite = params.questId === 'free-write' || window.location.pathname.includes('/free-write');
   console.log("Is free write mode:", isFreeWrite);
   
   // For free-write, get location, prompt type and mode from query parameters
@@ -90,11 +90,15 @@ const OWLWritingQuest: React.FC = () => {
     let description = `Express yourself freely in ${promptType} writing format.`;
     let questTags = ['free-writing', promptType];
     
-    // If this is a generated prompt mode, adjust the title and description
+    // Adjust title and description based on the mode
     if (mode === 'generated') {
       title = `Generated ${capitalizedType} Prompt`;
       description = `Write based on the custom prompt generated for this ${promptType} writing task.`;
       questTags = [...questTags, 'generated-prompt'];
+    } else if (mode === 'free') {
+      title = `Free ${capitalizedType} Writing`;
+      description = `Express yourself freely without constraints. This ${promptType} writing exercise allows you to explore your own ideas and creativity.`;
+      questTags = [...questTags, 'no-constraints'];
     }
       
     const virtualQuest: WritingQuest = {
@@ -122,19 +126,38 @@ const OWLWritingQuest: React.FC = () => {
       navigate('/owl');
     };
     
-    if (isFreeWrite && (!locationId || !promptType)) {
-      redirectToOwl();
+    // For free-write mode, we must have both locationId and promptType
+    if (isFreeWrite) {
+      console.log("Free write mode validation:", { locationId, promptType });
+      
+      if (!locationId || !promptType) {
+        console.error("Missing required parameters for free-write mode");
+        toast({
+          title: "Navigation Error",
+          description: "Missing location or prompt type for free-write mode. Returning to OWL Town.",
+          variant: "destructive"
+        });
+        redirectToOwl();
+        return;
+      }
+      
+      // Valid free-write mode with required parameters
+      console.log("Valid free-write mode with parameters:", { locationId, promptType });
+      setIsLoading(false);
       return;
     }
     
-    if (!isFreeWrite && !quest) {
+    // For regular quests, we must have a valid quest object
+    if (!quest) {
+      console.error("No quest found for ID:", params.questId);
       redirectToOwl();
       return;
     }
     
     // If we reach here, we have valid params
+    console.log("Valid quest found:", quest.id);
     setIsLoading(false);
-  }, [isFreeWrite, locationId, promptType, quest, navigate]);
+  }, [isFreeWrite, locationId, promptType, quest, navigate, params.questId, toast]);
   
   // Submit writing mutation - defined unconditionally to avoid hooks ordering issues
   const submitWritingMutation = useMutation({
@@ -197,7 +220,20 @@ const OWLWritingQuest: React.FC = () => {
   };
   
   // Use either the real quest or the free-write quest
-  const currentQuest = quest || freeWriteQuest;
+  // If in free-write mode, create a default quest if one wasn't created already
+  const currentQuest = quest || freeWriteQuest || (isFreeWrite && locationId && promptType ? {
+    id: 'free-write',
+    locationId: locationId,
+    title: `Free ${promptType.charAt(0).toUpperCase() + promptType.slice(1)} Writing`,
+    description: `Express yourself freely in ${promptType} writing format.`,
+    tags: ['free-writing', promptType],
+    minWordCount: 150,
+    skillFocus: 'voice' as const,
+    level: 1,
+    unlockRequirements: {
+      skillMastery: { mechanics: 0, sequencing: 0, voice: 0 },
+    }
+  } : null);
   
   // Show loading state while checking parameters
   if (isLoading) {
