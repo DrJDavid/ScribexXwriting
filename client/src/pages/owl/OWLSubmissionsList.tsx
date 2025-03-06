@@ -108,7 +108,7 @@ const OWLSubmissionsList: React.FC = () => {
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="relative z-10"
           >
-            <Plant className="h-12 w-12 text-emerald-400/70" />
+            <Leaf className="h-12 w-12 text-emerald-400/70" />
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
@@ -333,7 +333,7 @@ const OWLSubmissionsList: React.FC = () => {
                 <Card className="bg-gradient-to-br from-emerald-900/90 to-emerald-950/90 border border-emerald-700/50 p-6 shadow-glow-sm text-center rounded-xl">
                   <div className="flex flex-col items-center">
                     <div className="bg-emerald-800/50 p-4 rounded-full mb-4 border border-emerald-700/30">
-                      <Plant className="h-12 w-12 text-emerald-400/90" />
+                      <Leaf className="h-12 w-12 text-emerald-400/90" />
                     </div>
                     <h3 className="text-xl font-botanical text-emerald-100 mb-2">Your Garden Awaits</h3>
                     <p className="text-emerald-200/80 mb-6 max-w-md">
@@ -343,7 +343,7 @@ const OWLSubmissionsList: React.FC = () => {
                       onClick={handleBackToTown}
                       className="bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-emerald-50 shadow-md"
                     >
-                      <Plant className="h-4 w-4 mr-2" />
+                      <Leaf className="h-4 w-4 mr-2" />
                       Explore Writing Quests
                     </Button>
                   </div>
