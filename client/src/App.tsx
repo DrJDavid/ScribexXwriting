@@ -5,7 +5,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import { Button } from "@/components/ui/button";
-import { LogOut, FileText } from "lucide-react";
+import { LogOut, FileText, Award } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -129,6 +129,12 @@ const Header = () => {
               <Link href="/writing/submissions" className={`hover:text-white/80 transition-colors ${location.startsWith('/writing') ? 'underline' : ''}`}>
                 Submissions
               </Link>
+              <Link href="/achievements" className={`hover:text-white/80 transition-colors ${location === '/achievements' ? 'underline' : ''}`}>
+                <div className="flex items-center gap-1">
+                  <Award className="h-4 w-4" />
+                  Achievements
+                </div>
+              </Link>
               <Link href="/profile" className={`hover:text-white/80 transition-colors ${location === '/profile' ? 'underline' : ''}`}>
                 Profile
               </Link>
@@ -169,6 +175,7 @@ import OWLWritingQuest from "@/pages/owl/OWLWritingQuest";
 import REDIMap from "@/pages/redi/REDIMap";
 import REDIExercise from "@/pages/redi/REDIExercise";
 import ProfilePage from "@/pages/Profile";
+import AchievementsPage from "@/pages/AchievementsPage";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/hooks/use-auth";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -197,6 +204,7 @@ function App() {
                   <ProtectedRoute path="/owl" component={OWLTown} />
                   <ProtectedRoute path="/redi/exercise/:exerciseId" component={REDIExercise} />
                   <ProtectedRoute path="/redi" component={REDIMap} />
+                  <ProtectedRoute path="/achievements" component={AchievementsPage} />
                   <ProtectedRoute path="/profile" component={ProfilePage} />
                   <ProtectedRoute path="/" component={Home} />
                   <Route component={NotFound} />
