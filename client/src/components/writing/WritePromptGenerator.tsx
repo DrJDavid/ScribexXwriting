@@ -129,8 +129,8 @@ export function WritePromptGenerator({
       sessionStorage.setItem(promptKey, JSON.stringify(promptToSend));
       console.log("Stored prompt data in sessionStorage with key:", promptKey);
       
-      // Navigate directly to the writing page
-      const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+      // Navigate directly to the writing page with CORRECT path format
+      const destinationUrl = `/owl/quest/free-write?locationId=${encodeURIComponent(location.id)}&promptType=${encodeURIComponent(location.type)}&mode=generated&promptKey=${encodeURIComponent(promptKey)}`;
       console.log("Will navigate to:", destinationUrl);
       
       // Show a toast to confirm navigation
@@ -176,8 +176,8 @@ export function WritePromptGenerator({
         description: "Using a fallback prompt instead. Taking you to the writing page...",
       });
       
-      // Navigate directly to the writing page
-      const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+      // Navigate directly to the writing page with CORRECT path format
+      const destinationUrl = `/owl/quest/free-write?locationId=${encodeURIComponent(location.id)}&promptType=${encodeURIComponent(location.type)}&mode=generated&promptKey=${encodeURIComponent(promptKey)}`;
       setTimeout(() => {
         window.location.href = destinationUrl;
       }, 300);
@@ -249,7 +249,7 @@ export function WritePromptGenerator({
       // Force modal to close before navigation to prevent state issues
       setModalOpen(false);
       
-      const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+      const destinationUrl = `/owl/quest/free-write?locationId=${encodeURIComponent(location.id)}&promptType=${encodeURIComponent(location.type)}&mode=generated&promptKey=${encodeURIComponent(promptKey)}`;
       console.log("Will navigate to:", destinationUrl);
       
       // Show a toast to confirm navigation
@@ -419,8 +419,8 @@ export function WritePromptGenerator({
                     description: "Taking you to the writing page...",
                   });
                   
-                  // Navigate directly to the writing page
-                  const destinationUrl = `/owl/quest/free-write?locationId=${location.id}&promptType=${location.type}&mode=generated&promptKey=${promptKey}`;
+                  // Navigate directly to the writing page with CORRECT path format
+                  const destinationUrl = `/owl/quest/free-write?locationId=${encodeURIComponent(location.id)}&promptType=${encodeURIComponent(location.type)}&mode=generated&promptKey=${encodeURIComponent(promptKey)}`;
                   setTimeout(() => {
                     window.location.href = destinationUrl;
                   }, 300);

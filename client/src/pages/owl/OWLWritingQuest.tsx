@@ -36,7 +36,9 @@ const OWLWritingQuest: React.FC = () => {
   
   // Get URL parameters more reliably by using window.location directly
   const searchParams = useMemo(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const rawSearch = window.location.search;
+    const urlParams = new URLSearchParams(rawSearch);
+    console.log("Raw URL query string:", rawSearch);
     console.log("URL params:", {
       locationId: urlParams.get('locationId'),
       promptType: urlParams.get('promptType'),
@@ -51,10 +53,11 @@ const OWLWritingQuest: React.FC = () => {
   console.log("Is free write mode:", isFreeWrite);
   
   // For free-write, get location, prompt type and mode from query parameters
-  const locationId = searchParams.get('locationId');
-  const promptType = searchParams.get('promptType');
-  const mode = searchParams.get('mode'); // 'generated' for generated prompts
-  const promptKey = searchParams.get('promptKey'); // New approach using sessionStorage
+  // Decode URL components if they were encoded
+  const locationId = searchParams.get('locationId') ? decodeURIComponent(searchParams.get('locationId')!) : null;
+  const promptType = searchParams.get('promptType') ? decodeURIComponent(searchParams.get('promptType')!) : null;
+  const mode = searchParams.get('mode') ? decodeURIComponent(searchParams.get('mode')!) : null;
+  const promptKey = searchParams.get('promptKey') ? decodeURIComponent(searchParams.get('promptKey')!) : null;
   
   // Parse the prompt data if it exists
   const [generatedPromptData, setGeneratedPromptData] = useState<GeneratedPrompt | null>(null);
