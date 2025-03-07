@@ -802,6 +802,113 @@ const AchievementsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* Completed OWL Quests */}
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <PenLine className="h-5 w-5 text-green-500" />
+                  <span>Completed Writing Quests</span>
+                </h3>
+                <div className="max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-black/20">
+                  {progress?.completedQuests?.length ? (
+                    <div className="grid grid-cols-1 gap-2">
+                      {progress.completedQuests.map((questId) => {
+                        const quest = getQuestById(questId);
+                        return (
+                          <div 
+                            key={questId} 
+                            className="rounded bg-black/30 p-3 border border-green-900/50"
+                          >
+                            <div className="flex items-start gap-2">
+                              <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <h4 className="font-medium text-green-200">
+                                  {quest?.title || questId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </h4>
+                                {quest && (
+                                  <div className="mt-1">
+                                    <p className="text-sm text-gray-400 mb-1">
+                                      {quest.description}
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      <Badge variant="outline" className="bg-green-900/30 border-green-700/50 text-green-300 text-xs">
+                                        {quest.skillFocus.charAt(0).toUpperCase() + quest.skillFocus.slice(1)}
+                                      </Badge>
+                                      <Badge variant="outline" className="bg-green-900/30 border-green-700/50 text-green-300 text-xs">
+                                        Level {quest.level}
+                                      </Badge>
+                                      <Badge variant="outline" className="bg-green-900/30 border-green-700/50 text-green-300 text-xs">
+                                        Min. {quest.minWordCount} words
+                                      </Badge>
+                                      {quest.locationId && (
+                                        <Badge variant="outline" className="bg-green-900/30 border-green-700/50 text-green-300 text-xs">
+                                          {quest.locationId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <ScrollText className="h-12 w-12 mx-auto text-gray-600 mb-2" />
+                      <p className="text-gray-500">No writing quests completed yet</p>
+                      <p className="text-gray-600 text-sm mt-1">Complete OWL quests to showcase your writing talents</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Unlocked Locations */}
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-green-500" />
+                  <span>Unlocked Locations</span>
+                </h3>
+                <div className="max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-black/20">
+                  {progress?.unlockedLocations?.length ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {progress.unlockedLocations.map((locationId) => {
+                        const location = getLocationById(locationId);
+                        return (
+                          <div 
+                            key={locationId} 
+                            className="rounded bg-black/30 p-2 border border-green-900/50"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 flex items-center justify-center bg-green-900/50 rounded-full">
+                                {location?.icon && (
+                                  <span className="text-green-200">{location.icon}</span>
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-green-200">
+                                  {location?.name || locationId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </h4>
+                                {location?.type && (
+                                  <Badge className="bg-green-800/30 text-green-300 text-xs">
+                                    {location.type.charAt(0).toUpperCase() + location.type.slice(1)}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-gray-500">No locations unlocked yet</p>
+                      <p className="text-gray-600 text-sm mt-1">Complete exercises to unlock new writing locations</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
