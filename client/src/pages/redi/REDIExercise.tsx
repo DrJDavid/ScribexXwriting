@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import ExerciseMultipleChoice from '@/components/exercises/ExerciseMultipleChoice';
@@ -14,6 +14,11 @@ const REDIExercise: React.FC = () => {
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
   const { progress, completeExercise, updateProgress } = useProgress();
+  
+  // Track if we've already mounted this component to avoid state resets
+  const componentMounted = useRef(false);
+  // Store exercise set in a ref to preserve it between renders
+  const exerciseSetRef = useRef<string[]>([]);
   // exerciseIndex is 1-based (for display/UI purposes)
   // But when we use it as an index into the 0-based exerciseSet array,
   // we need to handle the conversion carefully
@@ -45,31 +50,67 @@ const REDIExercise: React.FC = () => {
   // Get the exercise data using the current exercise ID in the set
   const exercise = getExerciseById(currentSetExerciseId || params.exerciseId || "");
   
-  // Generate a set of exercises for the current skill type
+  // Track component mounting to prevent state resets
+  useEffect(() => {
+    console.log("Component mount effect running, mounted=", componentMounted.current);
+    
+    // Only run this once when component mounts
+    if (!componentMounted.current) {
+      console.log("📱 Component has mounted for the first time");
+      componentMounted.current = true;
+    }
+    
+    // Cleanup when component unmounts
+    return () => {
+      console.log("📴 Component is unmounting");
+      componentMounted.current = false;
+    };
+  }, []);
+  
+  // Generate a set of exercises for the current skill type - only on first load
   useEffect(() => {
     if (exercise) {
-      // Get all available exercises of the same skill type
-      const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
-      const sameTypeExercises = nodes
-        .filter(node => node.skillType === exercise.skillType && node.status !== 'locked')
-        .map(node => node.id);
-      
-      // If we don't have enough exercises of this type, include some from other types
-      let exerciseSelection = [...sameTypeExercises];
-      if (exerciseSelection.length < 5) {
-        const otherExercises = nodes
-          .filter(node => node.skillType !== exercise.skillType && node.status !== 'locked')
+      // Only regenerate if we don't have a set already OR if we're starting a new exercise
+      if (exerciseSet.length === 0 || exercise.id !== exerciseSet[0]) {
+        console.log("🎲 Generating exercise set for:", exercise.id);
+        
+        // Get all available exercises of the same skill type
+        const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 });
+        const sameTypeExercises = nodes
+          .filter(node => node.skillType === exercise.skillType && node.status !== 'locked')
           .map(node => node.id);
-        exerciseSelection = [...exerciseSelection, ...otherExercises].slice(0, 5);
+        
+        // If we don't have enough exercises of this type, include some from other types
+        let exerciseSelection = [...sameTypeExercises];
+        if (exerciseSelection.length < 5) {
+          const otherExercises = nodes
+            .filter(node => node.skillType !== exercise.skillType && node.status !== 'locked')
+            .map(node => node.id);
+          exerciseSelection = [...exerciseSelection, ...otherExercises].slice(0, 5);
+        }
+        
+        // Make sure the current exercise is included and is first
+        exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
+        exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
+        
+        console.log("🎯 Setting initial exercise set:", exerciseSelection);
+        
+        // Store exercise set in both state and ref
+        exerciseSetRef.current = exerciseSelection;
+        setExerciseSet(exerciseSelection);
+        setTotalExercises(exerciseSelection.length);
+        
+        // Reset to first exercise when starting a new set
+        // This ensures the index is correct for the current set
+        if (exercise.id === exerciseSelection[0] && exerciseIndex !== 1) {
+          console.log("Resetting exercise index to 1 for new set");
+          setExerciseIndex(1);
+          setCorrectAnswers(0);
+          setHasSubmitted(false);
+        }
+      } else {
+        console.log("Using existing exercise set:", exerciseSet);
       }
-      
-      // Make sure the current exercise is included and is first
-      exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
-      exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
-      
-      console.log("Setting exercise set:", exerciseSelection);
-      setExerciseSet(exerciseSelection);
-      setTotalExercises(exerciseSelection.length);
     }
   }, [exercise, progress]);
   
@@ -172,9 +213,13 @@ const REDIExercise: React.FC = () => {
     // the NEXT exercise is at index equal to exerciseIndex
     // (since exerciseIndex = 1 means first element at array[0], so next is at array[1])
     console.log("ENTIRE EXERCISE SET:", exerciseSet);
+    console.log("EXERCISE SET FROM REF:", exerciseSetRef.current);
+    
+    // Use the exercise set from the ref to ensure consistency
+    const combinedSet = exerciseSet.length > 0 ? exerciseSet : exerciseSetRef.current;
     
     // Directly get the next exercise without complicated calculations
-    const nextExerciseId = exerciseSet[exerciseIndex]; // Using the 1-indexed value directly
+    const nextExerciseId = combinedSet[exerciseIndex]; // Using the 1-indexed value directly
     console.log("🔄 Going to next exercise", { 
       currentExerciseIndex: exerciseIndex - 1, // For display only
       nextExerciseIndex: exerciseIndex,  // For display only
@@ -280,9 +325,39 @@ const REDIExercise: React.FC = () => {
     // This is handled in updateRediMastery
   };
   
-  // Handle continue button
+  // Handle continue button - directly advance to next exercise
   const handleContinue = () => {
-    advanceToNextExercise();
+    // This is a critical function called when clicking Continue
+    console.log("⏭️ Continue button clicked, hasSubmitted:", hasSubmitted);
+    
+    // Get the actual next exercise ID directly from the set
+    // Use refs to ensure we have the most stable data
+    const nextExerciseId = exerciseSetRef.current[exerciseIndex];
+    console.log("🎮 Next exercise from continue:", nextExerciseId);
+    
+    // If the next exercise exists, update state
+    if (nextExerciseId) {
+      setHasSubmitted(false);
+      setAnsweredCorrectly(false);
+      
+      // Update the current exercise ID
+      setCurrentSetExerciseId(nextExerciseId);
+      
+      // Increment exercise index
+      setExerciseIndex(exerciseIndex + 1);
+      
+      console.log("Continue button advancing to:", nextExerciseId);
+    } else {
+      // If we've completed all exercises
+      console.log("Set completed via continue button");
+      updateRediMastery().then(() => {
+        // Mark original exercise as completed
+        if (params.exerciseId && completeExercise) {
+          completeExercise(params.exerciseId, correctAnswers >= 3);
+        }
+        navigate('/redi');
+      });
+    }
   };
   
   // Handle back button

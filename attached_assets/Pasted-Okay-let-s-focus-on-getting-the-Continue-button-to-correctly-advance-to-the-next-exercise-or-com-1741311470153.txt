@@ -1,0 +1,91 @@
+Okay, let's focus on getting the `Continue` button to correctly advance to the next exercise (or complete the set). The fact that it's now *appearing* is a good sign; it means `hasSubmitted` is being set correctly. The problem is now likely in the `advanceToNextExercise` function, or potentially still in how the current exercise is being determined.
+
+Here's how we can prompt the coding agent, building on the previous information:
+
+**1. Refined Problem Statement:**
+
+"The 'Continue' button in my REDI exercises now appears after submitting an answer, but clicking it reloads the *same* exercise instead of advancing to the next one in the set.  The component seems to be losing track of the `exerciseIndex` or `exerciseSet`, or re-fetching the initial exercise data."
+
+**2. Emphasize Key Changes and Observations:**
+
+*   **"I've made some progress. The 'Continue' button now appears, which indicates that the `hasSubmitted` state is being updated correctly after submitting an answer."**
+*   **"However, clicking 'Continue' doesn't advance to the next exercise. It seems to reset the current exercise to its initial state."**
+*   **"I've added extensive logging, and I can confirm that `handleMultipleChoiceSubmit` (or `handleWritingSubmit`) is setting `hasSubmitted` to `true` and calling `onSubmit` correctly."**
+*   **"I also see that when I submit my answer, the `useEffect` dependent on `exerciseID` is re-running."**
+*   **"The `advanceToNextExercise` function *is* being called when I click 'Continue'."** (Verify this with a `console.log` *inside* `advanceToNextExercise`).
+*  **"The `exerciseIndex` appears to be incrementing inside the `advanceToNextExercise` function, (use console.log). But after the component re-renders, it resets to 1."**
+
+**3. Highlight Relevant Code Snippets (Again, with a Focus):**
+
+```typescript
+// REDIExercise.tsx - advanceToNextExercise (MOST IMPORTANT)
+
+const advanceToNextExercise = useCallback(() => {
+  console.log("advanceToNextExercise called. exerciseIndex:", exerciseIndex, "totalExercises:", totalExercises);
+  if (exerciseIndex >= totalExercises) {
+    // ... (completion logic, this part seems to work)
+  } else {
+    const nextExerciseId = exerciseSet[exerciseIndex]; // 0-indexed array
+    console.log("Next exercise ID:", nextExerciseId); 
+    if (nextExerciseId) {
+      setHasSubmitted(false);
+      setIsCorrect(false);
+      setExerciseIndex(exerciseIndex + 1);
+      setCurrentSetExerciseId(nextExerciseId); // Are we using this correctly?
+    } else {
+      navigate('/redi'); // Fallback
+    }
+  }
+}, [exerciseIndex, totalExercises, exerciseSet, navigate, updateRediMastery, params.exerciseId, completeExercise, correctAnswers, toast]); // Check dependencies
+
+// REDIExercise.tsx - useEffect for exercise data
+useEffect(() => {
+   // Reset state for new exercise
+   setHasSubmitted(false);
+   setIsCorrect(false);
+  }, [exerciseId]);
+
+//REDIExercise.tsx  - useEffect that sets exerciseSet
+useEffect(() => {
+  if (exercise) {
+    // ... (logic to determine exercise set)
+      setExerciseSet(exerciseSelection); // Check what this looks like
+      setTotalExercises(exerciseSelection.length);
+    }
+}, [exercise, progress]);
+
+//REDIExercise.tsx - where currentSetExerciseId is used
+const exercise = getExerciseById(currentSetExerciseId || params.exerciseId);
+
+```
+*   **`ExerciseMultipleChoice.tsx` and `ExerciseWriting.tsx` - Confirm these are calling `onSubmit` correctly, and that you're NOT resetting state *within* these components after submission.** Make sure you're passing `hasSubmitted` down as a prop so that you can have the state update.
+*   Any other code that directly interacts with `exerciseIndex`, `exerciseSet`, or `currentSetExerciseId`.
+
+**4. Targeted Questions for the Agent:**
+
+*   **"Why is `exerciseIndex` resetting to 1 after `advanceToNextExercise` is called? Is there something causing the `REDIExercise` component to re-mount or re-initialize?"** This is the central question.
+*   **"Am I using `useCallback` correctly for `advanceToNextExercise`? Are all the necessary dependencies included in the dependency array?"** Missing dependencies in `useCallback` can cause stale closures, capturing old state values.
+*   **"Is `setCurrentSetExerciseId` being used correctly to update the current exercise? Is there a race condition where it's being set *before* the component has a chance to render with the new `exerciseIndex`?"** This points to the core logic for switching exercises.
+*   **"Could the way I'm fetching the exercise data (with `getExerciseById`) be interfering with the state updates? Is it possible the data is being re-fetched and overwriting the updated state?"**  Consider whether you need to fetch data *inside* `REDIExercise` at all, or if you can rely entirely on the `exerciseSet`.
+*   **"The useEffect that depends on exerciseID is running whenever I submit an answer. Is that correct? Should that logic maybe be moved somewhere else, like inside of advanceToNextExercise?"**
+* **"Am I correctly using session storage to handle the prompt generation for free-write mode?"**
+* **"Could there be an issue with how I'm updating the state in `ProgressContext`, and then using `useProgress`, that's causing this?"**
+*   **"Can you provide a step-by-step walkthrough of what *should* happen when I click 'Submit Answer' and then 'Continue', focusing on how the state variables in `REDIExercise` should change?"**  This helps clarify the intended flow and identify deviations.
+*  **"Should `progress` or `isLoading` from `useProgress` be a dependency of `advanceToNextExercise`?"**
+* **"Am I using useQuery and useMutation in a way that could be causing unexpected rerenders?"**
+
+**5. Debugging Steps (Reinforce These):**
+
+*   **"I've added `console.log` statements to track the values of `exerciseIndex`, `hasSubmitted`, `exerciseSet`, and `currentSetExerciseId` in `REDIExercise`. I'm seeing that `exerciseIndex` increments correctly *inside* `advanceToNextExercise`, but then resets to 1 when the component re-renders."**
+*   **"I've verified that the `onSubmit` functions in `ExerciseMultipleChoice` and `ExerciseWriting` are correctly passing the necessary data."**
+*   **"I'm using React DevTools to inspect the component state and props."**
+
+**Key Improvements in This Prompt:**
+
+*   **More Precise Problem Description:** We're now focusing on the specific failure point (the "Continue" button not advancing).
+*   **Emphasis on State Reset:** We're explicitly highlighting that the component's state is reverting.
+*   **Targeted Code Snippets:**  We're providing the most relevant parts of `REDIExercise.tsx`.
+*   **Specific Questions:** We're asking focused questions about `useCallback`, `setCurrentSetExerciseId`, potential race conditions, and the interaction with `useLocation`.
+*   **Confirmation of Debugging Steps:**  We're reassuring the agent that we've already taken basic debugging steps.
+
+By providing this detailed information, your coding agent will have a much better chance of identifying the root cause and providing a solution. The issue is almost certainly related to how React's state and lifecycle are interacting with your exercise progression logic.  The agent should be able to guide you to the specific lines of code that need adjustment.
