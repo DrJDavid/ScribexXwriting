@@ -33,59 +33,71 @@ const REDIExercise: React.FC = () => {
   const exercise = getExerciseById(currentSetExerciseId || params.exerciseId);
   
   // Generate a set of exercises for the current skill type
+  // Only run this effect on initial mount with the original exercise ID
   useEffect(() => {
-    if (exercise) {
-      // Get all available exercises of the same skill type
-      const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 }, 
-        progress?.completedExercises || []);
-      
-      // First, include all exercises of the same skill type
-      const sameTypeExercises = nodes
-        .filter(node => node.skillType === exercise.skillType && 
-                        (node.status === 'available' || 
-                         node.status === 'current' || 
-                         node.id === exercise.id))
+    console.log('Initialize Exercise Set - Current State:', { 
+      exerciseId: params.exerciseId,
+      currentSetExerciseId,
+      setLength: exerciseSet.length,
+      exerciseSkillType: exercise?.skillType
+    });
+  
+    if (!exercise || exerciseSet.length > 0) {
+      console.log('Skipping exercise set initialization - already initialized or no exercise');
+      return;
+    }
+    
+    // Get all available exercises of the same skill type
+    const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 }, 
+      progress?.completedExercises || []);
+    
+    // First, include all exercises of the same skill type
+    const sameTypeExercises = nodes
+      .filter(node => node.skillType === exercise.skillType && 
+                      (node.status === 'available' || 
+                       node.status === 'current' || 
+                       node.id === exercise.id))
+      .map(node => node.id);
+    
+    console.log('Same type exercises:', sameTypeExercises);
+    
+    // If we don't have enough exercises of this type, include some from other types
+    let exerciseSelection = [...sameTypeExercises];
+    if (exerciseSelection.length < 5) {
+      const otherExercises = nodes
+        .filter(node => node.skillType !== exercise.skillType && 
+                       (node.status === 'available' || node.status === 'current'))
         .map(node => node.id);
       
-      console.log('Same type exercises:', sameTypeExercises);
-      
-      // If we don't have enough exercises of this type, include some from other types
-      let exerciseSelection = [...sameTypeExercises];
-      if (exerciseSelection.length < 5) {
-        const otherExercises = nodes
-          .filter(node => node.skillType !== exercise.skillType && 
-                         (node.status === 'available' || node.status === 'current'))
-          .map(node => node.id);
-        
-        console.log('Other available exercises:', otherExercises);
-        exerciseSelection = [...exerciseSelection, ...otherExercises];
-      }
-      
-      // Make sure the current exercise is included and is first
-      exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
-      exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
-      
-      console.log('Final exercise set:', exerciseSelection);
-      
-      // Ensure we have exactly 5 exercises by duplicating some if needed
-      while (exerciseSelection.length < 5 && exerciseSelection.length > 0) {
-        // Add duplicates from the existing set (excluding the first one which is the current exercise)
-        const availableToDuplicate = exerciseSelection.slice(1);
-        if (availableToDuplicate.length > 0) {
-          // Duplicate a random exercise from the available set
-          const randomIndex = Math.floor(Math.random() * availableToDuplicate.length);
-          exerciseSelection.push(availableToDuplicate[randomIndex]);
-        } else {
-          // If no other exercises available, duplicate the current one
-          exerciseSelection.push(exerciseSelection[0]);
-        }
-      }
-      
-      setExerciseSet(exerciseSelection);
-      setTotalExercises(exerciseSelection.length);
-      console.log('Set total exercises to:', exerciseSelection.length);
+      console.log('Other available exercises:', otherExercises);
+      exerciseSelection = [...exerciseSelection, ...otherExercises];
     }
-  }, [exercise, progress]);
+    
+    // Make sure the current exercise is included and is first
+    exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
+    exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
+    
+    console.log('Final exercise set:', exerciseSelection);
+    
+    // Ensure we have exactly 5 exercises by duplicating some if needed
+    while (exerciseSelection.length < 5 && exerciseSelection.length > 0) {
+      // Add duplicates from the existing set (excluding the first one which is the current exercise)
+      const availableToDuplicate = exerciseSelection.slice(1);
+      if (availableToDuplicate.length > 0) {
+        // Duplicate a random exercise from the available set
+        const randomIndex = Math.floor(Math.random() * availableToDuplicate.length);
+        exerciseSelection.push(availableToDuplicate[randomIndex]);
+      } else {
+        // If no other exercises available, duplicate the current one
+        exerciseSelection.push(exerciseSelection[0]);
+      }
+    }
+    
+    console.log('Setting exercise set:', exerciseSelection);
+    setExerciseSet(exerciseSelection);
+    setTotalExercises(exerciseSelection.length);
+    console.log('Set total exercises to:', exerciseSelection.length);
+  }, [params.exerciseId, progress, exercise && exercise.skillType]);
   
   // If exercise not found, go back to map
   useEffect(() => {
@@ -172,25 +184,34 @@ const REDIExercise: React.FC = () => {
     }
     
     // Otherwise, go to the next exercise in the set
-    const nextExerciseId = exerciseSet[exerciseIndex]; // 0-indexed array, 1-indexed display
+    // Get the next exercise from the set using the current index (which is 1-indexed for display)
+    // So we need to use exerciseIndex (not exerciseIndex+1) to get the next item
+    const nextExerciseId = exerciseSet[exerciseIndex];
     if (nextExerciseId) {
       // Reset submission state
       setHasSubmitted(false);
       setAnsweredCorrectly(false);
       
+      // Get the next exercise before incrementing index for logging
+      console.log(`Moving to next exercise: ${nextExerciseId} (${exerciseIndex + 1} of ${totalExercises})`);
+      
       // Increment exercise index
-      setExerciseIndex(exerciseIndex + 1);
+      setExerciseIndex(prev => prev + 1);
       
       // We don't navigate - just update the current exercise ID in the set
       // This keeps us on the same page but with new exercise content
-      const exercise = getExerciseById(nextExerciseId);
-      if (exercise) {
+      const nextExercise = getExerciseById(nextExerciseId);
+      if (nextExercise) {
+        // Update current exercise ID in a safe manner
         setCurrentSetExerciseId(nextExerciseId);
+        console.log(`Successfully loaded next exercise: ${nextExercise.title}`);
       } else {
+        console.error(`Exercise not found for ID: ${nextExerciseId}`);
         // Fallback if exercise not found
         navigate('/redi');
       }
     } else {
+      console.error(`No next exercise found at index ${exerciseIndex}`);
       // Fallback if we don't have a next exercise
       navigate('/redi');
     }
@@ -198,13 +219,6 @@ const REDIExercise: React.FC = () => {
   
   // Handle multiple choice submission
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
-    // Prevent default form submission if this is triggered from a form
-    try {
-      event && event.preventDefault && event.preventDefault();
-    } catch (e) {
-      // Ignore if event is not available
-    }
-    
     // If already submitted, prevent double-submission
     if (hasSubmitted) {
       return;
@@ -239,13 +253,6 @@ const REDIExercise: React.FC = () => {
   
   // Handle writing submission
   const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
-    // Prevent default form submission if this is triggered from a form
-    try {
-      event && event.preventDefault && event.preventDefault();
-    } catch (e) {
-      // Ignore if event is not available
-    }
-    
     // If already submitted, prevent double-submission
     if (hasSubmitted) {
       return;
