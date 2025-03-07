@@ -139,14 +139,24 @@ const FixedREDIExerciseNew: React.FC = () => {
     setFeedbackModalOpen(true);
   };
   
-  const handleNextExercise = () => {
-    // Simplified logic for demo - just record completion
-    if (completeExercise) {
-      completeExercise(exercise.id, isAnswerCorrect);
+  const handleNextExercise = async () => {
+    try {
+      // First close the feedback modal
+      setFeedbackModalOpen(false);
+      
+      // Record completion - need to await this to catch any errors
+      if (completeExercise && exercise?.id) {
+        await completeExercise(exercise.id, isAnswerCorrect);
+      }
+      
+      // Only navigate after the completion is successfully recorded
+      navigate('/redi');
+    } catch (error) {
+      console.error("Error completing exercise:", error);
+      // If an error occurs, still close the modal but show an error message
+      setFeedbackModalOpen(false);
+      navigate('/redi');
     }
-    
-    // Go back to map
-    navigate('/redi');
   };
   
   // Theme-specific styling

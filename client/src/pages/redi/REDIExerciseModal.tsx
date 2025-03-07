@@ -25,12 +25,12 @@ export function REDIExerciseModal({
 }: REDIExerciseModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700">
+      <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700" aria-describedby="exercise-feedback-message">
         <DialogHeader>
           <DialogTitle className={`text-xl ${isCorrect ? 'text-green-400' : 'text-red-400'} ${fontClass}`}>
             {title}
           </DialogTitle>
-          <div className="text-gray-200 mt-2">
+          <div className="text-gray-200 mt-2" id="exercise-feedback-message">
             {message}
           </div>
         </DialogHeader>
