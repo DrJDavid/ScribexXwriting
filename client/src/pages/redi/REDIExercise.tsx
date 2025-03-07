@@ -14,6 +14,10 @@ const REDIExercise: React.FC = () => {
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
   const { progress, completeExercise, updateProgress } = useProgress();
+  // exerciseIndex is 1-based (for display/UI purposes)
+  // But when we use it as an index into the 0-based exerciseSet array,
+  // we need to handle the conversion carefully
+  // Start at 1 for the first exercise (0-indexed in array would be 0)
   const [exerciseIndex, setExerciseIndex] = useState(1);
   const [totalExercises, setTotalExercises] = useState(5);
   const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
@@ -27,10 +31,19 @@ const REDIExercise: React.FC = () => {
   }, [setTheme]);
   
   // State to track the current exercise ID in the set
-  const [currentSetExerciseId, setCurrentSetExerciseId] = useState(params.exerciseId);
+  // Initialize with the URL parameter exerciseId
+  const [currentSetExerciseId, setCurrentSetExerciseId] = useState<string>(params.exerciseId || "");
+  
+  console.log("Current state:", { 
+    currentSetExerciseId,
+    paramsExerciseId: params.exerciseId,
+    exerciseIndex, 
+    totalExercises,
+    hasSubmitted
+  });
   
   // Get the exercise data using the current exercise ID in the set
-  const exercise = getExerciseById(currentSetExerciseId || params.exerciseId);
+  const exercise = getExerciseById(currentSetExerciseId || params.exerciseId || "");
   
   // Generate a set of exercises for the current skill type
   useEffect(() => {
@@ -54,6 +67,7 @@ const REDIExercise: React.FC = () => {
       exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
       exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
       
+      console.log("Setting exercise set:", exerciseSelection);
       setExerciseSet(exerciseSelection);
       setTotalExercises(exerciseSelection.length);
     }
@@ -124,8 +138,11 @@ const REDIExercise: React.FC = () => {
 
   // Function to handle advancing to next exercise
   const advanceToNextExercise = useCallback(() => {
+    console.log("advanceToNextExercise called", { exerciseIndex, totalExercises, exerciseSet });
+    
     // If we've completed all exercises in the set
     if (exerciseIndex >= totalExercises) {
+      console.log("All exercises in set completed, updating mastery...");
       // Update mastery only after completing the full set
       updateRediMastery().then(() => {
         // Mark original exercise ID as completed
@@ -143,13 +160,23 @@ const REDIExercise: React.FC = () => {
         }
         
         // Navigate back to the REDI map after updating mastery
+        console.log("Navigating back to REDI map");
         navigate('/redi');
       });
       return;
     }
     
     // Otherwise, go to the next exercise in the set
-    const nextExerciseId = exerciseSet[exerciseIndex]; // 0-indexed array, 1-indexed display
+    console.log("Going to next exercise", { exerciseIndex, totalExercises, exerciseSet });
+    
+    // Critical issue here: exerciseIndex is 1-indexed (starts at 1) but arrays are 0-indexed
+    // To get the next exercise from the set, we need to convert to the right array index 
+    // The next exercise would be at index = exerciseIndex (since arrays are 0-indexed)
+    const nextExerciseIndex = exerciseIndex;  // this gives us the array index for the next exercise
+    console.log("Next exercise index in array:", nextExerciseIndex, "out of", exerciseSet.length);
+    const nextExerciseId = nextExerciseIndex < exerciseSet.length ? exerciseSet[nextExerciseIndex] : null;
+    console.log("Next exercise ID:", nextExerciseId);
+    
     if (nextExerciseId) {
       // Reset submission state
       setHasSubmitted(false);
@@ -157,18 +184,22 @@ const REDIExercise: React.FC = () => {
       
       // Increment exercise index
       setExerciseIndex(exerciseIndex + 1);
+      console.log("Incrementing exercise index to", exerciseIndex + 1);
       
       // We don't navigate - just update the current exercise ID in the set
       // This keeps us on the same page but with new exercise content
       const exercise = getExerciseById(nextExerciseId);
       if (exercise) {
+        console.log("Setting current exercise ID to", nextExerciseId);
         setCurrentSetExerciseId(nextExerciseId);
       } else {
         // Fallback if exercise not found
+        console.log("Exercise not found, fallback to map");
         navigate('/redi');
       }
     } else {
       // Fallback if we don't have a next exercise
+      console.log("No next exercise ID, fallback to map");
       navigate('/redi');
     }
   }, [exerciseIndex, totalExercises, exerciseSet, navigate, updateRediMastery, params.exerciseId, completeExercise, correctAnswers, toast]);
