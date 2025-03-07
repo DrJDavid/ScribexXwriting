@@ -71,6 +71,9 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
   // Separate function to handle the continue button click
   const handleContinue = () => {
     if (selectedOption !== null) {
+      // Call onSubmit with hasSubmitted=true to indicate this is 
+      // a continuation after already submitting an answer
+      console.log("Continue clicked, notifying parent to advance");
       onSubmit(exerciseId, selectedOption, isCorrect);
     }
   };

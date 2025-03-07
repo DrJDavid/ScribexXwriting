@@ -73,6 +73,8 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
   // Separate handler for the continue button
   const handleContinue = () => {
     // Always consider writing submissions as "correct"
+    // Pass true to indicate they met the minimum requirements
+    console.log("Writing continue clicked, notifying parent to advance");
     onSubmit(exerciseId, response, true);
   };
 
