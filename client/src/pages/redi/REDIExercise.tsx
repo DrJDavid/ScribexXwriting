@@ -8,232 +8,114 @@ import useProgress from '@/hooks/useProgress';
 import { getExerciseById, getExerciseNodes } from '@/data/exercises';
 import { useToast } from '@/hooks/use-toast';
 
+// Set of quiz exercises that we'll cycle through
 const REDIExercise: React.FC = () => {
   const { setTheme } = useTheme();
   const { toast } = useToast();
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
   const { progress, completeExercise, updateProgress, calculateRediLevel } = useProgress();
-  // Track the current index in the exercise set (0-indexed internally, displayed as 1-indexed)
-  const [exerciseIndex, setExerciseIndex] = useState(0);
-  const [totalExercises, setTotalExercises] = useState(5);
-  const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [exerciseSet, setExerciseSet] = useState<string[]>([]);
-  const [correctAnswers, setCorrectAnswers] = useState<number>(0);
+  
+  // State for quiz management
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
+  const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+  const [questionsSet, setQuestionsSet] = useState<string[]>([]);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string>(params.exerciseId);
   
   // Make sure REDI theme is active
   useEffect(() => {
     setTheme('redi');
   }, [setTheme]);
   
-  // State to track the current exercise ID in the set
-  const [currentSetExerciseId, setCurrentSetExerciseId] = useState(params.exerciseId);
+  // Get the current exercise
+  const currentExercise = getExerciseById(currentQuestionId);
   
-  // Get the exercise data using the current exercise ID in the set
-  const exercise = getExerciseById(currentSetExerciseId || params.exerciseId);
-  
-  // Generate a set of exercises for the current skill type
-  // Only run this effect on initial mount with the original exercise ID
+  // Create the initial set of exercises for the quiz
   useEffect(() => {
-    console.log('Initialize Exercise Set - Current State:', { 
-      exerciseId: params.exerciseId,
-      currentSetExerciseId,
-      setLength: exerciseSet.length,
-      exerciseSkillType: exercise?.skillType
-    });
-  
-    if (!exercise || exerciseSet.length > 0) {
-      console.log('Skipping exercise set initialization - already initialized or no exercise');
+    if (!params.exerciseId || questionsSet.length > 0 || !progress) return;
+
+    // Get the initial exercise
+    const startingExercise = getExerciseById(params.exerciseId);
+    if (!startingExercise) {
+      console.error('Starting exercise not found');
+      navigate('/redi');
       return;
     }
+
+    // Find available exercises for the quiz
+    const nodes = getExerciseNodes(
+      progress.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 },
+      progress.completedExercises || []
+    );
     
-    // Get all available exercises of the same skill type
-    const nodes = getExerciseNodes(progress?.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 }, 
-      progress?.completedExercises || []);
-    
-    // First, include all exercises of the same skill type
+    // Get exercises of the same type first
     const sameTypeExercises = nodes
-      .filter(node => node.skillType === exercise.skillType && 
-                      (node.status === 'available' || 
-                       node.status === 'current' || 
-                       node.id === exercise.id))
+      .filter(node => 
+        node.skillType === startingExercise.skillType && 
+        (node.status === 'available' || node.status === 'current' || node.id === startingExercise.id))
       .map(node => node.id);
     
-    console.log('Same type exercises:', sameTypeExercises);
+    // Get other available exercises if needed
+    const otherExercises = nodes
+      .filter(node => 
+        node.skillType !== startingExercise.skillType && 
+        (node.status === 'available' || node.status === 'current'))
+      .map(node => node.id);
     
-    // If we don't have enough exercises of this type, include some from other types
-    let exerciseSelection = [...sameTypeExercises];
-    if (exerciseSelection.length < 5) {
-      const otherExercises = nodes
-        .filter(node => node.skillType !== exercise.skillType && 
-                       (node.status === 'available' || node.status === 'current'))
-        .map(node => node.id);
-      
-      console.log('Other available exercises:', otherExercises);
-      exerciseSelection = [...exerciseSelection, ...otherExercises];
+    // Create a set with the starting exercise first
+    const exerciseIds = [params.exerciseId];
+    
+    // Add other exercises (not including the starting one)
+    const remainingExercises = [...sameTypeExercises, ...otherExercises]
+      .filter(id => id !== params.exerciseId);
+    
+    // Add as many as needed to reach 5 total
+    while (exerciseIds.length < 5 && remainingExercises.length > 0) {
+      const randomIndex = Math.floor(Math.random() * remainingExercises.length);
+      exerciseIds.push(remainingExercises[randomIndex]);
+      remainingExercises.splice(randomIndex, 1);
     }
     
-    // Make sure the current exercise is included and is first
-    exerciseSelection = exerciseSelection.filter(id => id !== exercise.id);
-    exerciseSelection = [exercise.id, ...exerciseSelection].slice(0, 5);
-    
-    console.log('Final exercise set:', exerciseSelection);
-    
-    // Ensure we have exactly 5 exercises by duplicating some if needed
-    while (exerciseSelection.length < 5 && exerciseSelection.length > 0) {
-      // Add duplicates from the existing set (excluding the first one which is the current exercise)
-      const availableToDuplicate = exerciseSelection.slice(1);
-      if (availableToDuplicate.length > 0) {
-        // Duplicate a random exercise from the available set
-        const randomIndex = Math.floor(Math.random() * availableToDuplicate.length);
-        exerciseSelection.push(availableToDuplicate[randomIndex]);
-      } else {
-        // If no other exercises available, duplicate the current one
-        exerciseSelection.push(exerciseSelection[0]);
-      }
+    // If we still need more, duplicate some exercises
+    while (exerciseIds.length < 5) {
+      const randomIndex = Math.floor(Math.random() * exerciseIds.length);
+      exerciseIds.push(exerciseIds[randomIndex]);
     }
     
-    console.log('Setting exercise set:', exerciseSelection);
-    setExerciseSet(exerciseSelection);
-    setTotalExercises(exerciseSelection.length);
-    console.log('Set total exercises to:', exerciseSelection.length);
-  }, [params.exerciseId, progress, exercise && exercise.skillType]);
+    console.log('Created quiz set with exercises:', exerciseIds);
+    setQuestionsSet(exerciseIds);
+    setCurrentQuestionId(exerciseIds[0]);
+  }, [params.exerciseId, progress, navigate]);
   
   // If exercise not found, go back to map
   useEffect(() => {
-    if (!exercise && params.exerciseId) {
+    if (!currentExercise && params.exerciseId) {
+      console.error('Exercise not found');
       navigate('/redi');
     }
-  }, [exercise, params.exerciseId, navigate]);
+  }, [currentExercise, params.exerciseId, navigate]);
   
-  if (!exercise) {
+  // Skip rendering until we have an exercise
+  if (!currentExercise || questionsSet.length === 0) {
     return null;
   }
   
-  // Function to update REDI skill mastery after completing a set
-  const updateRediMastery = useCallback(async () => {
-    if (!progress) return;
-    
-    // Only increase mastery if the user got at least 3/5 correct answers
-    const isSuccessful = correctAnswers >= 3;
-    
-    if (isSuccessful) {
-      // Calculate skill increase based on correct answers in the set
-      const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
-      
-      // Create a skill update object based on the exercise type
-      let updatedRediSkillMastery = { ...progress.rediSkillMastery };
-      
-      if (exercise.skillType === 'mechanics') {
-        updatedRediSkillMastery.mechanics = Math.min(updatedRediSkillMastery.mechanics + skillIncrease, 100);
-      } else if (exercise.skillType === 'sequencing') {
-        updatedRediSkillMastery.sequencing = Math.min(updatedRediSkillMastery.sequencing + skillIncrease, 100);
-      } else if (exercise.skillType === 'voice') {
-        updatedRediSkillMastery.voice = Math.min(updatedRediSkillMastery.voice + skillIncrease, 100);
-      }
-      
-      // Use the progress context's helper function to calculate new level
-      const rediLevel = calculateRediLevel(
-        updatedRediSkillMastery, 
-        [...(progress.completedExercises || [])]
-      );
-      
-      // Update progress with new mastery and level
-      await updateProgress({
-        rediSkillMastery: updatedRediSkillMastery,
-        rediLevel,
-      });
-      
-      toast({
-        title: "Exercise Set Completed!",
-        description: `You got ${correctAnswers} out of ${totalExercises} correct. Your ${exercise.skillType} mastery increased by ${skillIncrease}%.`,
-      });
-    } else {
-      // No mastery increase if they didn't get enough correct
-      toast({
-        title: "Exercise Set Attempted",
-        description: `You got ${correctAnswers} out of ${totalExercises} correct. You need at least 3 correct to increase mastery.`,
-      });
-    }
-  }, [correctAnswers, totalExercises, exercise.skillType, progress, calculateRediLevel, updateProgress, toast]);
-
-  // Function to handle advancing to next exercise
-  const advanceToNextExercise = useCallback(() => {
-    // If we've completed all exercises in the set 
-    // Since exerciseIndex is 0-indexed, we complete when it reaches totalExercises - 1
-    if (exerciseIndex >= totalExercises - 1) {
-      // Update mastery only after completing the full set
-      updateRediMastery().then(() => {
-        // Mark original exercise ID as completed
-        if (params.exerciseId && completeExercise) {
-          // Consider set completed successfully if at least 3 out of 5 correct
-          const isSuccessful = correctAnswers >= 3;
-          completeExercise(params.exerciseId, isSuccessful);
-          
-          toast({
-            title: isSuccessful ? "Node Completed!" : "Node Attempted",
-            description: isSuccessful 
-              ? `You got ${correctAnswers} out of ${totalExercises} correct! Node mastery unlocked.` 
-              : `You got ${correctAnswers} out of ${totalExercises} correct. Try again for better mastery.`,
-          });
-        }
-        
-        // Navigate back to the REDI map after updating mastery
-        navigate('/redi');
-      });
-      return;
-    }
-    
-    // Otherwise, go to the next exercise in the set
-    // Get the next exercise from the set
-    // We need to use the NEXT index (exerciseIndex + 1) because exerciseIndex is the current one
-    const nextExerciseId = exerciseSet[exerciseIndex + 1];
-    if (nextExerciseId) {
-      // Reset submission state
-      setHasSubmitted(false);
-      setAnsweredCorrectly(false);
-      
-      // Get the next exercise before incrementing index for logging
-      console.log(`Moving to next exercise: ${nextExerciseId} (${exerciseIndex + 1} of ${totalExercises})`);
-      
-      // Increment exercise index
-      setExerciseIndex(prev => prev + 1);
-      
-      // We don't navigate - just update the current exercise ID in the set
-      // This keeps us on the same page but with new exercise content
-      const nextExercise = getExerciseById(nextExerciseId);
-      if (nextExercise) {
-        // Update current exercise ID in a safe manner
-        setCurrentSetExerciseId(nextExerciseId);
-        console.log(`Successfully loaded next exercise: ${nextExercise.title}`);
-      } else {
-        console.error(`Exercise not found for ID: ${nextExerciseId}`);
-        // Fallback if exercise not found
-        navigate('/redi');
-      }
-    } else {
-      console.error(`No next exercise found at index ${exerciseIndex}`);
-      // Fallback if we don't have a next exercise
-      navigate('/redi');
-    }
-  }, [exerciseIndex, totalExercises, exerciseSet, navigate, updateRediMastery, params.exerciseId, completeExercise, correctAnswers, toast]);
+  // Calculate if this is the last question
+  const isLastQuestion = currentQuestionIndex === questionsSet.length - 1;
   
-  // Handle multiple choice submission
+  // Function to submit a multiple choice answer
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
-    // If already submitted, prevent double-submission
-    if (hasSubmitted) {
-      return;
-    }
+    if (hasSubmittedAnswer) return;
     
-    // Track if answered correctly
-    setAnsweredCorrectly(isCorrect);
-    setHasSubmitted(true);
+    // Update state based on answer
+    setLastAnswerCorrect(isCorrect);
+    setHasSubmittedAnswer(true);
     
-    // Record total correct answers for the exercise set
+    // Count correct answers
     if (isCorrect) {
-      setCorrectAnswers(prev => prev + 1);
-      
+      setCorrectAnswersCount(prev => prev + 1);
       toast({
         title: "Correct!",
         description: "Great job! Click Continue to proceed.",
@@ -246,28 +128,19 @@ const REDIExercise: React.FC = () => {
         duration: 3000,
       });
     }
-    
-    // We'll only mark the original exercise as completed after finishing the full set
-    // This is handled in updateRediMastery
-    
-    // The continue button will be rendered to proceed to the next question
   };
   
-  // Handle writing submission
+  // Function to submit a writing exercise
   const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
-    // If already submitted, prevent double-submission
-    if (hasSubmitted) {
-      return;
-    }
+    if (hasSubmittedAnswer) return;
     
-    // Track if answered correctly (meets requirements)
-    setAnsweredCorrectly(isComplete);
-    setHasSubmitted(true);
+    // Update state based on submission
+    setLastAnswerCorrect(isComplete);
+    setHasSubmittedAnswer(true);
     
-    // Record total correct answers for the exercise set
+    // Count as correct if complete
     if (isComplete) {
-      setCorrectAnswers(prev => prev + 1);
-      
+      setCorrectAnswersCount(prev => prev + 1);
       toast({
         title: "Exercise Complete!",
         description: "Your submission meets the requirements. Click Continue to proceed.",
@@ -280,76 +153,147 @@ const REDIExercise: React.FC = () => {
         duration: 3000,
       });
     }
-    
-    // We'll only mark the original exercise as completed after finishing the full set
-    // This is handled in updateRediMastery
-    
-    // The continue button will be rendered to proceed to the next question
   };
   
-  // Handle continue button
-  const handleContinue = (e: React.MouseEvent) => {
-    // Prevent any form submission
+  // Function to handle the continue button
+  const handleContinue = async (e: React.MouseEvent) => {
     e.preventDefault();
-    advanceToNextExercise();
+    
+    // If this was the last question, update progress and go back to the map
+    if (isLastQuestion) {
+      // Required success criteria: at least 3 correct answers out of 5
+      const isSuccessful = correctAnswersCount >= 3;
+      
+      // Update skill mastery if successful
+      if (isSuccessful && progress) {
+        // Calculate skill increase based on correct answers
+        const skillIncrease = Math.min(correctAnswersCount * 5, 20);
+        
+        // Update the appropriate skill
+        const updatedSkillMastery = { ...progress.rediSkillMastery };
+        
+        if (currentExercise.skillType === 'mechanics') {
+          updatedSkillMastery.mechanics = Math.min(updatedSkillMastery.mechanics + skillIncrease, 100);
+        } else if (currentExercise.skillType === 'sequencing') {
+          updatedSkillMastery.sequencing = Math.min(updatedSkillMastery.sequencing + skillIncrease, 100);
+        } else if (currentExercise.skillType === 'voice') {
+          updatedSkillMastery.voice = Math.min(updatedSkillMastery.voice + skillIncrease, 100);
+        }
+        
+        // Calculate new level
+        const newRediLevel = calculateRediLevel(
+          updatedSkillMastery,
+          [...(progress.completedExercises || [])]
+        );
+        
+        // Update progress
+        await updateProgress({
+          rediSkillMastery: updatedSkillMastery,
+          rediLevel: newRediLevel,
+        });
+        
+        toast({
+          title: "Exercise Set Completed!",
+          description: `You got ${correctAnswersCount} out of ${questionsSet.length} correct. Your ${currentExercise.skillType} mastery increased by ${skillIncrease}%.`,
+        });
+      } else {
+        toast({
+          title: "Exercise Set Attempted",
+          description: `You got ${correctAnswersCount} out of ${questionsSet.length} correct. You need at least 3 correct to increase mastery.`,
+        });
+      }
+      
+      // Mark the original exercise as completed
+      if (params.exerciseId && completeExercise) {
+        completeExercise(params.exerciseId, isSuccessful);
+        
+        toast({
+          title: isSuccessful ? "Node Completed!" : "Node Attempted",
+          description: isSuccessful 
+            ? `You got ${correctAnswersCount} out of ${questionsSet.length} correct! Node mastery unlocked.` 
+            : `You got ${correctAnswersCount} out of ${questionsSet.length} correct. Try again for better mastery.`,
+        });
+      }
+      
+      // Navigate back to the REDI map
+      navigate('/redi');
+      return;
+    }
+    
+    // Move to the next question
+    const nextIndex = currentQuestionIndex + 1;
+    const nextQuestionId = questionsSet[nextIndex];
+    
+    if (nextQuestionId) {
+      console.log(`Moving to next question: ${nextQuestionId} (${nextIndex + 1} of ${questionsSet.length})`);
+      
+      // Update state for the next question
+      setCurrentQuestionIndex(nextIndex);
+      setCurrentQuestionId(nextQuestionId);
+      setHasSubmittedAnswer(false);
+      setLastAnswerCorrect(false);
+    } else {
+      console.error('Next question not found in set');
+      navigate('/redi');
+    }
   };
   
   // Handle back button
   const handleBack = () => {
     navigate('/redi');
   };
-
+  
   // Determine if this is a writing exercise
-  const isWritingExercise = exercise.type === 'writing';
-
+  const isWritingExercise = currentExercise.type === 'writing';
+  
   return (
     <MainLayout 
-      title={exercise.title} 
+      title={currentExercise.title} 
       showBackButton={true}
       onBackClick={handleBack}
     >
       <div className="text-gray-300 text-sm mb-4">
-        Exercise {exerciseIndex + 1} of {totalExercises}
+        Exercise {currentQuestionIndex + 1} of {questionsSet.length}
       </div>
       
       {isWritingExercise ? (
         // Render writing exercise component
         <ExerciseWriting
-          exerciseId={exercise.id}
-          title={exercise.title}
-          instructions={exercise.instructions}
-          content={exercise.content}
-          prompt={exercise.prompt || ''}
-          minWordCount={exercise.minWordCount || 50}
-          exampleResponse={exercise.exampleResponse}
+          exerciseId={currentExercise.id}
+          title={currentExercise.title}
+          instructions={currentExercise.instructions}
+          content={currentExercise.content}
+          prompt={currentExercise.prompt || ''}
+          minWordCount={currentExercise.minWordCount || 50}
+          exampleResponse={currentExercise.exampleResponse}
           onSubmit={handleWritingSubmit}
         />
       ) : (
         // Render multiple choice component
         <ExerciseMultipleChoice
-          exerciseId={exercise.id}
-          title={exercise.title}
-          instructions={exercise.instructions}
-          content={exercise.content}
-          options={exercise.options || []}
-          correctOptionIndex={exercise.correctOptionIndex || 0}
+          exerciseId={currentExercise.id}
+          title={currentExercise.title}
+          instructions={currentExercise.instructions}
+          content={currentExercise.content}
+          options={currentExercise.options || []}
+          correctOptionIndex={currentExercise.correctOptionIndex || 0}
           onSubmit={handleMultipleChoiceSubmit}
         />
       )}
       
       {/* Continue button - only shown after answering */}
-      {hasSubmitted && (
+      {hasSubmittedAnswer && (
         <div className="mt-6 flex justify-end">
           <button 
-            type="button" // Explicitly set to button type to prevent form submission
+            type="button"
             onClick={handleContinue}
             className={`px-6 py-3 rounded-lg text-white font-semibold transition-all text-lg
-            ${answeredCorrectly 
+            ${lastAnswerCorrect 
               ? 'bg-green-600 hover:bg-green-500' 
               : 'bg-violet-600 hover:bg-violet-500'} 
             flex items-center gap-2 shadow-xl hover:shadow-2xl fixed bottom-8 right-8 z-50 animate-pulse`}
           >
-            Continue
+            {isLastQuestion ? 'Finish' : 'Continue'}
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 18l6-6-6-6"/>
             </svg>
@@ -361,12 +305,12 @@ const REDIExercise: React.FC = () => {
       <div className="mt-8">
         <div className="flex justify-between mb-2 text-gray-300 text-sm">
           <span>Progress</span>
-          <span>{exerciseIndex + 1} of {totalExercises}</span>
+          <span>{currentQuestionIndex + 1} of {questionsSet.length}</span>
         </div>
         <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
-            style={{ width: `${((exerciseIndex + 1) / totalExercises) * 100}%` }}
+            style={{ width: `${((currentQuestionIndex + 1) / questionsSet.length) * 100}%` }}
           ></div>
         </div>
       </div>
