@@ -1,0 +1,45 @@
+1. Problem Statement (Clear and Concise):
+
+"The REDI exercise components (ExerciseMultipleChoice.tsx and ExerciseWriting.tsx) in my React application are not progressing to the next exercise after submitting an answer. Instead, the component resets to its initial state, losing the user's input and preventing the 'Continue' button from appearing. This breaks the intended exercise flow."
+
+2. Context and Setup (Provide the Essential Background):
+
+"I'm building an educational React application called ScribexX. It has two main sections: REDI (for skill exercises) and OWL (for writing quests). This issue is specifically within the REDI section."
+
+"The REDIExercise.tsx component (client/src/pages/redi/REDIExercise.tsx) is responsible for displaying the exercises. It uses two main components: ExerciseMultipleChoice (for multiple-choice questions) and ExerciseWriting (for writing prompts). These components are in the client/src/components/exercises folder."
+
+"The REDIExercise.tsx component fetches exercise data and should handle updating the user's progress, including marking exercises as complete and tracking skill mastery."
+
+"I'm using React state (useState, useEffect) to manage the current exercise, user input, submission status, and correct answers."
+
+"I'm using react-hook-form, zod, and @hookform/resolvers/zod for form management and validation. (Even though they're not directly used in the exercise component, it's the overall architecture)"
+
+"I'm using wouter for routing and navigation."
+
+"I am using @tanstack/react-query to handle data fetching and mutations"
+
+"I have a progress context that tracks student progress"
+
+3. Expected Behavior (What Should Happen):
+
+"When a user submits an answer (either by clicking 'Submit Answer' in ExerciseMultipleChoice or 'Submit Response' in ExerciseWriting), the component should:
+
+Prevent further input (e.g., disable the buttons/textarea).
+
+Evaluate the answer and update the isCorrect and hasSubmitted state.
+
+Display feedback to the user (e.g., "Correct!" or "Not quite right").
+
+Show a "Continue" button.
+
+When the "Continue" button is clicked, advance to the next exercise in the exerciseSet or navigate back to the REDI map (/redi) if all exercises in the set are complete."
+
+When complete, update the user's mastery with the updateRediMastery function. This function correctly calls the updateProgress function from the useProgress hook
+
+4. Actual Behavior (What Is Happening):
+
+"After submitting an answer, the component resets. The input fields clear, the selected option (in multiple-choice) is unselected, and no feedback or 'Continue' button appears."
+
+The updateRediMastery function is being called, but at the wrong time, resulting in incorrect progress data being sent.
+
+5. Code Snippets (Key Areas to Focus On):

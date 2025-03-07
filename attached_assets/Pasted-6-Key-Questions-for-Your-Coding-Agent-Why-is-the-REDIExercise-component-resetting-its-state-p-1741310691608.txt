@@ -1,0 +1,45 @@
+6. Key Questions for Your Coding Agent:
+
+"Why is the REDIExercise component resetting its state (particularly hasSubmitted, selectedOption, and the input fields in ExerciseWriting) after submission? Is there a re-render happening that I'm missing?" This is the crucial question. The agent needs to understand the state lifecycle.
+
+"Are there any unnecessary re-renders of the REDIExercise component? Could a parent component be re-rendering and causing REDIExercise to re-initialize?" This points the agent towards potential issues with component keys, unnecessary updates in parent components, or issues with how useLocation is used.
+
+"Am I correctly using useState and useEffect within REDIExercise to manage the exercise state, especially hasSubmitted?" This directs the agent to review your state management.
+
+"Is there a problem with how I am using the onSubmit prop in ExerciseMultipleChoice and ExerciseWriting? Are they correctly communicating the submission status back to REDIExercise?" This focuses on the interaction between parent and child components.
+
+"Is my navigation logic using wouter correct? Could the navigation be causing a full component remount instead of a state update?" This helps rule out routing issues.
+
+"Are there any asynchronous operations (like API calls) that might be causing unexpected side effects on the component's state?" This is important because async operations can sometimes lead to race conditions or state updates happening at unexpected times.
+
+"Can you suggest debugging steps to help pinpoint where the state reset is occurring? For example, can you recommend how to use React DevTools to track state changes?" This encourages the agent to provide practical debugging guidance.
+
+"Does the fact that I update the REDI level after each SET of questions, rather than after each question, affect the state?"
+
+"Am I handling the exerciseSet and exerciseIndex correctly to display the correct exercise content?" This focuses on that particular piece of logic.
+
+"Can you see if there are any issues with how I am handling the useMutation calls, making sure that I am not incorrectly resetting any relevant state?"
+
+"Can you examine how the auth state is managed, and confirm that the useAuth hook is not causing a refresh?"
+
+7. Debugging Strategy (Steps for You and the Agent):
+
+Console Logging: Add extensive console.log statements within:
+
+REDIExercise.tsx: Inside the handleMultipleChoiceSubmit, handleWritingSubmit, advanceToNextExercise, and the useEffect that fetches exercises. Log the values of exerciseIndex, hasSubmitted, isCorrect, exerciseSet, and currentSetExerciseId at various points.
+
+ExerciseMultipleChoice.tsx and ExerciseWriting.tsx: Inside the onSubmit handlers, log the values being passed before calling onSubmit.
+
+ProgressContext.tsx: Inside the completeExercise function.
+
+useAuth.tsx: Inside the success handlers for login and register.
+
+This logging will reveal the order of operations and the state values at each step. Look for unexpected resets or changes.
+
+React DevTools: Use the React DevTools browser extension to:
+
+Inspect the state and props of the REDIExercise, ExerciseMultipleChoice, and ExerciseWriting components.
+
+Step through the component lifecycle (e.g., see what happens to the state when you click "Submit Answer").
+
+Check if unnecessary re-renders are occurring. A component might be re-rendering (and thus resetting its state) if a parent component is re-rendering unnecessarily.
