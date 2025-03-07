@@ -126,15 +126,9 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
           <Button
             className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
             onClick={() => {
-              // Get the wouter navigate function from a ref or through a callback
-              if (onSubmit) {
-                // Tell parent we're done, and let parent handle navigation
-                setTimeout(() => {
-                  // Add a delay to allow animation to complete
-                  if (selectedOption !== null) {
-                    onSubmit(exerciseId, selectedOption, isCorrect);
-                  }
-                }, 1000);
+              // Tell parent we're ready to continue - no need for timeout
+              if (onSubmit && selectedOption !== null) {
+                onSubmit(exerciseId, selectedOption, isCorrect);
               }
             }}
           >

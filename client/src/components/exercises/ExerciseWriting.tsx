@@ -133,7 +133,7 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
           
           <Button
             className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-            onClick={() => window.location.href = '/redi'}
+            onClick={() => onSubmit(exerciseId, response, true)}
           >
             Continue
           </Button>
