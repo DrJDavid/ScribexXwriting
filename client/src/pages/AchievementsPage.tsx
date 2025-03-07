@@ -23,7 +23,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
          BarChart as RechartsBarChart, Bar, Legend, CartesianGrid } from 'recharts';
 import { ProgressHistoryEntry, SkillMastery } from '@shared/schema';
 import { getExerciseById } from '@/data/exercises';
-import { getQuestById } from '@/data/quests';
+import { getQuestById, getLocationById } from '@/data/quests';
 import { format, subDays } from 'date-fns';
 
 // Helper function to create particles
@@ -883,7 +883,7 @@ const AchievementsPage: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 flex items-center justify-center bg-green-900/50 rounded-full">
                                 {location?.icon && (
-                                  <span className="text-green-200">{location.icon}</span>
+                                  <span className="text-green-200 text-sm">{location.icon.charAt(0).toUpperCase()}</span>
                                 )}
                               </div>
                               <div>
