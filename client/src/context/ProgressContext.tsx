@@ -76,13 +76,13 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Mutation to update progress
   const updateProgressMutation = useMutation({
     mutationFn: async (update: Partial<Progress>) => {
-      const res = await apiRequest('PATCH', '/api/progress', update);
-      return res.json();
+      return await apiRequest('/api/progress', 'PATCH', update);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/progress'] });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error updating progress:", error);
       toast({
         title: 'Update Failed',
         description: 'Failed to update progress',
