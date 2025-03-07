@@ -336,8 +336,15 @@ const FixedREDIExercise: React.FC = () => {
                 
                 <Button
                   className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-                  onClick={handleWritingSubmit}
+                  onClick={(e) => {
+                    // Prevent default form submission behavior
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Call our handler
+                    handleWritingSubmit();
+                  }}
                   disabled={writingResponse.trim() === ''}
+                  type="button" // Explicitly set button type to prevent form submission
                 >
                   Submit Response
                 </Button>
@@ -364,7 +371,12 @@ const FixedREDIExercise: React.FC = () => {
                 
                 <Button
                   className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-                  onClick={handleNextExercise}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleNextExercise();
+                  }}
+                  type="button"
                 >
                   Continue
                 </Button>
@@ -427,8 +439,15 @@ const FixedREDIExercise: React.FC = () => {
             ) : (
               <Button
                 className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-                onClick={handleMultipleChoiceSubmit}
+                onClick={(e) => {
+                  // Prevent default form submission behavior
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Call our handler
+                  handleMultipleChoiceSubmit();
+                }}
                 disabled={selectedOption === null}
+                type="button" // Explicitly set button type to prevent form submission
               >
                 Submit Answer
               </Button>
