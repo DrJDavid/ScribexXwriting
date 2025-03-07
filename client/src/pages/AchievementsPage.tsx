@@ -3,7 +3,8 @@ import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { 
   Award, Trophy, Medal, Star, BookOpen, FileText, Zap, Crown, 
-  TrendingUp, Activity, LineChart, BarChart
+  TrendingUp, Activity, LineChart, BarChart, CheckCircle, BookOpenCheck,
+  ScrollText, PenLine, GraduationCap
 } from 'lucide-react';
 import { 
   Card, 
@@ -21,6 +22,8 @@ import { getAllAchievements, Achievement } from '@/data/achievements';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
          BarChart as RechartsBarChart, Bar, Legend, CartesianGrid } from 'recharts';
 import { ProgressHistoryEntry, SkillMastery } from '@shared/schema';
+import { getExerciseById } from '@/data/exercises';
+import { getQuestById } from '@/data/quests';
 import { format, subDays } from 'date-fns';
 
 // Helper function to create particles
@@ -525,6 +528,63 @@ const AchievementsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Completed Activities Overview */}
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <ScrollText className="h-5 w-5 text-primary" />
+                  <span>Completed Activities</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded bg-black/30 p-3">
+                    <h4 className="text-md font-medium mb-2 text-violet-300 flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                      REDI Exercises ({progress?.completedExercises?.length || 0})
+                    </h4>
+                    <div className="max-h-40 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-violet-600 scrollbar-track-black/20">
+                      {progress?.completedExercises?.length ? (
+                        <ul className="space-y-1 text-sm">
+                          {progress.completedExercises.map((exerciseId) => {
+                            const exercise = getExerciseById(exerciseId);
+                            return (
+                              <li key={exerciseId} className="text-gray-300 flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-violet-500" />
+                                {exercise?.title || exerciseId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 italic">No exercises completed yet</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="rounded bg-black/30 p-3">
+                    <h4 className="text-md font-medium mb-2 text-green-300 flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      OWL Quests ({progress?.completedQuests?.length || 0})
+                    </h4>
+                    <div className="max-h-40 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-black/20">
+                      {progress?.completedQuests?.length ? (
+                        <ul className="space-y-1 text-sm">
+                          {progress.completedQuests.map((questId) => {
+                            const quest = getQuestById(questId);
+                            return (
+                              <li key={questId} className="text-gray-300 flex items-center gap-1">
+                                <PenLine className="h-3 w-3 text-green-500" />
+                                {quest?.title || questId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 italic">No quests completed yet</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="redi" className="space-y-4">
@@ -605,6 +665,59 @@ const AchievementsPage: React.FC = () => {
                     </div>
                     <p className="text-right text-xs mt-1">{progress?.rediSkillMastery?.voice || 0}%</p>
                   </div>
+                </div>
+              </div>
+              
+              {/* Completed REDI Exercises */}
+              <div className="rounded-lg bg-black/20 backdrop-blur-sm p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <BookOpenCheck className="h-5 w-5 text-violet-500" />
+                  <span>Completed Exercises</span>
+                </h3>
+                <div className="max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-violet-600 scrollbar-track-black/20">
+                  {progress?.completedExercises?.length ? (
+                    <div className="grid grid-cols-1 gap-2">
+                      {progress.completedExercises.map((exerciseId) => {
+                        const exercise = getExerciseById(exerciseId);
+                        return (
+                          <div 
+                            key={exerciseId} 
+                            className="rounded bg-black/30 p-3 border border-violet-900/50"
+                          >
+                            <div className="flex items-start gap-2">
+                              <CheckCircle className="h-5 w-5 text-violet-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <h4 className="font-medium text-violet-200">
+                                  {exercise?.title || exerciseId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </h4>
+                                {exercise && (
+                                  <div className="mt-1 flex flex-wrap gap-2">
+                                    <Badge variant="outline" className="bg-violet-900/30 border-violet-700/50 text-violet-300 text-xs">
+                                      {exercise.skillType.charAt(0).toUpperCase() + exercise.skillType.slice(1)}
+                                    </Badge>
+                                    <Badge variant="outline" className="bg-violet-900/30 border-violet-700/50 text-violet-300 text-xs">
+                                      Level {exercise.level}
+                                    </Badge>
+                                    {exercise.type && (
+                                      <Badge variant="outline" className="bg-violet-900/30 border-violet-700/50 text-violet-300 text-xs">
+                                        {exercise.type.charAt(0).toUpperCase() + exercise.type.slice(1)}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <GraduationCap className="h-12 w-12 mx-auto text-gray-600 mb-2" />
+                      <p className="text-gray-500">No exercises completed yet</p>
+                      <p className="text-gray-600 text-sm mt-1">Complete REDI exercises to improve your writing skills</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
