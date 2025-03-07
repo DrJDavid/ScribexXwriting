@@ -431,7 +431,12 @@ const FixedREDIExercise: React.FC = () => {
                 
                 <Button
                   className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-                  onClick={handleNextExercise}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleNextExercise();
+                  }}
+                  type="button"
                 >
                   Continue
                 </Button>
