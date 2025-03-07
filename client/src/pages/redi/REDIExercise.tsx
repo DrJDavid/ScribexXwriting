@@ -13,7 +13,7 @@ const REDIExercise: React.FC = () => {
   const { toast } = useToast();
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
-  const { progress, completeExercise } = useProgress();
+  const { progress, completeExercise, updateProgress } = useProgress();
   const [exerciseIndex, setExerciseIndex] = useState(1);
   const [totalExercises, setTotalExercises] = useState(5);
   const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
@@ -103,7 +103,8 @@ const REDIExercise: React.FC = () => {
       const rediLevel = Math.max(1, Math.min(10, 1 + exerciseFactor + masteryFactor));
       
       // Update progress with new mastery and level
-      await progress.updateProgress({
+      // Use the updateProgress function from the hook, not as a method on progress
+      await updateProgress({
         rediSkillMastery: updatedRediSkillMastery,
         rediLevel,
       });
@@ -119,7 +120,7 @@ const REDIExercise: React.FC = () => {
         description: `You got ${correctAnswers} out of ${totalExercises} correct. You need at least 3 correct to increase mastery.`,
       });
     }
-  }, [correctAnswers, totalExercises, exercise.skillType, progress, toast]);
+  }, [correctAnswers, totalExercises, exercise.skillType, progress, toast, updateProgress]);
 
   // Function to handle advancing to next exercise
   const advanceToNextExercise = useCallback(() => {
@@ -174,13 +175,18 @@ const REDIExercise: React.FC = () => {
   
   // Handle multiple choice submission
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
+    console.log("handleMultipleChoiceSubmit called", { exerciseId, selectedOption, isCorrect, hasSubmitted });
+    
+    // This function is called by both the initial submission and the continue button
     if (hasSubmitted) {
       // If already submitted, advance to next exercise
+      console.log("Already submitted, advancing to next exercise");
       advanceToNextExercise();
       return;
     }
     
-    // Track if answered correctly
+    // First submission - just track the state but don't advance yet
+    console.log("First submission - tracking state");
     setAnsweredCorrectly(isCorrect);
     setHasSubmitted(true);
     
@@ -205,13 +211,17 @@ const REDIExercise: React.FC = () => {
   
   // Handle writing submission
   const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
+    console.log("handleWritingSubmit called", { exerciseId, response: response.substring(0, 20), isComplete, hasSubmitted });
+    
     if (hasSubmitted) {
       // If already submitted, advance to next exercise
+      console.log("Already submitted writing, advancing to next exercise");
       advanceToNextExercise();
       return;
     }
     
     // Track if answered correctly (meets requirements)
+    console.log("First writing submission - tracking state");
     setAnsweredCorrectly(isComplete);
     setHasSubmitted(true);
     

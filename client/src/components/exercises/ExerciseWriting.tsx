@@ -66,6 +66,12 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
     setSubmitted(true);
     setValidationMessage('');
     
+    // We'll call onSubmit when clicking continue, not here
+    // This prevents double submission events causing state issues
+  };
+  
+  // Separate handler for the continue button
+  const handleContinue = () => {
     // Always consider writing submissions as "correct"
     onSubmit(exerciseId, response, true);
   };
@@ -133,7 +139,7 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
           
           <Button
             className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-            onClick={() => window.location.href = '/redi'}
+            onClick={handleContinue}
           >
             Continue
           </Button>
