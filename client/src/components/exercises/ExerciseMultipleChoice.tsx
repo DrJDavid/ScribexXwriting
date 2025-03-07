@@ -100,6 +100,7 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
           return (
             <motion.button
               key={index}
+              type="button" // Explicitly set to button type to prevent form submission
               className={optionClasses}
               onClick={() => handleOptionSelect(index)}
               whileHover={!hasSubmitted ? { scale: 1.01 } : {}}
@@ -128,6 +129,7 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
         </div>
       ) : (
         <Button
+          type="button" // Explicitly set to button type to prevent form submission
           className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
           onClick={handleSubmit}
           disabled={selectedOption === null}

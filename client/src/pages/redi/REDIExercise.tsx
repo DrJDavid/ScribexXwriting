@@ -198,6 +198,13 @@ const REDIExercise: React.FC = () => {
   
   // Handle multiple choice submission
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
+    // Prevent default form submission if this is triggered from a form
+    try {
+      event && event.preventDefault && event.preventDefault();
+    } catch (e) {
+      // Ignore if event is not available
+    }
+    
     // If already submitted, prevent double-submission
     if (hasSubmitted) {
       return;
@@ -232,6 +239,13 @@ const REDIExercise: React.FC = () => {
   
   // Handle writing submission
   const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
+    // Prevent default form submission if this is triggered from a form
+    try {
+      event && event.preventDefault && event.preventDefault();
+    } catch (e) {
+      // Ignore if event is not available
+    }
+    
     // If already submitted, prevent double-submission
     if (hasSubmitted) {
       return;
@@ -265,7 +279,9 @@ const REDIExercise: React.FC = () => {
   };
   
   // Handle continue button
-  const handleContinue = () => {
+  const handleContinue = (e: React.MouseEvent) => {
+    // Prevent any form submission
+    e.preventDefault();
     advanceToNextExercise();
   };
   
@@ -316,6 +332,7 @@ const REDIExercise: React.FC = () => {
       {hasSubmitted && (
         <div className="mt-6 flex justify-end">
           <button 
+            type="button" // Explicitly set to button type to prevent form submission
             onClick={handleContinue}
             className={`px-6 py-3 rounded-lg text-white font-semibold transition-all text-lg
             ${answeredCorrectly 

@@ -55,7 +55,10 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
   };
   
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = (e?: React.MouseEvent) => {
+    // Prevent any form submission
+    e && e.preventDefault();
+    
     // Check word count
     if (wordCount < minWordCount) {
       setValidationMessage(`Please write at least ${minWordCount} words. Current count: ${wordCount}.`);
@@ -104,6 +107,7 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
           </div>
           
           <Button
+            type="button" // Explicitly set button type to prevent form submission
             className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
             onClick={handleSubmit}
             disabled={response.trim() === ''}
