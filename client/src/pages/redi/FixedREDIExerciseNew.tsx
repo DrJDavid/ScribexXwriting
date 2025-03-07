@@ -5,13 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
-import { getExerciseById, getNextExerciseId, EXERCISES } from '@/data/exercises';
+import { 
+  getExerciseById, 
+  getQuestionsForNode, 
+  getQuestionByNodeAndNumber, 
+  NODE_QUESTIONS 
+} from '@/data/exercises';
 import { motion } from 'framer-motion';
 import REDIExerciseModal from './REDIExerciseModal';
 
 /**
  * Fixed REDI Exercise component that combines all exercise types into a single component 
  * to prevent component swapping and state reset issues.
+ * 
+ * This version supports node-based questions where each node contains 5 questions.
  */
 const FixedREDIExerciseNew: React.FC = () => {
   const { setTheme } = useTheme();
@@ -24,12 +31,13 @@ const FixedREDIExerciseNew: React.FC = () => {
     setTheme('redi');
   }, [setTheme]);
   
-  // Exercise state
-  const [exerciseIndex, setExerciseIndex] = useState(1);
-  const [totalExercises, setTotalExercises] = useState(5);
+  // Node and question state
+  const [currentNodeId, setCurrentNodeId] = useState<string>("");
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(1);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [writingResponse, setWritingResponse] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [validationMessage, setValidationMessage] = useState('');
@@ -39,31 +47,42 @@ const FixedREDIExerciseNew: React.FC = () => {
   const [feedbackTitle, setFeedbackTitle] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   
-  // Get the current exercise
+  // Get the current exercise (node)
   const exercise = getExerciseById(params.exerciseId || "");
-  const isWritingExercise = exercise?.type === 'writing';
   
-  // Calculate exercise index and total exercises in useEffect
+  // Get questions for this node
+  const nodeQuestions = getQuestionsForNode(params.exerciseId || "");
+  const totalQuestionsInNode = nodeQuestions.length;
+  
+  // Get current question
+  const currentQuestion = getQuestionByNodeAndNumber(
+    params.exerciseId || "",
+    currentQuestionNumber
+  );
+  
+  const isWritingExercise = currentQuestion?.type === 'writing';
+  
+  // Initialize node and question
   useEffect(() => {
     if (exercise?.id) {
-      const currentIndex = EXERCISES.findIndex(ex => ex.id === exercise.id);
-      if (currentIndex !== -1) {
-        setExerciseIndex(currentIndex + 1);
-        setTotalExercises(EXERCISES.length);
-      }
+      setCurrentNodeId(exercise.id);
+      setCurrentQuestionNumber(1);
+      setCorrectAnswersCount(0);
     }
   }, [exercise?.id]);
   
-  // If exercise not found, go back to map
+  // Remove references to variables that don't exist
+  
+  // If exercise/node not found, go back to map
   useEffect(() => {
     if (!exercise && params.exerciseId) {
       navigate('/redi');
     }
   }, [exercise, params.exerciseId, navigate]);
   
-  // Reset state when exercise changes
+  // Reset state when question changes
   useEffect(() => {
-    if (exercise) {
+    if (currentQuestion) {
       setSelectedOption(null);
       setHasSubmitted(false);
       setIsAnswerCorrect(false);
@@ -72,26 +91,26 @@ const FixedREDIExerciseNew: React.FC = () => {
       setValidationMessage('');
       setFeedbackModalOpen(false);
     }
-  }, [exercise?.id]);
+  }, [currentNodeId, currentQuestionNumber]);
   
   // Count words in writing response
   useEffect(() => {
-    if (isWritingExercise) {
+    if (isWritingExercise && currentQuestion) {
       // Count non-empty words
       const words = writingResponse.trim().split(/\s+/).filter(word => word.length > 0);
       setWordCount(words.length);
       
       // Update validation message
-      if (words.length < (exercise?.minWordCount || 50) && writingResponse.trim().length > 0) {
-        setValidationMessage(`Need ${(exercise?.minWordCount || 50) - words.length} more words.`);
+      if (words.length < (currentQuestion.minWordCount || 50) && writingResponse.trim().length > 0) {
+        setValidationMessage(`Need ${(currentQuestion.minWordCount || 50) - words.length} more words.`);
       } else {
         setValidationMessage('');
       }
     }
-  }, [writingResponse, isWritingExercise, exercise]);
+  }, [writingResponse, isWritingExercise, currentQuestion]);
   
-  // If no exercise, don't render
-  if (!exercise) {
+  // If no exercise or question, don't render
+  if (!exercise || !currentQuestion) {
     return null;
   }
   
@@ -110,10 +129,15 @@ const FixedREDIExerciseNew: React.FC = () => {
   };
   
   const handleMultipleChoiceSubmit = () => {
-    if (selectedOption !== null) {
-      const isCorrect = selectedOption === exercise.correctOptionIndex;
+    if (selectedOption !== null && currentQuestion) {
+      const isCorrect = selectedOption === currentQuestion.correctOptionIndex;
       setIsAnswerCorrect(isCorrect);
       setHasSubmitted(true);
+      
+      // Count correct answers for mastery calculation
+      if (isCorrect) {
+        setCorrectAnswersCount(prev => prev + 1);
+      }
       
       // Set feedback modal content
       if (isCorrect) {
@@ -121,7 +145,7 @@ const FixedREDIExerciseNew: React.FC = () => {
         setFeedbackMessage("Great job! Click Continue to proceed.");
       } else {
         setFeedbackTitle("Not quite right");
-        const correctAnswer = exercise.options?.[exercise.correctOptionIndex || 0] || "";
+        const correctAnswer = currentQuestion.options?.[currentQuestion.correctOptionIndex || 0] || "";
         setFeedbackMessage(`That's okay! The correct answer was: ${correctAnswer}`);
       }
       
@@ -131,11 +155,16 @@ const FixedREDIExerciseNew: React.FC = () => {
   };
   
   const handleWritingSubmit = () => {
-    if (writingResponse.trim().length === 0) return;
+    if (writingResponse.trim().length === 0 || !currentQuestion) return;
     
-    const meetsWordCount = wordCount >= (exercise.minWordCount || 50);
+    const meetsWordCount = wordCount >= (currentQuestion.minWordCount || 50);
     setIsAnswerCorrect(meetsWordCount);
     setHasSubmitted(true);
+    
+    // Count correct answers for mastery calculation
+    if (meetsWordCount) {
+      setCorrectAnswersCount(prev => prev + 1);
+    }
     
     // Set feedback modal content
     if (meetsWordCount) {
@@ -155,22 +184,24 @@ const FixedREDIExerciseNew: React.FC = () => {
       // First close the feedback modal
       setFeedbackModalOpen(false);
       
+      // Check if there's another question in this node
+      if (currentQuestionNumber < totalQuestionsInNode) {
+        // Move to the next question in this node
+        setCurrentQuestionNumber(prev => prev + 1);
+        return;
+      }
+      
+      // If completed all questions in the node, calculate mastery and submit
+      const masteryPercentage = (correctAnswersCount / totalQuestionsInNode) * 100;
+      const isNodeComplete = masteryPercentage >= 60; // Consider 60% correct as passing
+      
       // Record completion - need to await this to catch any errors
       if (completeExercise && exercise?.id) {
-        await completeExercise(exercise.id, isAnswerCorrect);
+        await completeExercise(exercise.id, isNodeComplete);
+        console.log(`Node ${exercise.id} completed with mastery: ${masteryPercentage}%`);
       }
       
-      // Check if there's a next exercise
-      if (exercise?.id) {
-        const nextExerciseId = getNextExerciseId(exercise.id);
-        if (nextExerciseId) {
-          // Navigate to the next exercise
-          navigate(`/redi/exercise/${nextExerciseId}`);
-          return;
-        }
-      }
-      
-      // If no next exercise or there was an error getting it, go back to the map
+      // Navigate back to the REDI map
       navigate('/redi');
     } catch (error) {
       console.error("Error completing exercise:", error);
@@ -191,12 +222,12 @@ const FixedREDIExerciseNew: React.FC = () => {
   
   return (
     <MainLayout 
-      title={exercise.title} 
+      title={`${exercise.title} - Question ${currentQuestionNumber}`} 
       showBackButton={true}
       onBackClick={handleBack}
     >
       <div className="text-gray-300 text-sm mb-4">
-        Exercise {exerciseIndex} of {totalExercises}
+        Question {currentQuestionNumber} of {totalQuestionsInNode}
       </div>
       
       {/* Feedback Modal */}
@@ -214,13 +245,13 @@ const FixedREDIExerciseNew: React.FC = () => {
       {/* Main exercise content */}
       <div className={`${bgClass} rounded-xl p-5 shadow-lg`}>
         <div className="mb-6">
-          <h3 className={`text-white ${fontClass} text-xl mb-3`}>{exercise.title}</h3>
-          <p className="text-gray-200 text-sm">{exercise.instructions}</p>
+          <h3 className={`text-white ${fontClass} text-xl mb-3`}>{currentQuestion.title}</h3>
+          <p className="text-gray-200 text-sm">{currentQuestion.instructions}</p>
         </div>
         
         <div className={`${contentBgClass} p-4 rounded-lg mb-6`}>
           <p className="text-gray-200 text-sm leading-relaxed">
-            {exercise.content}
+            {currentQuestion.content}
           </p>
         </div>
         
@@ -229,7 +260,7 @@ const FixedREDIExerciseNew: React.FC = () => {
           /* Writing Exercise */
           <>
             <div className="mb-6 bg-gray-700 p-4 rounded-md text-white">
-              {exercise.prompt}
+              {currentQuestion.prompt}
             </div>
             
             {!hasSubmitted ? (
@@ -242,8 +273,8 @@ const FixedREDIExerciseNew: React.FC = () => {
                     className="min-h-[200px] bg-gray-900 text-white border-gray-700"
                   />
                   <div className="flex justify-between mt-2 text-sm">
-                    <span className={wordCount >= (exercise.minWordCount || 50) ? 'text-green-400' : 'text-gray-400'}>
-                      Words: {wordCount} / {exercise.minWordCount || 50} minimum
+                    <span className={wordCount >= (currentQuestion.minWordCount || 50) ? 'text-green-400' : 'text-gray-400'}>
+                      Words: {wordCount} / {currentQuestion.minWordCount || 50} minimum
                     </span>
                     {validationMessage && (
                       <span className="text-red-400">{validationMessage}</span>
@@ -270,10 +301,10 @@ const FixedREDIExerciseNew: React.FC = () => {
                   <div className="text-white whitespace-pre-wrap">{writingResponse}</div>
                 </div>
                 
-                {exercise.exampleResponse && (
+                {currentQuestion.exampleResponse && (
                   <div className="bg-gray-700 p-4 rounded-md mb-4">
                     <h3 className="text-blue-400 font-bold mb-2">Example Response:</h3>
-                    <div className="text-white whitespace-pre-wrap">{exercise.exampleResponse}</div>
+                    <div className="text-white whitespace-pre-wrap">{currentQuestion.exampleResponse}</div>
                   </div>
                 )}
                 
@@ -290,11 +321,11 @@ const FixedREDIExerciseNew: React.FC = () => {
           <>
             {/* Multiple choice options */}
             <div className="space-y-3 mb-6">
-              {exercise.options?.map((option, index) => {
+              {currentQuestion.options?.map((option, index) => {
                 let optionClasses = `w-full text-left ${contentBgClass} hover:bg-opacity-80 transition-colors p-3 rounded-lg text-gray-200 text-sm border border-gray-700`;
                 
                 if (hasSubmitted) {
-                  if (index === exercise.correctOptionIndex) {
+                  if (index === currentQuestion.correctOptionIndex) {
                     optionClasses = `w-full text-left ${correctClass} p-3 rounded-lg text-white text-sm border-2`;
                   } else if (index === selectedOption) {
                     optionClasses = `w-full text-left ${incorrectClass} p-3 rounded-lg text-white text-sm border-2`;
@@ -343,13 +374,25 @@ const FixedREDIExerciseNew: React.FC = () => {
       {/* Exercise progress */}
       <div className="mt-8">
         <div className="flex justify-between mb-2 text-gray-300 text-sm">
-          <span>Progress</span>
-          <span>{exerciseIndex} of {totalExercises}</span>
+          <span>Node Progress</span>
+          <span>Question {currentQuestionNumber} of {totalQuestionsInNode}</span>
         </div>
         <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
-            style={{ width: `${(exerciseIndex / totalExercises) * 100}%` }}
+            style={{ width: `${(currentQuestionNumber / totalQuestionsInNode) * 100}%` }}
+          ></div>
+        </div>
+        
+        {/* Show mastery stats */}
+        <div className="flex justify-between mt-4 text-gray-300 text-sm">
+          <span>Mastery Progress</span>
+          <span>{correctAnswersCount} correct answers</span>
+        </div>
+        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+            style={{ width: `${(correctAnswersCount / totalQuestionsInNode) * 100}%` }}
           ></div>
         </div>
       </div>

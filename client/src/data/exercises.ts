@@ -410,3 +410,269 @@ export const getNextExerciseId = (currentId: string): string | undefined => {
   }
   return EXERCISES[currentIndex + 1].id;
 };
+
+// NodeQuestions data structure for sub-questions within a node
+export interface NodeQuestion {
+  id: string;
+  questionNumber: number;
+  title: string;
+  instructions: string;
+  content: string;
+  type: ExerciseType;
+  options?: string[];
+  correctOptionIndex?: number;
+  prompt?: string;
+  minWordCount?: number;
+  exampleResponse?: string;
+}
+
+// Map of node IDs to their respective questions
+export interface NodesQuestionsMap {
+  [nodeId: string]: NodeQuestion[];
+}
+
+// Example questions for some nodes
+export const NODE_QUESTIONS: NodesQuestionsMap = {
+  'mechanics-1': [
+    {
+      id: 'mechanics-1-q1',
+      questionNumber: 1,
+      title: 'Nouns and Pronouns',
+      instructions: 'Select the correctly written sentence',
+      content: 'Choose the option with proper noun and pronoun usage.',
+      type: 'multiple-choice',
+      options: [
+        'Her and me went to the store.',
+        'Her and I went to the store.',
+        'She and me went to the store.',
+        'She and myself went to the store.'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'mechanics-1-q2',
+      questionNumber: 2,
+      title: 'Subject-Verb Agreement',
+      instructions: 'Choose the sentence with correct subject-verb agreement',
+      content: 'Read each option and select the sentence where the subject and verb properly agree.',
+      type: 'multiple-choice',
+      options: [
+        'The group of students are working on their projects.',
+        'The group of students is working on their projects.',
+        'The group of students be working on their projects.',
+        'The group of students working on their projects.'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'mechanics-1-q3',
+      questionNumber: 3,
+      title: 'Verb Tenses',
+      instructions: 'Identify the sentence with consistent verb tense',
+      content: 'Choose the option where the verb tenses are consistent.',
+      type: 'multiple-choice',
+      options: [
+        'I am going to the store and bought some milk.',
+        'I went to the store and buy some milk.',
+        'I go to the store and bought some milk.',
+        'I went to the store and bought some milk.'
+      ],
+      correctOptionIndex: 3
+    },
+    {
+      id: 'mechanics-1-q4',
+      questionNumber: 4,
+      title: 'Capitalization',
+      instructions: 'Select the correctly capitalized sentence',
+      content: 'Choose the option with proper capitalization rules applied.',
+      type: 'multiple-choice',
+      options: [
+        'My Friend Sara lives in new york city.',
+        'My friend sara lives in New york city.',
+        'My friend Sara lives in New York City.',
+        'my Friend Sara Lives In New York City.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'mechanics-1-q5',
+      questionNumber: 5,
+      title: 'Sentence Structure',
+      instructions: 'Identify the complete sentence',
+      content: 'Choose the option that represents a complete sentence.',
+      type: 'multiple-choice',
+      options: [
+        'Running quickly through the park.',
+        'The dog barked loudly at the mailman.',
+        'When the rain started to fall.',
+        'Because we were late for the meeting.'
+      ],
+      correctOptionIndex: 1
+    }
+  ],
+  'sequencing-1': [
+    {
+      id: 'sequencing-1-q1',
+      questionNumber: 1,
+      title: 'Chronological Order',
+      instructions: 'Select the correct sequence for these events',
+      content: 'Which order would these events naturally occur?',
+      type: 'multiple-choice',
+      options: [
+        'Graduate college, Start high school, Learn to walk, Retire',
+        'Learn to walk, Start high school, Graduate college, Retire',
+        'Start high school, Learn to walk, Graduate college, Retire',
+        'Retire, Graduate college, Start high school, Learn to walk'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'sequencing-1-q2',
+      questionNumber: 2,
+      title: 'Logical Flow',
+      instructions: 'Identify the most logical sequence',
+      content: 'Which order makes the most sense for these actions?',
+      type: 'multiple-choice',
+      options: [
+        'Turn on oven, Eat cake, Mix ingredients, Bake batter',
+        'Mix ingredients, Turn on oven, Bake batter, Eat cake',
+        'Eat cake, Mix ingredients, Turn on oven, Bake batter',
+        'Bake batter, Mix ingredients, Turn on oven, Eat cake'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'sequencing-1-q3',
+      questionNumber: 3,
+      title: 'Paragraph Organization',
+      instructions: 'Choose the best order for these sentences to form a paragraph',
+      content: 'Which sequence creates the most logical paragraph?',
+      type: 'multiple-choice',
+      options: [
+        'She won first place. She practiced daily. She entered the competition. She received a trophy.',
+        'She practiced daily. She entered the competition. She won first place. She received a trophy.',
+        'She received a trophy. She won first place. She entered the competition. She practiced daily.',
+        'She entered the competition. She practiced daily. She won first place. She received a trophy.'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'sequencing-1-q4',
+      questionNumber: 4,
+      title: 'Transitional Phrases',
+      instructions: 'Identify the sentence with transitional phrases in logical order',
+      content: 'Which option uses transitional phrases in a logical sequence?',
+      type: 'multiple-choice',
+      options: [
+        'Finally, we started the project. Next, we planned our approach. First, we gathered materials. Lastly, we presented our results.',
+        'First, we gathered materials. Next, we planned our approach. Finally, we started the project. Lastly, we presented our results.',
+        'First, we gathered materials. Next, we planned our approach. Then, we started the project. Finally, we presented our results.',
+        'Next, we gathered materials. First, we planned our approach. Then, we started the project. Finally, we presented our results.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'sequencing-1-q5',
+      questionNumber: 5,
+      title: 'Story Sequence',
+      instructions: 'Select the most logical sequence for this story',
+      content: 'Which order of events creates the most coherent story?',
+      type: 'multiple-choice',
+      options: [
+        'The princess was rescued. The dragon appeared. The knight set out on a quest. The kingdom celebrated.',
+        'The dragon appeared. The princess was rescued. The knight set out on a quest. The kingdom celebrated.',
+        'The knight set out on a quest. The dragon appeared. The princess was rescued. The kingdom celebrated.',
+        'The kingdom celebrated. The knight set out on a quest. The dragon appeared. The princess was rescued.'
+      ],
+      correctOptionIndex: 2
+    }
+  ],
+  'voice-1': [
+    {
+      id: 'voice-1-q1',
+      questionNumber: 1,
+      title: 'Formal vs. Informal',
+      instructions: 'Identify the sentence with a formal tone',
+      content: 'Which sentence would be appropriate in a formal academic essay?',
+      type: 'multiple-choice',
+      options: [
+        'The experiment was like, super cool and stuff.',
+        'The results of the experiment were quite fascinating.',
+        'OMG! The experiment results blew my mind!',
+        'So anyway, the experiment turned out pretty good I think.'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'voice-1-q2',
+      questionNumber: 2,
+      title: 'Active Voice',
+      instructions: 'Select the sentence written in active voice',
+      content: 'Which option uses the active rather than passive voice?',
+      type: 'multiple-choice',
+      options: [
+        'The ball was thrown by the pitcher.',
+        'The essay was written by the student.',
+        'The student wrote the essay.',
+        'The cake was baked by my mother.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'voice-1-q3',
+      questionNumber: 3,
+      title: 'Vivid Description',
+      instructions: 'Choose the sentence with the most vivid description',
+      content: 'Which sentence creates the clearest mental image?',
+      type: 'multiple-choice',
+      options: [
+        'The man walked through the forest.',
+        'The tall man went through the green forest.',
+        'The elderly ranger trudged through the dense, misty forest, his boots crunching fallen leaves.',
+        'The forest had a man walking in it who was going somewhere.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'voice-1-q4',
+      questionNumber: 4,
+      title: 'Audience Appropriate',
+      instructions: 'Select the sentence most appropriate for younger readers',
+      content: 'Which option would be best in a children\'s book?',
+      type: 'multiple-choice',
+      options: [
+        'The canine\'s rapid locomotion suggested heightened alertness.',
+        'The dog ran super fast, like, faster than any dog ever!',
+        'The happy puppy zoomed around the yard, his tail wagging like a flag in the wind.',
+        'The physical exertion demonstrated by the domesticated animal was notable.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'voice-1-q5',
+      questionNumber: 5,
+      title: 'Emotional Appeal',
+      instructions: 'Identify the sentence with the strongest emotional appeal',
+      content: 'Which sentence evokes the strongest emotional response?',
+      type: 'multiple-choice',
+      options: [
+        'The dog waited at the shelter.',
+        'The number of dogs in shelters increased by 5% last year.',
+        'The dog was at the shelter for 732 days.',
+        'After two years of waiting, the three-legged shepherd watched hopefully as each visitor passed by his kennel, his eyes pleading for a forever home.'
+      ],
+      correctOptionIndex: 3
+    }
+  ]
+};
+
+// Function to get questions for a specific node
+export const getQuestionsForNode = (nodeId: string): NodeQuestion[] => {
+  return NODE_QUESTIONS[nodeId] || [];
+};
+
+// Function to get a specific question by node ID and question number
+export const getQuestionByNodeAndNumber = (nodeId: string, questionNumber: number): NodeQuestion | undefined => {
+  const questions = getQuestionsForNode(nodeId);
+  return questions.find(q => q.questionNumber === questionNumber);
+};
