@@ -401,3 +401,12 @@ export const getExerciseNodes = (
 export const getExerciseById = (id: string): Exercise | undefined => {
   return EXERCISES.find(exercise => exercise.id === id);
 };
+
+// Get the next exercise based on the current exercise ID
+export const getNextExerciseId = (currentId: string): string | undefined => {
+  const currentIndex = EXERCISES.findIndex(exercise => exercise.id === currentId);
+  if (currentIndex === -1 || currentIndex === EXERCISES.length - 1) {
+    return undefined; // No next exercise
+  }
+  return EXERCISES[currentIndex + 1].id;
+};

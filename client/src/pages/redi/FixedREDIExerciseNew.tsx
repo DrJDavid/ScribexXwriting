@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useTheme } from '@/context/ThemeContext';
 import useProgress from '@/hooks/useProgress';
-import { getExerciseById } from '@/data/exercises';
+import { getExerciseById, getNextExerciseId, EXERCISES } from '@/data/exercises';
 import { motion } from 'framer-motion';
 import REDIExerciseModal from './REDIExerciseModal';
 
@@ -42,6 +42,17 @@ const FixedREDIExerciseNew: React.FC = () => {
   // Get the current exercise
   const exercise = getExerciseById(params.exerciseId || "");
   const isWritingExercise = exercise?.type === 'writing';
+  
+  // Calculate exercise index and total exercises in useEffect
+  useEffect(() => {
+    if (exercise?.id) {
+      const currentIndex = EXERCISES.findIndex(ex => ex.id === exercise.id);
+      if (currentIndex !== -1) {
+        setExerciseIndex(currentIndex + 1);
+        setTotalExercises(EXERCISES.length);
+      }
+    }
+  }, [exercise?.id]);
   
   // If exercise not found, go back to map
   useEffect(() => {
@@ -149,7 +160,17 @@ const FixedREDIExerciseNew: React.FC = () => {
         await completeExercise(exercise.id, isAnswerCorrect);
       }
       
-      // Only navigate after the completion is successfully recorded
+      // Check if there's a next exercise
+      if (exercise?.id) {
+        const nextExerciseId = getNextExerciseId(exercise.id);
+        if (nextExerciseId) {
+          // Navigate to the next exercise
+          navigate(`/redi/exercise/${nextExerciseId}`);
+          return;
+        }
+      }
+      
+      // If no next exercise or there was an error getting it, go back to the map
       navigate('/redi');
     } catch (error) {
       console.error("Error completing exercise:", error);
