@@ -214,7 +214,7 @@ import DirectPromptDisplay from "@/pages/owl/DirectPromptDisplay";
 import WorkingLocationDetail from "@/pages/owl/WorkingLocationDetail";
 import OWLWritingQuest from "@/pages/owl/OWLWritingQuest";
 import REDIMap from "@/pages/redi/REDIMap";
-import REDIExercise from "@/pages/redi/REDIExercise";
+import FixedREDIExercise from "@/pages/redi/FixedREDIExercise";
 import ProfilePage from "@/pages/Profile";
 import AchievementsPage from "@/pages/AchievementsPage";
 import TeacherParentProfile from "@/pages/TeacherParentProfile";
@@ -318,7 +318,7 @@ function App() {
                   />
                   <RoleBasedRoute 
                     path="/redi/exercise/:exerciseId" 
-                    component={REDIExercise} 
+                    component={FixedREDIExercise} 
                     allowedRoles={['student', 'teacher', 'parent']} 
                   />
                   <RoleBasedRoute 
