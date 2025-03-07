@@ -14,7 +14,8 @@ const REDIExercise: React.FC = () => {
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
   const { progress, completeExercise, updateProgress, calculateRediLevel } = useProgress();
-  const [exerciseIndex, setExerciseIndex] = useState(1);
+  // Track the current index in the exercise set (0-indexed internally, displayed as 1-indexed)
+  const [exerciseIndex, setExerciseIndex] = useState(0);
   const [totalExercises, setTotalExercises] = useState(5);
   const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -159,8 +160,9 @@ const REDIExercise: React.FC = () => {
 
   // Function to handle advancing to next exercise
   const advanceToNextExercise = useCallback(() => {
-    // If we've completed all exercises in the set
-    if (exerciseIndex >= totalExercises) {
+    // If we've completed all exercises in the set 
+    // Since exerciseIndex is 0-indexed, we complete when it reaches totalExercises - 1
+    if (exerciseIndex >= totalExercises - 1) {
       // Update mastery only after completing the full set
       updateRediMastery().then(() => {
         // Mark original exercise ID as completed
@@ -184,9 +186,9 @@ const REDIExercise: React.FC = () => {
     }
     
     // Otherwise, go to the next exercise in the set
-    // Get the next exercise from the set using the current index (which is 1-indexed for display)
-    // So we need to use exerciseIndex (not exerciseIndex+1) to get the next item
-    const nextExerciseId = exerciseSet[exerciseIndex];
+    // Get the next exercise from the set
+    // We need to use the NEXT index (exerciseIndex + 1) because exerciseIndex is the current one
+    const nextExerciseId = exerciseSet[exerciseIndex + 1];
     if (nextExerciseId) {
       // Reset submission state
       setHasSubmitted(false);
@@ -307,7 +309,7 @@ const REDIExercise: React.FC = () => {
       onBackClick={handleBack}
     >
       <div className="text-gray-300 text-sm mb-4">
-        Exercise {exerciseIndex} of {totalExercises}
+        Exercise {exerciseIndex + 1} of {totalExercises}
       </div>
       
       {isWritingExercise ? (
@@ -359,12 +361,12 @@ const REDIExercise: React.FC = () => {
       <div className="mt-8">
         <div className="flex justify-between mb-2 text-gray-300 text-sm">
           <span>Progress</span>
-          <span>{exerciseIndex} of {totalExercises}</span>
+          <span>{exerciseIndex + 1} of {totalExercises}</span>
         </div>
         <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
-            style={{ width: `${(exerciseIndex / totalExercises) * 100}%` }}
+            style={{ width: `${((exerciseIndex + 1) / totalExercises) * 100}%` }}
           ></div>
         </div>
       </div>
