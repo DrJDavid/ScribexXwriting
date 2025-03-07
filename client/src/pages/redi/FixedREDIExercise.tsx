@@ -294,8 +294,14 @@ const FixedREDIExercise: React.FC = () => {
         Exercise {exerciseIndex} of {totalExercises}
       </div>
       
-      {/* Main exercise content */}
-      <div className={`${bgClass} rounded-xl p-5 shadow-lg`}>
+      {/* Main exercise content - use noValidate to disable browser validation */}
+      <form 
+        onSubmit={(e) => {
+          e.preventDefault(); // This prevents the default form submission
+        }}
+        noValidate
+      >
+        <div className={`${bgClass} rounded-xl p-5 shadow-lg`}>
         <div className="mb-6">
           <h3 className={`text-white ${fontClass} text-xl mb-3`}>{exercise.title}</h3>
           <p className="text-gray-200 text-sm">{exercise.instructions}</p>
@@ -405,9 +411,14 @@ const FixedREDIExercise: React.FC = () => {
                   <motion.button
                     key={index}
                     className={optionClasses}
-                    onClick={() => handleOptionSelect(index)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleOptionSelect(index);
+                    }}
                     whileHover={!hasSubmitted ? { scale: 1.01 } : {}}
                     whileTap={!hasSubmitted ? { scale: 0.99 } : {}}
+                    type="button"
                   >
                     {option}
                   </motion.button>
@@ -474,6 +485,7 @@ const FixedREDIExercise: React.FC = () => {
           ></div>
         </div>
       </div>
+      </form>
     </MainLayout>
   );
 };
