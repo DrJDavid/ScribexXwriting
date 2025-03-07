@@ -9,7 +9,7 @@ import {
   getExerciseById, 
   getQuestionsForNode, 
   getQuestionByNodeAndNumber, 
-  NODE_QUESTIONS 
+  NodeQuestion
 } from '@/data/exercises';
 import { motion } from 'framer-motion';
 import REDIExerciseModal from './REDIExerciseModal';
@@ -71,7 +71,12 @@ const FixedREDIExerciseNew: React.FC = () => {
     }
   }, [exercise?.id]);
   
-  // Remove references to variables that don't exist
+  // Default to 5 questions if no questions found
+  useEffect(() => {
+    if (totalQuestionsInNode === 0 && exercise?.id) {
+      console.log("No questions found for this node:", exercise.id);
+    }
+  }, [totalQuestionsInNode, exercise?.id]);
   
   // If exercise/node not found, go back to map
   useEffect(() => {

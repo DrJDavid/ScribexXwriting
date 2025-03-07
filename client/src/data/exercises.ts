@@ -510,6 +510,83 @@ export const NODE_QUESTIONS: NodesQuestionsMap = {
       correctOptionIndex: 1
     }
   ],
+  'mechanics-2': [
+    {
+      id: 'mechanics-2-q1',
+      questionNumber: 1,
+      title: 'Punctuation: Periods',
+      instructions: 'Choose the correctly punctuated sentence',
+      content: 'Select the option that uses periods correctly.',
+      type: 'multiple-choice',
+      options: [
+        'Dr Jones arrived at 4.30 P.M.',
+        'Dr. Jones arrived at 4:30 P.M.',
+        'Dr. Jones arrived at 4.30 P.M',
+        'Dr Jones arrived at 4:30 pm.'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'mechanics-2-q2',
+      questionNumber: 2,
+      title: 'Punctuation: Question Marks',
+      instructions: 'Identify the correct use of question marks',
+      content: 'Choose the sentence that uses question marks properly.',
+      type: 'multiple-choice',
+      options: [
+        'Do you know what time it is.',
+        'Do you know what time it is?',
+        'Do you know what time it is!',
+        'Do you know what time it is;'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'mechanics-2-q3',
+      questionNumber: 3,
+      title: 'Punctuation: Commas',
+      instructions: 'Select the sentence with correct comma usage',
+      content: 'Choose the option that uses commas appropriately.',
+      type: 'multiple-choice',
+      options: [
+        'After eating dinner, we went to the movies.',
+        'After eating dinner we, went to the movies.',
+        'After, eating dinner we went to the movies.',
+        'After eating dinner we went, to the movies.'
+      ],
+      correctOptionIndex: 0
+    },
+    {
+      id: 'mechanics-2-q4',
+      questionNumber: 4,
+      title: 'Punctuation: Quotation Marks',
+      instructions: 'Choose the sentence with correct quotation mark usage',
+      content: 'Identify the proper use of quotation marks.',
+      type: 'multiple-choice',
+      options: [
+        'She said "I\'ll be there soon".',
+        'She said, "I\'ll be there soon."',
+        'She said, "I\'ll be there soon".',
+        'She said "I\'ll be there soon."'
+      ],
+      correctOptionIndex: 1
+    },
+    {
+      id: 'mechanics-2-q5',
+      questionNumber: 5,
+      title: 'Punctuation: Apostrophes',
+      instructions: 'Identify the correct use of apostrophes',
+      content: 'Choose the option that uses apostrophes correctly.',
+      type: 'multiple-choice',
+      options: [
+        'The dog\'s bone is under the table.',
+        'The dogs bone is under the table.',
+        'The dog\'s bone is under the table\'s.',
+        'The dogs\' bone is under the table.'
+      ],
+      correctOptionIndex: 0
+    }
+  ],
   'sequencing-1': [
     {
       id: 'sequencing-1-q1',
@@ -662,6 +739,83 @@ export const NODE_QUESTIONS: NodesQuestionsMap = {
         'After two years of waiting, the three-legged shepherd watched hopefully as each visitor passed by his kennel, his eyes pleading for a forever home.'
       ],
       correctOptionIndex: 3
+    }
+  ],
+  'voice-2': [
+    {
+      id: 'voice-2-q1',
+      questionNumber: 1,
+      title: 'Sensory Language',
+      instructions: 'Choose the sentence with the most sensory details',
+      content: 'Select the option that engages the reader\'s senses most effectively.',
+      type: 'multiple-choice',
+      options: [
+        'The pizza was good.',
+        'The pizza had cheese and pepperoni on it.',
+        'The hot, gooey cheese stretched in stringy strands as I lifted a slice of spicy pepperoni pizza, its aroma of oregano and tomato filling the air.',
+        'I ate a large pizza for dinner yesterday evening.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'voice-2-q2',
+      questionNumber: 2,
+      title: 'Metaphors and Similes',
+      instructions: 'Identify the sentence containing a metaphor',
+      content: 'Choose the option that uses metaphorical language.',
+      type: 'multiple-choice',
+      options: [
+        'The runner was very fast.',
+        'The classroom was like a zoo during the party.',
+        'Her eyes were pools of wisdom that had witnessed decades of history.',
+        'The runner moved quickly, similar to a cheetah.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'voice-2-q3',
+      questionNumber: 3,
+      title: 'Strong Verbs',
+      instructions: 'Select the sentence with the strongest verbs',
+      content: 'Choose the option with the most powerful and specific verbs.',
+      type: 'multiple-choice',
+      options: [
+        'The dog went across the yard and got the ball.',
+        'The dog moved quickly to the yard and took the ball.',
+        'The dog sprinted across the yard and snatched the ball.',
+        'The dog was in the yard with the ball.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'voice-2-q4',
+      questionNumber: 4,
+      title: 'Precise Adjectives',
+      instructions: 'Identify the sentence with the most precise adjectives',
+      content: 'Choose the option that uses specific, descriptive adjectives.',
+      type: 'multiple-choice',
+      options: [
+        'It was a bad day with bad weather.',
+        'It was a day with weather that wasn\'t good.',
+        'It was a miserable day with stormy weather.',
+        'It was a really really bad day with very bad weather.'
+      ],
+      correctOptionIndex: 2
+    },
+    {
+      id: 'voice-2-q5',
+      questionNumber: 5,
+      title: 'Word Choice Impact',
+      instructions: 'Select the sentence with the most impactful word choice',
+      content: 'Choose the option where the words create the strongest impression.',
+      type: 'multiple-choice',
+      options: [
+        'The old building was taken down yesterday.',
+        'The historic landmark was demolished yesterday.',
+        'They got rid of the building that was there for a long time yesterday.',
+        'The building is no longer there as of yesterday.'
+      ],
+      correctOptionIndex: 1
     }
   ]
 };
