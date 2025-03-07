@@ -202,12 +202,25 @@ const FixedREDIExerciseNew: React.FC = () => {
       
       // Record completion - need to await this to catch any errors
       if (completeExercise && exercise?.id) {
-        await completeExercise(exercise.id, isNodeComplete);
-        console.log(`Node ${exercise.id} completed with mastery: ${masteryPercentage}%`);
+        try {
+          // Add the exercise to the completedExercises list in progress
+          const result = await completeExercise(exercise.id, isNodeComplete);
+          console.log(`Node ${exercise.id} completed with mastery: ${masteryPercentage}%`);
+          console.log('Updated progress:', result);
+          
+          // Wait a moment for progress state to update before navigating
+          setTimeout(() => {
+            // Navigate back to the REDI map
+            navigate('/redi');
+          }, 500);
+        } catch (updateError) {
+          console.error("Error updating progress:", updateError);
+          navigate('/redi');
+        }
+      } else {
+        console.warn("Unable to update progress: completeExercise function or exercise ID is missing");
+        navigate('/redi');
       }
-      
-      // Navigate back to the REDI map
-      navigate('/redi');
     } catch (error) {
       console.error("Error completing exercise:", error);
       // If an error occurs, still close the modal but show an error message
