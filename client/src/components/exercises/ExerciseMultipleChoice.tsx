@@ -64,10 +64,8 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
       setIsCorrect(correct);
       setHasSubmitted(true);
       
-      // Call onSubmit but with a slight delay to avoid immediate transition
-      setTimeout(() => {
-        onSubmit(exerciseId, selectedOption, correct);
-      }, 500);
+      // Call onSubmit immediately but let parent component handle the transition
+      onSubmit(exerciseId, selectedOption, correct);
     }
   };
 

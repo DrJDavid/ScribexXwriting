@@ -13,7 +13,7 @@ const REDIExercise: React.FC = () => {
   const { toast } = useToast();
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
-  const { progress, completeExercise } = useProgress();
+  const { progress, completeExercise, updateProgress, calculateRediLevel } = useProgress();
   const [exerciseIndex, setExerciseIndex] = useState(1);
   const [totalExercises, setTotalExercises] = useState(5);
   const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
@@ -100,7 +100,7 @@ const REDIExercise: React.FC = () => {
   
   // Function to update REDI skill mastery after completing a set
   const updateRediMastery = useCallback(async () => {
-    if (!progress || !progress.progress) return;
+    if (!progress) return;
     
     // Only increase mastery if the user got at least 3/5 correct answers
     const isSuccessful = correctAnswers >= 3;
@@ -110,7 +110,7 @@ const REDIExercise: React.FC = () => {
       const skillIncrease = Math.min(correctAnswers * 5, 20); // Cap at 20% increase per set
       
       // Create a skill update object based on the exercise type
-      let updatedRediSkillMastery = { ...progress.progress.rediSkillMastery };
+      let updatedRediSkillMastery = { ...progress.rediSkillMastery };
       
       if (exercise.skillType === 'mechanics') {
         updatedRediSkillMastery.mechanics = Math.min(updatedRediSkillMastery.mechanics + skillIncrease, 100);
@@ -121,13 +121,13 @@ const REDIExercise: React.FC = () => {
       }
       
       // Use the progress context's helper function to calculate new level
-      const rediLevel = progress.calculateRediLevel(
+      const rediLevel = calculateRediLevel(
         updatedRediSkillMastery, 
-        progress.progress.completedExercises
+        [...(progress.completedExercises || [])]
       );
       
       // Update progress with new mastery and level
-      await progress.updateProgress({
+      await updateProgress({
         rediSkillMastery: updatedRediSkillMastery,
         rediLevel,
       });
@@ -143,7 +143,7 @@ const REDIExercise: React.FC = () => {
         description: `You got ${correctAnswers} out of ${totalExercises} correct. You need at least 3 correct to increase mastery.`,
       });
     }
-  }, [correctAnswers, totalExercises, exercise.skillType, progress, toast]);
+  }, [correctAnswers, totalExercises, exercise.skillType, progress, calculateRediLevel, updateProgress, toast]);
 
   // Function to handle advancing to next exercise
   const advanceToNextExercise = useCallback(() => {
@@ -198,9 +198,8 @@ const REDIExercise: React.FC = () => {
   
   // Handle multiple choice submission
   const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
+    // If already submitted, prevent double-submission
     if (hasSubmitted) {
-      // If already submitted, advance to next exercise
-      advanceToNextExercise();
       return;
     }
     
@@ -215,23 +214,26 @@ const REDIExercise: React.FC = () => {
       toast({
         title: "Correct!",
         description: "Great job! Click Continue to proceed.",
+        duration: 3000,
       });
     } else {
       toast({
         title: "Not quite right",
         description: "That's okay! Click Continue to proceed.",
+        duration: 3000,
       });
     }
     
     // We'll only mark the original exercise as completed after finishing the full set
     // This is handled in updateRediMastery
+    
+    // The continue button will be rendered to proceed to the next question
   };
   
   // Handle writing submission
   const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
+    // If already submitted, prevent double-submission
     if (hasSubmitted) {
-      // If already submitted, advance to next exercise
-      advanceToNextExercise();
       return;
     }
     
@@ -246,16 +248,20 @@ const REDIExercise: React.FC = () => {
       toast({
         title: "Exercise Complete!",
         description: "Your submission meets the requirements. Click Continue to proceed.",
+        duration: 3000,
       });
     } else {
       toast({
         title: "Requirements Not Met",
         description: "Your submission doesn't meet all requirements yet. Click Continue to proceed anyway.",
+        duration: 3000,
       });
     }
     
     // We'll only mark the original exercise as completed after finishing the full set
     // This is handled in updateRediMastery
+    
+    // The continue button will be rendered to proceed to the next question
   };
   
   // Handle continue button
