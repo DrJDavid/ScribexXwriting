@@ -63,7 +63,15 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
       const correct = selectedOption === correctOptionIndex;
       setIsCorrect(correct);
       setHasSubmitted(true);
-      onSubmit(exerciseId, selectedOption, correct);
+      // We'll call onSubmit but NOT when handling the initial submit
+      // This prevents double-calling which may cause state issues
+    }
+  };
+  
+  // Separate function to handle the continue button click
+  const handleContinue = () => {
+    if (selectedOption !== null) {
+      onSubmit(exerciseId, selectedOption, isCorrect);
     }
   };
 
@@ -125,18 +133,7 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
           
           <Button
             className={`w-full py-3 font-medium text-white bg-gradient-to-r ${accentClass} rounded-md shadow hover:opacity-90 transition ${fontClass}`}
-            onClick={() => {
-              // Get the wouter navigate function from a ref or through a callback
-              if (onSubmit) {
-                // Tell parent we're done, and let parent handle navigation
-                setTimeout(() => {
-                  // Add a delay to allow animation to complete
-                  if (selectedOption !== null) {
-                    onSubmit(exerciseId, selectedOption, isCorrect);
-                  }
-                }, 1000);
-              }
-            }}
+            onClick={handleContinue}
           >
             Continue
           </Button>
