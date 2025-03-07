@@ -58,7 +58,11 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
     }
   };
   
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.MouseEvent) => {
+    // Critical - prevent any default actions and propagation
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (selectedOption !== null) {
       const correct = selectedOption === correctOptionIndex;
       setIsCorrect(correct);
@@ -69,8 +73,15 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
     }
   };
 
+  // Prevent any form submissions
+  const preventFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
   return (
-    <div className={`${bgClass} rounded-xl p-5 shadow-lg`}>
+    <div className={`${bgClass} rounded-xl p-5 shadow-lg`} onSubmit={preventFormSubmit}>
       <div className="mb-6">
         <h3 className={`text-white ${fontClass} text-xl mb-3`}>{title}</h3>
         <p className="text-gray-200 text-sm">{instructions}</p>
@@ -83,7 +94,7 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
       </div>
       
       {/* Multiple choice options */}
-      <div className="space-y-3 mb-6">
+      <div className="space-y-3 mb-6" onSubmit={preventFormSubmit}>
         {options.map((option, index) => {
           let optionClasses = `w-full text-left ${contentBgClass} hover:bg-opacity-80 transition-colors p-3 rounded-lg text-gray-200 text-sm border border-gray-700`;
           
@@ -102,7 +113,10 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
               key={index}
               type="button" // Explicitly set to button type to prevent form submission
               className={optionClasses}
-              onClick={() => handleOptionSelect(index)}
+              onClick={(e) => {
+                e.preventDefault(); // Prevent any form submission
+                handleOptionSelect(index);
+              }}
               whileHover={!hasSubmitted ? { scale: 1.01 } : {}}
               whileTap={!hasSubmitted ? { scale: 0.99 } : {}}
             >
@@ -113,7 +127,7 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
       </div>
       
       {hasSubmitted ? (
-        <div className="mb-6">
+        <div className="mb-6" onSubmit={preventFormSubmit}>
           <div className={`p-4 rounded-lg ${isCorrect ? 'bg-green-700/20' : 'bg-red-700/20'} mb-4`}>
             <h4 className={`text-lg ${isCorrect ? 'text-green-400' : 'text-red-400'} ${fontClass} mb-2`}>
               {isCorrect ? 'Correct!' : 'Not quite right'}
@@ -125,7 +139,6 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
               }
             </p>
           </div>
-          {/* Removed the duplicate continue button to avoid conflicts with parent */}
         </div>
       ) : (
         <Button

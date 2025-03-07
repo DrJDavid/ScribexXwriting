@@ -54,10 +54,19 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
     }
   };
   
+  // Prevent form submission
+  const preventFormSubmit = (e: React.FormEvent) => {
+    console.log('Preventing form submission in writing component');
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+  
   // Handle form submission
-  const handleSubmit = (e?: React.MouseEvent) => {
+  const handleSubmit = (e: React.MouseEvent) => {
     // Prevent any form submission
-    e && e.preventDefault();
+    e.preventDefault();
+    e.stopPropagation();
     
     // Check word count
     if (wordCount < minWordCount) {
@@ -74,7 +83,7 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+    <div className="bg-gray-800 rounded-lg p-6 shadow-lg" onSubmit={preventFormSubmit}>
       <h2 className={`text-xl font-bold mb-4 ${theme === 'owl' ? 'text-amber-400' : 'text-blue-400'}`}>
         {instructions}
       </h2>
@@ -88,7 +97,7 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
       </div>
       
       {!submitted ? (
-        <>
+        <div onSubmit={preventFormSubmit}>
           <div className="mb-2">
             <Textarea 
               placeholder="Write your response here..." 
@@ -114,9 +123,9 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
           >
             Submit Response
           </Button>
-        </>
+        </div>
       ) : (
-        <div className="mt-6">
+        <div className="mt-6" onSubmit={preventFormSubmit}>
           <div className="bg-gray-700 p-4 rounded-md mb-4">
             <h3 className="text-green-400 font-bold mb-2">Your Response:</h3>
             <div className="text-white whitespace-pre-wrap">{response}</div>
@@ -134,8 +143,6 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
               Great job! Writing exercises help you practice expressing your thoughts clearly.
             </p>
           </div>
-          
-          {/* Removed continue button to allow parent component to handle navigation */}
         </div>
       )}
     </div>

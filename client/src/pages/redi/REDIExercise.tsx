@@ -8,117 +8,116 @@ import useProgress from '@/hooks/useProgress';
 import { getExerciseById, getExerciseNodes } from '@/data/exercises';
 import { useToast } from '@/hooks/use-toast';
 
-// Simple exercise component with no hooks to avoid reordering issues
-const REDIExercise: React.FC = () => {
+/**
+ * REDI Exercise page to show quizzes and exercises
+ */
+const REDIExercise = () => {
+  // Setup hooks and params
   const { setTheme } = useTheme();
   const { toast } = useToast();
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
   const { progress, completeExercise, updateProgress, calculateRediLevel } = useProgress();
   
-  // Quiz state
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Set REDI theme
+  useEffect(() => { setTheme('redi'); }, [setTheme]);
+
+  // QUIZ STATE
+  // Track current exercise being shown
+  const [currentExerciseId, setCurrentExerciseId] = useState(params.exerciseId || '');
+  // Has user answered current question
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
+  // Was their answer correct
+  const [isCorrect, setIsCorrect] = useState(false);
+  // How many correct answers so far
   const [correctCount, setCorrectCount] = useState(0);
-  const [exercises, setExercises] = useState<string[]>([]);
-  const [currentExerciseId, setCurrentExerciseId] = useState<string>(params.exerciseId || '');
-  
-  // Make sure REDI theme is active
+  // Current question index
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  // List of questions in order
+  const [questionsList, setQuestionsList] = useState<string[]>([]);
+
+  // Create 5 question exercise set
   useEffect(() => {
-    setTheme('redi');
-  }, [setTheme]);
-  
-  // Current exercise data
-  const currentExercise = getExerciseById(currentExerciseId);
-  
-  // Create initial exercise set
-  useEffect(() => {
-    // Early returns
-    if (!params.exerciseId || exercises.length > 0 || !progress) return;
+    // Skip if we already have questions or missing required data
+    if (!params.exerciseId || questionsList.length > 0 || !progress) return;
     
-    // Get base exercise
-    const baseExercise = getExerciseById(params.exerciseId);
-    if (!baseExercise) {
-      console.error('Base exercise not found');
-      navigate('/redi');
-      return;
-    }
+    // Get initial exercise data
+    const initialExercise = getExerciseById(params.exerciseId);
+    if (!initialExercise) return navigate('/redi');
     
-    console.log('Initializing exercise set for:', params.exerciseId);
-    
-    // Get all nodes
+    // Find available exercises
     const nodes = getExerciseNodes(
       progress.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 },
       progress.completedExercises || []
     );
     
-    // Get matching skill type exercises
-    const matchingExercises = nodes
+    // Get exercises of the same skill type (mechanics, sequencing, voice)
+    const sameTypeExercises = nodes
       .filter(node => 
-        node.skillType === baseExercise.skillType && 
-        (node.status === 'available' || node.status === 'current' || node.id === baseExercise.id))
+        node.skillType === initialExercise.skillType && 
+        (node.status === 'available' || node.status === 'current' || node.id === initialExercise.id))
       .map(node => node.id);
     
-    // Get other types as backups
+    // Get other skill types as backups
     const otherExercises = nodes
       .filter(node => 
-        node.skillType !== baseExercise.skillType && 
+        node.skillType !== initialExercise.skillType && 
         (node.status === 'available' || node.status === 'current'))
       .map(node => node.id);
     
-    // Always start with the original exercise
-    let questionsList = [params.exerciseId];
+    // Always start with the initial exercise
+    let exercises = [params.exerciseId];
     
-    // Get additional exercises, not including the starting one
-    const remainingOptions = [...matchingExercises, ...otherExercises]
+    // Add other exercises (not including the starting one)
+    const availableExercises = [...sameTypeExercises, ...otherExercises]
       .filter(id => id !== params.exerciseId);
     
-    // Add exercises to reach 5 total
-    while (questionsList.length < 5 && remainingOptions.length > 0) {
-      const randomIndex = Math.floor(Math.random() * remainingOptions.length);
-      questionsList.push(remainingOptions[randomIndex]);
-      remainingOptions.splice(randomIndex, 1);
+    // Add exercises until we have 5 total
+    while (exercises.length < 5 && availableExercises.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableExercises.length);
+      exercises.push(availableExercises[randomIndex]);
+      availableExercises.splice(randomIndex, 1);
     }
     
-    // If we need more, duplicate some
-    while (questionsList.length < 5) {
-      const randomIndex = Math.floor(Math.random() * questionsList.length);
-      questionsList.push(questionsList[randomIndex]);
+    // If we don't have enough, duplicate some
+    while (exercises.length < 5) {
+      const randomIndex = Math.floor(Math.random() * exercises.length);
+      exercises.push(exercises[randomIndex]);
     }
     
-    console.log('Exercise set created:', questionsList);
-    setExercises(questionsList);
-    setCurrentExerciseId(questionsList[0]);
-  }, [params.exerciseId, progress, navigate]);
+    // Save state
+    setQuestionsList(exercises);
+    setCurrentExerciseId(exercises[0]);
+  }, [params.exerciseId, progress, questionsList.length, navigate]);
   
-  // Safety check for missing exercise
+  // Get current exercise data
+  const currentExercise = getExerciseById(currentExerciseId);
+  
+  // If exercise not found, back to map
   useEffect(() => {
     if (!currentExercise && params.exerciseId) {
-      console.error('Current exercise not found');
       navigate('/redi');
     }
   }, [currentExercise, params.exerciseId, navigate]);
   
-  // Exit if no exercise data
-  if (!currentExercise || exercises.length === 0) {
+  // Show nothing until we're ready to render
+  if (!currentExercise || questionsList.length === 0) {
     return null;
   }
   
-  // Last question check
-  const isLastQuestion = currentIndex === exercises.length - 1;
+  // Is this the last question?
+  const isLastQuestion = currentQuestionIndex === questionsList.length - 1;
   
-  // Handle multiple choice submission
-  const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
-    console.log('Multiple choice submitted:', { exerciseId, isCorrect });
-    if (hasAnswered) return; // Prevent double submission
+  // Handle multiple choice answer
+  const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, correct: boolean) => {
+    if (hasAnswered) return;
     
-    // Update state
-    setIsCorrectAnswer(isCorrect);
+    // Update state based on answer
+    setIsCorrect(correct);
     setHasAnswered(true);
     
-    // Track correct answers
-    if (isCorrect) {
+    // Count correct answers
+    if (correct) {
       setCorrectCount(prev => prev + 1);
       toast({
         title: "Correct!",
@@ -136,11 +135,10 @@ const REDIExercise: React.FC = () => {
   
   // Handle writing submission
   const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
-    console.log('Writing exercise submitted:', { exerciseId, isComplete });
-    if (hasAnswered) return; // Prevent double submission
+    if (hasAnswered) return;
     
-    // Update state
-    setIsCorrectAnswer(isComplete);
+    // Update state based on submission
+    setIsCorrect(isComplete);
     setHasAnswered(true);
     
     // Count as correct if complete
@@ -160,21 +158,13 @@ const REDIExercise: React.FC = () => {
     }
   };
   
-  // Continue to next question or finish
+  // Handle continue button click
   const handleContinue = async (e: React.MouseEvent) => {
-    // Prevent any form submission
     e.preventDefault();
-    e.stopPropagation();
     
-    console.log('Continue clicked:', { 
-      currentIndex, 
-      isLastQuestion, 
-      correctCount 
-    });
-    
-    // If last question, complete the exercise set
+    // If this is the last question, finish the exercise
     if (isLastQuestion) {
-      // Success criteria: at least 3/5 correct
+      // Need at least 3 correct to pass
       const isSuccessful = correctCount >= 3;
       
       // Update skill mastery if successful
@@ -207,24 +197,24 @@ const REDIExercise: React.FC = () => {
         
         toast({
           title: "Exercise Set Completed!",
-          description: `You got ${correctCount} out of ${exercises.length} correct. Your ${currentExercise.skillType} mastery increased by ${skillIncrease}%.`,
+          description: `You got ${correctCount} out of ${questionsList.length} correct. Your ${currentExercise.skillType} mastery increased by ${skillIncrease}%.`,
         });
       } else {
         toast({
           title: "Exercise Set Attempted",
-          description: `You got ${correctCount} out of ${exercises.length} correct. You need at least 3 correct to increase mastery.`,
+          description: `You got ${correctCount} out of ${questionsList.length} correct. You need at least 3 correct to increase mastery.`,
         });
       }
       
-      // Mark the original exercise as completed
+      // Mark the exercise as completed
       if (params.exerciseId && completeExercise) {
         completeExercise(params.exerciseId, isSuccessful);
         
         toast({
           title: isSuccessful ? "Node Completed!" : "Node Attempted",
           description: isSuccessful 
-            ? `You got ${correctCount} out of ${exercises.length} correct! Node mastery unlocked.` 
-            : `You got ${correctCount} out of ${exercises.length} correct. Try again for better mastery.`,
+            ? `You got ${correctCount} out of ${questionsList.length} correct! Node mastery unlocked.` 
+            : `You got ${correctCount} out of ${questionsList.length} correct. Try again for better mastery.`,
         });
       }
       
@@ -234,19 +224,16 @@ const REDIExercise: React.FC = () => {
     }
     
     // Move to next question
-    const nextIndex = currentIndex + 1;
-    const nextExerciseId = exercises[nextIndex];
+    const nextIndex = currentQuestionIndex + 1;
+    const nextExerciseId = questionsList[nextIndex];
     
     if (nextExerciseId) {
-      console.log(`Moving to next exercise: ${nextExerciseId} (${nextIndex + 1} of ${exercises.length})`);
-      
       // Update state for the next question
-      setCurrentIndex(nextIndex);
+      setCurrentQuestionIndex(nextIndex);
       setCurrentExerciseId(nextExerciseId);
       setHasAnswered(false);
-      setIsCorrectAnswer(false);
+      setIsCorrect(false);
     } else {
-      console.error('Next exercise not found');
       navigate('/redi');
     }
   };
@@ -256,53 +243,41 @@ const REDIExercise: React.FC = () => {
     navigate('/redi');
   };
   
-  // Determine exercise type
-  const isWritingExercise = currentExercise.type === 'writing';
-  
-  // Prevent form submission at a global level to prevent page resets
-  const preventFormSubmission = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-  };
-  
   return (
-    <form onSubmit={preventFormSubmission}>
+    // Wrap everything in a root element that captures any form submissions
+    <div onSubmit={(e) => { e.preventDefault(); return false; }}>
       <MainLayout 
         title={currentExercise.title} 
         showBackButton={true}
         onBackClick={handleBack}
       >
         <div className="text-gray-300 text-sm mb-4">
-          Exercise {currentIndex + 1} of {exercises.length}
+          Exercise {currentQuestionIndex + 1} of {questionsList.length}
         </div>
         
-        <div onSubmit={preventFormSubmission}>
-          {isWritingExercise ? (
-            // Render writing exercise component
-            <ExerciseWriting
-              exerciseId={currentExercise.id}
-              title={currentExercise.title}
-              instructions={currentExercise.instructions}
-              content={currentExercise.content}
-              prompt={currentExercise.prompt || ''}
-              minWordCount={currentExercise.minWordCount || 50}
-              exampleResponse={currentExercise.exampleResponse}
-              onSubmit={handleWritingSubmit}
-            />
-          ) : (
-            // Render multiple choice component
-            <ExerciseMultipleChoice
-              exerciseId={currentExercise.id}
-              title={currentExercise.title}
-              instructions={currentExercise.instructions}
-              content={currentExercise.content}
-              options={currentExercise.options || []}
-              correctOptionIndex={currentExercise.correctOptionIndex || 0}
-              onSubmit={handleMultipleChoiceSubmit}
-            />
-          )}
-        </div>
+        {/* Display the appropriate exercise component */}
+        {currentExercise.type === 'writing' ? (
+          <ExerciseWriting
+            exerciseId={currentExercise.id}
+            title={currentExercise.title}
+            instructions={currentExercise.instructions}
+            content={currentExercise.content}
+            prompt={currentExercise.prompt || ''}
+            minWordCount={currentExercise.minWordCount || 50}
+            exampleResponse={currentExercise.exampleResponse}
+            onSubmit={handleWritingSubmit}
+          />
+        ) : (
+          <ExerciseMultipleChoice
+            exerciseId={currentExercise.id}
+            title={currentExercise.title}
+            instructions={currentExercise.instructions}
+            content={currentExercise.content}
+            options={currentExercise.options || []}
+            correctOptionIndex={currentExercise.correctOptionIndex || 0}
+            onSubmit={handleMultipleChoiceSubmit}
+          />
+        )}
         
         {/* Continue button - only shown after answering */}
         {hasAnswered && (
@@ -311,7 +286,7 @@ const REDIExercise: React.FC = () => {
               type="button"
               onClick={handleContinue}
               className={`px-6 py-3 rounded-lg text-white font-semibold transition-all text-lg
-              ${isCorrectAnswer 
+              ${isCorrect 
                 ? 'bg-green-600 hover:bg-green-500' 
                 : 'bg-violet-600 hover:bg-violet-500'} 
               flex items-center gap-2 shadow-xl hover:shadow-2xl fixed bottom-8 right-8 z-50 animate-pulse`}
@@ -328,17 +303,17 @@ const REDIExercise: React.FC = () => {
         <div className="mt-8">
           <div className="flex justify-between mb-2 text-gray-300 text-sm">
             <span>Progress</span>
-            <span>{currentIndex + 1} of {exercises.length}</span>
+            <span>{currentQuestionIndex + 1} of {questionsList.length}</span>
           </div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
-              style={{ width: `${((currentIndex + 1) / exercises.length) * 100}%` }}
+              style={{ width: `${((currentQuestionIndex + 1) / questionsList.length) * 100}%` }}
             ></div>
           </div>
         </div>
       </MainLayout>
-    </form>
+    </div>
   );
 };
 
