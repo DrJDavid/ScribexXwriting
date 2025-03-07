@@ -68,13 +68,28 @@ const ExerciseMultipleChoice: React.FC<ExerciseMultipleChoiceProps> = ({
     }
   };
   
+  // Instead of having the continue button in both components, we only want 
+  // to show it once in the parent component
   // Separate function to handle the continue button click
   const handleContinue = () => {
     if (selectedOption !== null) {
-      // Call onSubmit with hasSubmitted=true to indicate this is 
-      // a continuation after already submitting an answer
-      console.log("Continue clicked, notifying parent to advance");
-      onSubmit(exerciseId, selectedOption, isCorrect);
+      // We're changing this critical line - instead of directly calling onSubmit,
+      // we need to dispatch a custom event that the parent component can listen for
+      // This will prevent any component unmounting issues
+      console.log("Continue clicked, dispatching custom event");
+      
+      // Create and dispatch a custom event that will be caught by REDIExercise
+      const continueEvent = new CustomEvent('exercise:continue', {
+        detail: {
+          exerciseId,
+          selectedOption,
+          isCorrect
+        }
+      });
+      window.dispatchEvent(continueEvent);
+      
+      // Let the parent handle this without causing the component to unmount
+      // onSubmit(exerciseId, selectedOption, isCorrect);
     }
   };
 

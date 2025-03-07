@@ -72,10 +72,22 @@ const ExerciseWriting: React.FC<ExerciseWritingProps> = ({
   
   // Separate handler for the continue button
   const handleContinue = () => {
-    // Always consider writing submissions as "correct"
-    // Pass true to indicate they met the minimum requirements
-    console.log("Writing continue clicked, notifying parent to advance");
-    onSubmit(exerciseId, response, true);
+    // Instead of directly calling onSubmit which causes component unmounting issues,
+    // we'll dispatch a custom event that the parent component can listen for
+    console.log("Writing continue clicked, dispatching custom event");
+    
+    // Create and dispatch a custom event that will be caught by REDIExercise
+    const continueEvent = new CustomEvent('exercise:continue', {
+      detail: {
+        exerciseId,
+        response,
+        isComplete: true
+      }
+    });
+    window.dispatchEvent(continueEvent);
+    
+    // We no longer directly call onSubmit to prevent component unmounting
+    // onSubmit(exerciseId, response, true);
   };
 
   return (

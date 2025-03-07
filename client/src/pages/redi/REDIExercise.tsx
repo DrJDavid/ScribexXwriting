@@ -50,7 +50,7 @@ const REDIExercise: React.FC = () => {
   // Get the exercise data using the current exercise ID in the set
   const exercise = getExerciseById(currentSetExerciseId || params.exerciseId || "");
   
-  // Track component mounting to prevent state resets
+  // Track component mounting and set up event listeners
   useEffect(() => {
     console.log("Component mount effect running, mounted=", componentMounted.current);
     
@@ -58,6 +58,64 @@ const REDIExercise: React.FC = () => {
     if (!componentMounted.current) {
       console.log("📱 Component has mounted for the first time");
       componentMounted.current = true;
+      
+      // Setup event listener for custom continue events from child components
+      const handleContinueEvent = (event: Event) => {
+        const { exerciseId, selectedOption, isCorrect, response, isComplete } = (event as CustomEvent).detail;
+        console.log("📢 Received exercise:continue event:", (event as CustomEvent).detail);
+        
+        // Determine which type of exercise is continuing
+        if (response !== undefined) {
+          // It's a writing exercise
+          console.log("✍️ Processing writing continue event");
+          setHasSubmitted(true);
+          setAnsweredCorrectly(true); // Writing exercises are always considered "correct"
+          
+          // Increment correct answers
+          setCorrectAnswers(prev => prev + 1);
+          
+          // Show success toast
+          toast({
+            title: "Exercise Complete!",
+            description: "Your submission meets the requirements. Proceeding to next exercise..."
+          });
+          
+          // Wait a moment before continuing to next exercise
+          setTimeout(() => handleContinue(), 500);
+          
+        } else if (selectedOption !== undefined) {
+          // It's a multiple choice exercise
+          console.log("🔢 Processing multiple choice continue event");
+          setHasSubmitted(true);
+          setAnsweredCorrectly(isCorrect);
+          
+          // Record total correct answers for the exercise set
+          if (isCorrect) {
+            setCorrectAnswers(prev => prev + 1);
+            
+            toast({
+              title: "Correct!",
+              description: "Great job! Proceeding to next exercise..."
+            });
+          } else {
+            toast({
+              title: "Not quite right",
+              description: "That's okay! Proceeding to next exercise..."
+            });
+          }
+          
+          // Wait a moment before continuing to next exercise
+          setTimeout(() => handleContinue(), 500);
+        }
+      };
+      
+      // Add the event listener
+      window.addEventListener('exercise:continue', handleContinueEvent);
+      
+      // Return cleanup function
+      return () => {
+        window.removeEventListener('exercise:continue', handleContinueEvent);
+      };
     }
     
     // Cleanup when component unmounts
@@ -403,24 +461,9 @@ const REDIExercise: React.FC = () => {
         />
       )}
       
-      {/* Continue button - only shown after answering */}
-      {hasSubmitted && (
-        <div className="mt-6 flex justify-end">
-          <button 
-            onClick={handleContinue}
-            className={`px-6 py-3 rounded-lg text-white font-semibold transition-all
-            ${answeredCorrectly 
-              ? 'bg-green-600 hover:bg-green-500' 
-              : 'bg-violet-600 hover:bg-violet-500'} 
-            flex items-center gap-2 shadow-lg hover:shadow-xl`}
-          >
-            Continue
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
-        </div>
-      )}
+      {/* We no longer need the parent's Continue button since 
+         each child component handles its own continue action 
+         through the custom events */}
       
       {/* Exercise progress */}
       <div className="mt-8">
