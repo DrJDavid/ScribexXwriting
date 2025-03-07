@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import ExerciseMultipleChoice from '@/components/exercises/ExerciseMultipleChoice';
@@ -8,114 +8,135 @@ import useProgress from '@/hooks/useProgress';
 import { getExerciseById, getExerciseNodes } from '@/data/exercises';
 import { useToast } from '@/hooks/use-toast';
 
-// Set of quiz exercises that we'll cycle through
+// Wrapping in div to prevent form submission propagation
 const REDIExercise: React.FC = () => {
+  // This will prevent form submission and the questions resetting
+  const handleFormSubmitPrevention = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Form submission prevented');
+    return false;
+  };
+
+  return (
+    <div onSubmit={handleFormSubmitPrevention}>
+      <REDIExerciseContent />
+    </div>
+  );
+};
+
+// Actual component content separated to prevent form issues
+const REDIExerciseContent: React.FC = () => {
   const { setTheme } = useTheme();
   const { toast } = useToast();
   const params = useParams<{ exerciseId: string }>();
   const [, navigate] = useLocation();
   const { progress, completeExercise, updateProgress, calculateRediLevel } = useProgress();
   
-  // State for quiz management
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
-  const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
-  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
-  const [questionsSet, setQuestionsSet] = useState<string[]>([]);
-  const [currentQuestionId, setCurrentQuestionId] = useState<string>(params.exerciseId);
+  // Quiz state
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasAnswered, setHasAnswered] = useState(false);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [exercises, setExercises] = useState<string[]>([]);
+  const [currentExerciseId, setCurrentExerciseId] = useState<string>(params.exerciseId);
   
   // Make sure REDI theme is active
   useEffect(() => {
     setTheme('redi');
   }, [setTheme]);
   
-  // Get the current exercise
-  const currentExercise = getExerciseById(currentQuestionId);
+  // Current exercise data
+  const currentExercise = getExerciseById(currentExerciseId);
   
-  // Create the initial set of exercises for the quiz
+  // Create initial exercise set
   useEffect(() => {
-    if (!params.exerciseId || questionsSet.length > 0 || !progress) return;
-
-    // Get the initial exercise
-    const startingExercise = getExerciseById(params.exerciseId);
-    if (!startingExercise) {
-      console.error('Starting exercise not found');
+    // Early returns
+    if (!params.exerciseId || exercises.length > 0 || !progress) return;
+    
+    // Get base exercise
+    const baseExercise = getExerciseById(params.exerciseId);
+    if (!baseExercise) {
+      console.error('Base exercise not found');
       navigate('/redi');
       return;
     }
-
-    // Find available exercises for the quiz
+    
+    console.log('Initializing exercise set for:', params.exerciseId);
+    
+    // Get all nodes
     const nodes = getExerciseNodes(
       progress.rediSkillMastery || { mechanics: 0, sequencing: 0, voice: 0 },
       progress.completedExercises || []
     );
     
-    // Get exercises of the same type first
-    const sameTypeExercises = nodes
+    // Get matching skill type exercises
+    const matchingExercises = nodes
       .filter(node => 
-        node.skillType === startingExercise.skillType && 
-        (node.status === 'available' || node.status === 'current' || node.id === startingExercise.id))
+        node.skillType === baseExercise.skillType && 
+        (node.status === 'available' || node.status === 'current' || node.id === baseExercise.id))
       .map(node => node.id);
     
-    // Get other available exercises if needed
+    // Get other types as backups
     const otherExercises = nodes
       .filter(node => 
-        node.skillType !== startingExercise.skillType && 
+        node.skillType !== baseExercise.skillType && 
         (node.status === 'available' || node.status === 'current'))
       .map(node => node.id);
     
-    // Create a set with the starting exercise first
-    const exerciseIds = [params.exerciseId];
+    // Always start with the original exercise
+    let questionsList = [params.exerciseId];
     
-    // Add other exercises (not including the starting one)
-    const remainingExercises = [...sameTypeExercises, ...otherExercises]
+    // Get additional exercises, not including the starting one
+    const remainingOptions = [...matchingExercises, ...otherExercises]
       .filter(id => id !== params.exerciseId);
     
-    // Add as many as needed to reach 5 total
-    while (exerciseIds.length < 5 && remainingExercises.length > 0) {
-      const randomIndex = Math.floor(Math.random() * remainingExercises.length);
-      exerciseIds.push(remainingExercises[randomIndex]);
-      remainingExercises.splice(randomIndex, 1);
+    // Add exercises to reach 5 total
+    while (questionsList.length < 5 && remainingOptions.length > 0) {
+      const randomIndex = Math.floor(Math.random() * remainingOptions.length);
+      questionsList.push(remainingOptions[randomIndex]);
+      remainingOptions.splice(randomIndex, 1);
     }
     
-    // If we still need more, duplicate some exercises
-    while (exerciseIds.length < 5) {
-      const randomIndex = Math.floor(Math.random() * exerciseIds.length);
-      exerciseIds.push(exerciseIds[randomIndex]);
+    // If we need more, duplicate some
+    while (questionsList.length < 5) {
+      const randomIndex = Math.floor(Math.random() * questionsList.length);
+      questionsList.push(questionsList[randomIndex]);
     }
     
-    console.log('Created quiz set with exercises:', exerciseIds);
-    setQuestionsSet(exerciseIds);
-    setCurrentQuestionId(exerciseIds[0]);
+    console.log('Exercise set created:', questionsList);
+    setExercises(questionsList);
+    setCurrentExerciseId(questionsList[0]);
   }, [params.exerciseId, progress, navigate]);
   
-  // If exercise not found, go back to map
+  // Safety check for missing exercise
   useEffect(() => {
     if (!currentExercise && params.exerciseId) {
-      console.error('Exercise not found');
+      console.error('Current exercise not found');
       navigate('/redi');
     }
   }, [currentExercise, params.exerciseId, navigate]);
   
-  // Skip rendering until we have an exercise
-  if (!currentExercise || questionsSet.length === 0) {
+  // Exit if no exercise data
+  if (!currentExercise || exercises.length === 0) {
     return null;
   }
   
-  // Calculate if this is the last question
-  const isLastQuestion = currentQuestionIndex === questionsSet.length - 1;
+  // Last question check
+  const isLastQuestion = currentIndex === exercises.length - 1;
   
-  // Function to submit a multiple choice answer
-  const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
-    if (hasSubmittedAnswer) return;
+  // Handle multiple choice submission
+  const handleMultipleChoiceSubmit = useCallback((exerciseId: string, selectedOption: number, isCorrect: boolean) => {
+    console.log('Multiple choice submitted:', { exerciseId, isCorrect });
+    if (hasAnswered) return; // Prevent double submission
     
-    // Update state based on answer
-    setLastAnswerCorrect(isCorrect);
-    setHasSubmittedAnswer(true);
+    // Update state
+    setIsCorrectAnswer(isCorrect);
+    setHasAnswered(true);
     
-    // Count correct answers
+    // Track correct answers
     if (isCorrect) {
-      setCorrectAnswersCount(prev => prev + 1);
+      setCorrectCount(prev => prev + 1);
       toast({
         title: "Correct!",
         description: "Great job! Click Continue to proceed.",
@@ -128,19 +149,20 @@ const REDIExercise: React.FC = () => {
         duration: 3000,
       });
     }
-  };
+  }, [hasAnswered, toast]);
   
-  // Function to submit a writing exercise
-  const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
-    if (hasSubmittedAnswer) return;
+  // Handle writing submission
+  const handleWritingSubmit = useCallback((exerciseId: string, response: string, isComplete: boolean) => {
+    console.log('Writing exercise submitted:', { exerciseId, isComplete });
+    if (hasAnswered) return; // Prevent double submission
     
-    // Update state based on submission
-    setLastAnswerCorrect(isComplete);
-    setHasSubmittedAnswer(true);
+    // Update state
+    setIsCorrectAnswer(isComplete);
+    setHasAnswered(true);
     
     // Count as correct if complete
     if (isComplete) {
-      setCorrectAnswersCount(prev => prev + 1);
+      setCorrectCount(prev => prev + 1);
       toast({
         title: "Exercise Complete!",
         description: "Your submission meets the requirements. Click Continue to proceed.",
@@ -153,21 +175,29 @@ const REDIExercise: React.FC = () => {
         duration: 3000,
       });
     }
-  };
+  }, [hasAnswered, toast]);
   
-  // Function to handle the continue button
-  const handleContinue = async (e: React.MouseEvent) => {
+  // Continue to next question or finish
+  const handleContinue = useCallback(async (e: React.MouseEvent) => {
+    // Prevent any form submission
     e.preventDefault();
+    e.stopPropagation();
     
-    // If this was the last question, update progress and go back to the map
+    console.log('Continue clicked:', { 
+      currentIndex, 
+      isLastQuestion, 
+      correctCount 
+    });
+    
+    // If last question, complete the exercise set
     if (isLastQuestion) {
-      // Required success criteria: at least 3 correct answers out of 5
-      const isSuccessful = correctAnswersCount >= 3;
+      // Success criteria: at least 3/5 correct
+      const isSuccessful = correctCount >= 3;
       
       // Update skill mastery if successful
       if (isSuccessful && progress) {
         // Calculate skill increase based on correct answers
-        const skillIncrease = Math.min(correctAnswersCount * 5, 20);
+        const skillIncrease = Math.min(correctCount * 5, 20);
         
         // Update the appropriate skill
         const updatedSkillMastery = { ...progress.rediSkillMastery };
@@ -194,12 +224,12 @@ const REDIExercise: React.FC = () => {
         
         toast({
           title: "Exercise Set Completed!",
-          description: `You got ${correctAnswersCount} out of ${questionsSet.length} correct. Your ${currentExercise.skillType} mastery increased by ${skillIncrease}%.`,
+          description: `You got ${correctCount} out of ${exercises.length} correct. Your ${currentExercise.skillType} mastery increased by ${skillIncrease}%.`,
         });
       } else {
         toast({
           title: "Exercise Set Attempted",
-          description: `You got ${correctAnswersCount} out of ${questionsSet.length} correct. You need at least 3 correct to increase mastery.`,
+          description: `You got ${correctCount} out of ${exercises.length} correct. You need at least 3 correct to increase mastery.`,
         });
       }
       
@@ -210,8 +240,8 @@ const REDIExercise: React.FC = () => {
         toast({
           title: isSuccessful ? "Node Completed!" : "Node Attempted",
           description: isSuccessful 
-            ? `You got ${correctAnswersCount} out of ${questionsSet.length} correct! Node mastery unlocked.` 
-            : `You got ${correctAnswersCount} out of ${questionsSet.length} correct. Try again for better mastery.`,
+            ? `You got ${correctCount} out of ${exercises.length} correct! Node mastery unlocked.` 
+            : `You got ${correctCount} out of ${exercises.length} correct. Try again for better mastery.`,
         });
       }
       
@@ -220,30 +250,43 @@ const REDIExercise: React.FC = () => {
       return;
     }
     
-    // Move to the next question
-    const nextIndex = currentQuestionIndex + 1;
-    const nextQuestionId = questionsSet[nextIndex];
+    // Move to next question
+    const nextIndex = currentIndex + 1;
+    const nextExerciseId = exercises[nextIndex];
     
-    if (nextQuestionId) {
-      console.log(`Moving to next question: ${nextQuestionId} (${nextIndex + 1} of ${questionsSet.length})`);
+    if (nextExerciseId) {
+      console.log(`Moving to next exercise: ${nextExerciseId} (${nextIndex + 1} of ${exercises.length})`);
       
       // Update state for the next question
-      setCurrentQuestionIndex(nextIndex);
-      setCurrentQuestionId(nextQuestionId);
-      setHasSubmittedAnswer(false);
-      setLastAnswerCorrect(false);
+      setCurrentIndex(nextIndex);
+      setCurrentExerciseId(nextExerciseId);
+      setHasAnswered(false);
+      setIsCorrectAnswer(false);
     } else {
-      console.error('Next question not found in set');
+      console.error('Next exercise not found');
       navigate('/redi');
     }
-  };
+  }, [
+    currentIndex, 
+    isLastQuestion, 
+    correctCount, 
+    exercises, 
+    currentExercise, 
+    progress, 
+    calculateRediLevel, 
+    updateProgress, 
+    params.exerciseId, 
+    completeExercise, 
+    navigate, 
+    toast
+  ]);
   
   // Handle back button
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate('/redi');
-  };
+  }, [navigate]);
   
-  // Determine if this is a writing exercise
+  // Determine exercise type
   const isWritingExercise = currentExercise.type === 'writing';
   
   return (
@@ -253,42 +296,44 @@ const REDIExercise: React.FC = () => {
       onBackClick={handleBack}
     >
       <div className="text-gray-300 text-sm mb-4">
-        Exercise {currentQuestionIndex + 1} of {questionsSet.length}
+        Exercise {currentIndex + 1} of {exercises.length}
       </div>
       
-      {isWritingExercise ? (
-        // Render writing exercise component
-        <ExerciseWriting
-          exerciseId={currentExercise.id}
-          title={currentExercise.title}
-          instructions={currentExercise.instructions}
-          content={currentExercise.content}
-          prompt={currentExercise.prompt || ''}
-          minWordCount={currentExercise.minWordCount || 50}
-          exampleResponse={currentExercise.exampleResponse}
-          onSubmit={handleWritingSubmit}
-        />
-      ) : (
-        // Render multiple choice component
-        <ExerciseMultipleChoice
-          exerciseId={currentExercise.id}
-          title={currentExercise.title}
-          instructions={currentExercise.instructions}
-          content={currentExercise.content}
-          options={currentExercise.options || []}
-          correctOptionIndex={currentExercise.correctOptionIndex || 0}
-          onSubmit={handleMultipleChoiceSubmit}
-        />
-      )}
+      <div onSubmit={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()}>
+        {isWritingExercise ? (
+          // Render writing exercise component
+          <ExerciseWriting
+            exerciseId={currentExercise.id}
+            title={currentExercise.title}
+            instructions={currentExercise.instructions}
+            content={currentExercise.content}
+            prompt={currentExercise.prompt || ''}
+            minWordCount={currentExercise.minWordCount || 50}
+            exampleResponse={currentExercise.exampleResponse}
+            onSubmit={handleWritingSubmit}
+          />
+        ) : (
+          // Render multiple choice component
+          <ExerciseMultipleChoice
+            exerciseId={currentExercise.id}
+            title={currentExercise.title}
+            instructions={currentExercise.instructions}
+            content={currentExercise.content}
+            options={currentExercise.options || []}
+            correctOptionIndex={currentExercise.correctOptionIndex || 0}
+            onSubmit={handleMultipleChoiceSubmit}
+          />
+        )}
+      </div>
       
       {/* Continue button - only shown after answering */}
-      {hasSubmittedAnswer && (
+      {hasAnswered && (
         <div className="mt-6 flex justify-end">
           <button 
             type="button"
             onClick={handleContinue}
             className={`px-6 py-3 rounded-lg text-white font-semibold transition-all text-lg
-            ${lastAnswerCorrect 
+            ${isCorrectAnswer 
               ? 'bg-green-600 hover:bg-green-500' 
               : 'bg-violet-600 hover:bg-violet-500'} 
             flex items-center gap-2 shadow-xl hover:shadow-2xl fixed bottom-8 right-8 z-50 animate-pulse`}
@@ -305,12 +350,12 @@ const REDIExercise: React.FC = () => {
       <div className="mt-8">
         <div className="flex justify-between mb-2 text-gray-300 text-sm">
           <span>Progress</span>
-          <span>{currentQuestionIndex + 1} of {questionsSet.length}</span>
+          <span>{currentIndex + 1} of {exercises.length}</span>
         </div>
         <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
-            style={{ width: `${((currentQuestionIndex + 1) / questionsSet.length) * 100}%` }}
+            style={{ width: `${((currentIndex + 1) / exercises.length) * 100}%` }}
           ></div>
         </div>
       </div>
