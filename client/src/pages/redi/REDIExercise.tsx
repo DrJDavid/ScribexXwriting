@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import MainLayout from '@/components/layouts/MainLayout';
 import ExerciseMultipleChoice from '@/components/exercises/ExerciseMultipleChoice';
@@ -8,25 +8,8 @@ import useProgress from '@/hooks/useProgress';
 import { getExerciseById, getExerciseNodes } from '@/data/exercises';
 import { useToast } from '@/hooks/use-toast';
 
-// Wrapping in div to prevent form submission propagation
+// Simple exercise component with no hooks to avoid reordering issues
 const REDIExercise: React.FC = () => {
-  // This will prevent form submission and the questions resetting
-  const handleFormSubmitPrevention = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Form submission prevented');
-    return false;
-  };
-
-  return (
-    <div onSubmit={handleFormSubmitPrevention}>
-      <REDIExerciseContent />
-    </div>
-  );
-};
-
-// Actual component content separated to prevent form issues
-const REDIExerciseContent: React.FC = () => {
   const { setTheme } = useTheme();
   const { toast } = useToast();
   const params = useParams<{ exerciseId: string }>();
@@ -39,7 +22,7 @@ const REDIExerciseContent: React.FC = () => {
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [exercises, setExercises] = useState<string[]>([]);
-  const [currentExerciseId, setCurrentExerciseId] = useState<string>(params.exerciseId);
+  const [currentExerciseId, setCurrentExerciseId] = useState<string>(params.exerciseId || '');
   
   // Make sure REDI theme is active
   useEffect(() => {
@@ -126,7 +109,7 @@ const REDIExerciseContent: React.FC = () => {
   const isLastQuestion = currentIndex === exercises.length - 1;
   
   // Handle multiple choice submission
-  const handleMultipleChoiceSubmit = useCallback((exerciseId: string, selectedOption: number, isCorrect: boolean) => {
+  const handleMultipleChoiceSubmit = (exerciseId: string, selectedOption: number, isCorrect: boolean) => {
     console.log('Multiple choice submitted:', { exerciseId, isCorrect });
     if (hasAnswered) return; // Prevent double submission
     
@@ -149,10 +132,10 @@ const REDIExerciseContent: React.FC = () => {
         duration: 3000,
       });
     }
-  }, [hasAnswered, toast]);
+  };
   
   // Handle writing submission
-  const handleWritingSubmit = useCallback((exerciseId: string, response: string, isComplete: boolean) => {
+  const handleWritingSubmit = (exerciseId: string, response: string, isComplete: boolean) => {
     console.log('Writing exercise submitted:', { exerciseId, isComplete });
     if (hasAnswered) return; // Prevent double submission
     
@@ -175,10 +158,10 @@ const REDIExerciseContent: React.FC = () => {
         duration: 3000,
       });
     }
-  }, [hasAnswered, toast]);
+  };
   
   // Continue to next question or finish
-  const handleContinue = useCallback(async (e: React.MouseEvent) => {
+  const handleContinue = async (e: React.MouseEvent) => {
     // Prevent any form submission
     e.preventDefault();
     e.stopPropagation();
@@ -266,100 +249,96 @@ const REDIExerciseContent: React.FC = () => {
       console.error('Next exercise not found');
       navigate('/redi');
     }
-  }, [
-    currentIndex, 
-    isLastQuestion, 
-    correctCount, 
-    exercises, 
-    currentExercise, 
-    progress, 
-    calculateRediLevel, 
-    updateProgress, 
-    params.exerciseId, 
-    completeExercise, 
-    navigate, 
-    toast
-  ]);
+  };
   
   // Handle back button
-  const handleBack = useCallback(() => {
+  const handleBack = () => {
     navigate('/redi');
-  }, [navigate]);
+  };
   
   // Determine exercise type
   const isWritingExercise = currentExercise.type === 'writing';
   
+  // Prevent form submission at a global level to prevent page resets
+  const preventFormSubmission = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+  
   return (
-    <MainLayout 
-      title={currentExercise.title} 
-      showBackButton={true}
-      onBackClick={handleBack}
-    >
-      <div className="text-gray-300 text-sm mb-4">
-        Exercise {currentIndex + 1} of {exercises.length}
-      </div>
-      
-      <div onSubmit={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()}>
-        {isWritingExercise ? (
-          // Render writing exercise component
-          <ExerciseWriting
-            exerciseId={currentExercise.id}
-            title={currentExercise.title}
-            instructions={currentExercise.instructions}
-            content={currentExercise.content}
-            prompt={currentExercise.prompt || ''}
-            minWordCount={currentExercise.minWordCount || 50}
-            exampleResponse={currentExercise.exampleResponse}
-            onSubmit={handleWritingSubmit}
-          />
-        ) : (
-          // Render multiple choice component
-          <ExerciseMultipleChoice
-            exerciseId={currentExercise.id}
-            title={currentExercise.title}
-            instructions={currentExercise.instructions}
-            content={currentExercise.content}
-            options={currentExercise.options || []}
-            correctOptionIndex={currentExercise.correctOptionIndex || 0}
-            onSubmit={handleMultipleChoiceSubmit}
-          />
+    <form onSubmit={preventFormSubmission}>
+      <MainLayout 
+        title={currentExercise.title} 
+        showBackButton={true}
+        onBackClick={handleBack}
+      >
+        <div className="text-gray-300 text-sm mb-4">
+          Exercise {currentIndex + 1} of {exercises.length}
+        </div>
+        
+        <div onSubmit={preventFormSubmission}>
+          {isWritingExercise ? (
+            // Render writing exercise component
+            <ExerciseWriting
+              exerciseId={currentExercise.id}
+              title={currentExercise.title}
+              instructions={currentExercise.instructions}
+              content={currentExercise.content}
+              prompt={currentExercise.prompt || ''}
+              minWordCount={currentExercise.minWordCount || 50}
+              exampleResponse={currentExercise.exampleResponse}
+              onSubmit={handleWritingSubmit}
+            />
+          ) : (
+            // Render multiple choice component
+            <ExerciseMultipleChoice
+              exerciseId={currentExercise.id}
+              title={currentExercise.title}
+              instructions={currentExercise.instructions}
+              content={currentExercise.content}
+              options={currentExercise.options || []}
+              correctOptionIndex={currentExercise.correctOptionIndex || 0}
+              onSubmit={handleMultipleChoiceSubmit}
+            />
+          )}
+        </div>
+        
+        {/* Continue button - only shown after answering */}
+        {hasAnswered && (
+          <div className="mt-6 flex justify-end">
+            <button 
+              type="button"
+              onClick={handleContinue}
+              className={`px-6 py-3 rounded-lg text-white font-semibold transition-all text-lg
+              ${isCorrectAnswer 
+                ? 'bg-green-600 hover:bg-green-500' 
+                : 'bg-violet-600 hover:bg-violet-500'} 
+              flex items-center gap-2 shadow-xl hover:shadow-2xl fixed bottom-8 right-8 z-50 animate-pulse`}
+            >
+              {isLastQuestion ? 'Finish' : 'Continue'}
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
         )}
-      </div>
-      
-      {/* Continue button - only shown after answering */}
-      {hasAnswered && (
-        <div className="mt-6 flex justify-end">
-          <button 
-            type="button"
-            onClick={handleContinue}
-            className={`px-6 py-3 rounded-lg text-white font-semibold transition-all text-lg
-            ${isCorrectAnswer 
-              ? 'bg-green-600 hover:bg-green-500' 
-              : 'bg-violet-600 hover:bg-violet-500'} 
-            flex items-center gap-2 shadow-xl hover:shadow-2xl fixed bottom-8 right-8 z-50 animate-pulse`}
-          >
-            {isLastQuestion ? 'Finish' : 'Continue'}
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
+        
+        {/* Exercise progress */}
+        <div className="mt-8">
+          <div className="flex justify-between mb-2 text-gray-300 text-sm">
+            <span>Progress</span>
+            <span>{currentIndex + 1} of {exercises.length}</span>
+          </div>
+          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
+              style={{ width: `${((currentIndex + 1) / exercises.length) * 100}%` }}
+            ></div>
+          </div>
         </div>
-      )}
-      
-      {/* Exercise progress */}
-      <div className="mt-8">
-        <div className="flex justify-between mb-2 text-gray-300 text-sm">
-          <span>Progress</span>
-          <span>{currentIndex + 1} of {exercises.length}</span>
-        </div>
-        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
-            style={{ width: `${((currentIndex + 1) / exercises.length) * 100}%` }}
-          ></div>
-        </div>
-      </div>
-    </MainLayout>
+      </MainLayout>
+    </form>
   );
 };
 
